@@ -50,6 +50,8 @@ def check_store_window() -> None:
         raise AssertionError("OminX Store window did not become visible")
     if not window.page_box.get_children():
         raise AssertionError("OminX Store home page rendered no content")
+    if window._desktop_app_info("ominx-smoke-test-missing.desktop") is not None:
+        raise AssertionError("Missing desktop entries should fall back to the software catalog")
 
     window.search_entry.set_text("steam")
     drain_events()

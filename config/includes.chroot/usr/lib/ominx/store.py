@@ -533,7 +533,7 @@ class StoreWindow(Gtk.Window):
         badge.get_style_context().add_class("ominx-pill")
         footer.pack_start(badge, False, False, 0)
         footer.pack_end(Gtk.Box(), True, True, 0)
-        desktop_info = Gio.DesktopAppInfo.new(product["desktop_id"])
+        desktop_info = self._desktop_app_info(product["desktop_id"])
         button = Gtk.Button(label="Open" if desktop_info is not None else "Find")
         button.get_style_context().add_class("ominx-primary")
         button.connect("clicked", self._open_product, product)
@@ -599,6 +599,13 @@ class StoreWindow(Gtk.Window):
     def _get_product(name: str) -> dict[str, str]:
         return next(product for product in PRODUCTS if product["name"] == name)
 
+    @staticmethod
+    def _desktop_app_info(desktop_id: str):
+        try:
+            return Gio.DesktopAppInfo.new(desktop_id)
+        except TypeError:
+            return None
+
     def _open_category(self, _button: Gtk.Button, category: str) -> None:
         self._show_page("apps")
         self.category_filter = category
@@ -609,7 +616,7 @@ class StoreWindow(Gtk.Window):
         self._render_page()
 
     def _open_product(self, _button: Gtk.Button, product: dict[str, str]) -> None:
-        desktop_info = Gio.DesktopAppInfo.new(product["desktop_id"])
+        desktop_info = self._desktop_app_info(product["desktop_id"])
         if desktop_info is None:
             self._launch_software(search=product["name"])
             return
