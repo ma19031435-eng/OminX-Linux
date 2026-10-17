@@ -235,7 +235,6 @@ class StoreWindow(Gtk.Window):
     def _on_search_changed(self, _entry: Gtk.SearchEntry) -> None:
         self._cancel_search_refresh()
         self._search_timeout_id = GLib.timeout_add(
-            GLib.PRIORITY_DEFAULT,
             85,
             self._apply_search,
         )
