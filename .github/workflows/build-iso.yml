@@ -1,0 +1,73 @@
+name: Build OminX installable ISO
+
+on:
+  push:
+    branches:
+      - "arena/30b7965b-ominx-linux"
+    paths:
+      - ".github/workflows/build-iso.yml"
+      - "Makefile"
+      - "README.md"
+      - "auto/**"
+      - "build.sh"
+      - "config/**"
+      - "scripts/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-iso:
+    name: Build amd64 live installer
+    runs-on: ubuntu-24.04
+    timeout-minutes: 240
+
+    steps:
+      - name: Check out OminX
+        uses: actions/checkout@v4
+
+      - name: Free runner disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
+            /usr/local/share/powershell /usr/local/share/chromium \
+            /opt/hostedtoolcache/CodeQL
+          if command -v docker >/dev/null 2>&1; then
+            sudo docker system prune --all --force || true
+          fi
+          df -h /
+
+      - name: Install ISO build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends \
+            live-build debootstrap xorriso squashfs-tools dosfstools mtools \
+            grub-pc-bin grub-efi-amd64-bin isolinux syslinux-common \
+            syslinux-utils debian-archive-keyring
+
+      - name: Validate OminX configuration
+        run: make check
+
+      - name: Build installable ISO
+        run: sudo ./build.sh
+
+      - name: Verify ISO and write build summary
+        run: |
+          test -s live-image-amd64.hybrid.iso
+          sha256sum -c SHA256SUMS
+          echo "## OminX installable ISO" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Base: Debian 13 Trixie amd64" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Size: $(du -h live-image-amd64.hybrid.iso | cut -f1)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- SHA-256: $(cut -d ' ' -f1 SHA256SUMS)" >> "$GITHUB_STEP_SUMMARY"
+          echo "The ISO is available as a workflow artifact." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload installable ISO
+        uses: actions/upload-artifact@v4
+        with:
+          name: OminX-installable-ISO-${{ github.sha }}
+          path: |
+            live-image-amd64.hybrid.iso
+            SHA256SUMS
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 0

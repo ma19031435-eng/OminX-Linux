@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=OminX Memory Optimization
+Comment=Read about compressed RAM and non-pausing memory behavior
+Exec=ominx-welcome --memory
+Icon=utilities-system-monitor
+Terminal=false
+Categories=System;Settings;
+StartupNotify=true

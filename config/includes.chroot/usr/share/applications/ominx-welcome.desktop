@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Welcome to OminX
+Comment=Explore apps, settings, games, and compatibility help
+Exec=ominx-welcome
+Icon=ominx
+Terminal=false
+Categories=System;Settings;
+StartupNotify=true

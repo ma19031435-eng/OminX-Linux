@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=OminX Welcome
+Comment=First steps and compatibility notes for OminX
+Exec=ominx-welcome --first-run
+Icon=ominx
+Terminal=false
+X-GNOME-Autostart-enabled=true

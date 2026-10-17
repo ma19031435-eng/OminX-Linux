@@ -1,0 +1,10 @@
+# Debian live-build output (large and reproducible)
+/binary/
+/chroot/
+/cache/
+/live-image-*.iso
+/SHA256SUMS
+*.iso
+*.log
+__pycache__/
+*.py[cod]

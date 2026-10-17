@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="OminX icon">
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#101f3b"/>
+      <stop offset="1" stop-color="#081325"/>
+    </linearGradient>
+    <linearGradient id="x" x1=".06" y1=".08" x2=".94" y2=".92">
+      <stop offset="0" stop-color="#7cf1ed"/>
+      <stop offset=".5" stop-color="#36b7f0"/>
+      <stop offset="1" stop-color="#5369ff"/>
+    </linearGradient>
+    <filter id="shadow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="18"/>
+    </filter>
+  </defs>
+  <rect x="20" y="20" width="472" height="472" rx="116" fill="url(#tile)"/>
+  <rect x="21" y="21" width="470" height="470" rx="115" fill="none" stroke="#a8dfff" stroke-opacity=".2" stroke-width="2"/>
+  <circle cx="256" cy="255" r="147" fill="#2389f2" opacity=".22" filter="url(#shadow)"/>
+  <path d="M107 176 176 107 405 336 336 405Z" fill="url(#x)"/>
+  <path d="M336 107 405 176 176 405 107 336Z" fill="url(#x)"/>
+  <path d="m256 207 49 49-49 49-49-49z" fill="#10203b"/>
+  <path d="m256 228 28 28-28 28-28-28z" fill="#a3fff3"/>
+</svg>

@@ -1,0 +1,37 @@
+#!/bin/sh
+# Add the 32-bit userspace and compatibility stack after the base desktop has
+# been installed. Keeping this after the normal package selection ensures the
+# i386 architecture is enabled before Steam and Wine are resolved.
+set -eu
+
+export DEBIAN_FRONTEND=noninteractive
+export NEEDRESTART_MODE=a
+
+dpkg --add-architecture i386
+apt-get update
+apt-get install --yes --no-install-recommends \
+    steam-installer \
+    steam-devices \
+    wine \
+    wine64 \
+    wine32:i386 \
+    wine-binfmt \
+    winetricks \
+    lutris \
+    libgl1-mesa-dri:i386 \
+    libvulkan1:i386 \
+    mesa-vulkan-drivers:i386 \
+    libpulse0:i386 \
+    libasound2-plugins:i386
+
+# Make the official Flathub catalog available in the desktop software center.
+# Apps are not preinstalled from this third-party remote.
+flatpak remote-add --system --if-not-exists flathub \
+    https://dl.flathub.org/repo/flathub.flatpakrepo
+
+# Compile the system-wide Cinnamon wallpaper and panel defaults shipped in the
+# chroot overlay.
+dconf update
+
+apt-get clean
+rm -rf /var/lib/apt/lists/*

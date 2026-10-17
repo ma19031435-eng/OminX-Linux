@@ -1,0 +1,11 @@
+NAME="OminX"
+PRETTY_NAME="OminX 0.2 (Debian 13 Trixie)"
+ID=ominx
+ID_LIKE=debian
+VERSION_ID="0.2"
+VERSION="0.2 (Trixie)"
+VERSION_CODENAME=ominx
+DEBIAN_CODENAME=trixie
+HOME_URL="https://github.com/ma19031435-eng/OminX-Linux"
+SUPPORT_URL="https://github.com/ma19031435-eng/OminX-Linux/issues"
+BUG_REPORT_URL="https://github.com/ma19031435-eng/OminX-Linux/issues"

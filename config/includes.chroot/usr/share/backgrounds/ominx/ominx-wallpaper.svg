@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2560" height="1440" viewBox="0 0 2560 1440" role="img" aria-label="OminX midnight blue desktop wallpaper">
+  <defs>
+    <linearGradient id="base" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#07101f"/>
+      <stop offset="0.48" stop-color="#0c1830"/>
+      <stop offset="1" stop-color="#101f3d"/>
+    </linearGradient>
+    <radialGradient id="aura" cx="76%" cy="48%" r="62%">
+      <stop offset="0" stop-color="#176be0" stop-opacity=".26"/>
+      <stop offset=".52" stop-color="#123d83" stop-opacity=".12"/>
+      <stop offset="1" stop-color="#081325" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="mark" x1=".12" y1=".06" x2=".88" y2=".94">
+      <stop offset="0" stop-color="#62e6f2"/>
+      <stop offset=".46" stop-color="#31a8f1"/>
+      <stop offset="1" stop-color="#4269ff"/>
+    </linearGradient>
+    <linearGradient id="markMuted" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#82f5ed" stop-opacity=".88"/>
+      <stop offset="1" stop-color="#536eff" stop-opacity=".68"/>
+    </linearGradient>
+    <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="34" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="0.2 0 0 0 0.04  0 0.6 0 0 0.3  0 0 1 0 0.9  0 0 0 .65 0"/>
+    </filter>
+    <pattern id="grid" width="72" height="72" patternUnits="userSpaceOnUse">
+      <path d="M72 0H0V72" fill="none" stroke="#a9d8ff" stroke-opacity=".035" stroke-width="1"/>
+      <circle cx="0" cy="0" r="1.5" fill="#9de9ff" fill-opacity=".12"/>
+    </pattern>
+    <linearGradient id="fade" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#07101f" stop-opacity=".95"/>
+      <stop offset=".62" stop-color="#07101f" stop-opacity=".28"/>
+      <stop offset="1" stop-color="#07101f" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="2560" height="1440" fill="url(#base)"/>
+  <rect width="2560" height="1440" fill="url(#aura)"/>
+  <rect width="2560" height="1440" fill="url(#grid)"/>
+  <path d="M1550 -160 2790 1080M1370 20 2610 1260M1750 -340 2990 900" fill="none" stroke="#77d8ff" stroke-opacity=".08" stroke-width="2"/>
+  <path d="M2560 170C2180 240 1915 400 1750 640c-130 188-165 407-360 800" fill="none" stroke="#48b7f5" stroke-opacity=".16" stroke-width="2"/>
+  <path d="M2560 320C2260 370 2055 520 1925 730c-112 179-152 381-305 710" fill="none" stroke="#526fff" stroke-opacity=".19" stroke-width="2"/>
+  <circle cx="1990" cy="650" r="390" fill="#22b9f2" opacity=".12" filter="url(#glow)"/>
+  <g transform="translate(1620 268)" opacity=".34">
+    <path d="M74 0 420 346 346 420 0 74Z" fill="url(#markMuted)"/>
+    <path d="M346 0 420 74 74 420 0 346Z" fill="url(#mark)"/>
+    <path d="M210 137 283 210 210 283 137 210Z" fill="#0d1b34"/>
+    <path d="M210 162 258 210 210 258 162 210Z" fill="#72eff0" opacity=".92"/>
+  </g>
+  <path d="M0 900c360-178 709-187 1075-65 224 75 361 88 527 13" fill="none" stroke="#4f8dd3" stroke-opacity=".08" stroke-width="2"/>
+  <rect x="0" y="0" width="1600" height="1440" fill="url(#fade)"/>
+  <g font-family="Noto Sans, DejaVu Sans, sans-serif" fill="#f2f7ff">
+    <text x="168" y="1106" font-size="74" font-weight="700" letter-spacing="12">OMINX</text>
+    <rect x="170" y="1145" width="112" height="5" rx="3" fill="#4de0ed"/>
+    <text x="170" y="1205" font-size="22" font-weight="400" letter-spacing="4" fill="#aac0df">A DESKTOP BUILT AROUND YOU</text>
+  </g>
+</svg>

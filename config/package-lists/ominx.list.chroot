@@ -1,0 +1,105 @@
+# OminX desktop and daily-use software for Debian 13 (Trixie), amd64.
+# Debian's contrib and non-free components are enabled for Steam and firmware.
+
+# Familiar desktop shell, X11 session, login manager, and networking
+cinnamon-desktop-environment
+xserver-xorg
+lightdm
+lightdm-gtk-greeter
+network-manager
+network-manager-gnome
+nemo-fileroller
+xdg-user-dirs
+xdg-utils
+
+# Store / package management
+flatpak
+gnome-software
+gnome-software-plugin-deb
+gnome-software-plugin-flatpak
+packagekit
+synaptic
+
+# Audio, Bluetooth, displays and common peripherals
+pipewire
+pipewire-audio
+pipewire-pulse
+wireplumber
+pavucontrol
+bluez
+blueman
+libspa-0.2-bluetooth
+cups
+system-config-printer
+ipp-usb
+simple-scan
+sane-airscan
+fwupd
+
+# Hardware enablement: open drivers, firmware, Wi-Fi and CPU microcode
+firmware-linux-nonfree
+firmware-iwlwifi
+firmware-realtek
+firmware-brcm80211
+firmware-intel-graphics
+firmware-sof-signed
+firmware-nvidia-gsp
+nvidia-detect
+intel-microcode
+amd64-microcode
+xserver-xorg-video-all
+mesa-utils
+mesa-vulkan-drivers
+mesa-va-drivers
+mesa-vdpau-drivers
+libvulkan1
+vulkan-tools
+intel-media-va-driver
+
+# Browser, office, mail, media, creative tools, and common formats
+firefox-esr
+thunderbird
+libreoffice
+libreoffice-gtk3
+vlc
+gimp
+inkscape
+deja-dup
+geany
+file-roller
+7zip
+unzip
+zip
+unrar-free
+fonts-noto-core
+fonts-noto-color-emoji
+fonts-liberation
+fonts-crosextra-carlito
+fonts-crosextra-caladea
+
+# File sharing, remote access, system tools, and basic security controls
+smbclient
+remmina
+gnome-disk-utility
+gparted
+gnome-system-monitor
+gnome-calculator
+gufw
+ufw
+orca
+
+# Performance: compressed RAM and per-game performance tuning
+systemd-zram-generator
+gamemode
+
+# OminX first-run application runtime and optional Protontricks installer
+python3
+python3-gi
+gir1.2-gtk-3.0
+pipx
+python3-venv
+zenity
+curl
+wget
+git
+build-essential
