@@ -92,6 +92,21 @@ jobs:
           cp "$SERIAL_LOG" ominx-serial.log 2>/dev/null || true
           cp "$QEMU_LOG" ominx-qemu.log 2>/dev/null || true
 
+      - name: Publish a small preview thumbnail for inspection
+        run: |
+          "$RUNNER_TEMP/vnc-venv/bin/python" - <<'PY'
+          from base64 import b64encode
+          from io import BytesIO
+          from PIL import Image
+
+          image = Image.open("ominx-boot-preview.png").convert("RGB")
+          image.thumbnail((320, 240), Image.Resampling.LANCZOS)
+          output = BytesIO()
+          image.save(output, format="JPEG", quality=35, optimize=True)
+          thumbnail = b64encode(output.getvalue()).decode("ascii")
+          print(f"::notice title=OminX desktop thumbnail::{thumbnail}")
+          PY
+
       - name: Upload preview and emulator logs
         if: always()
         uses: actions/upload-artifact@v4
