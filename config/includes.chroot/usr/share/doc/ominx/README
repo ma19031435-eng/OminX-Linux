@@ -9,6 +9,15 @@ The OminX shell theme provides a familiar bottom taskbar, centered O Start
 button, pinned and grouped apps, searchable menu, system tray, and common
 desktop icons. It uses original OminX styling and artwork with Linux components.
 
+Nemo (Files) opens in a details/list view with folders first, double-click
+navigation, a Places sidebar, breadcrumb path, toolbar search/new-folder actions,
+and a status bar. Home, Computer, Trash, mounted volumes, and Network icons are
+available on the desktop. Familiar shortcuts include Super+E for Files,
+Super+R for Run, Super+I for Settings, Ctrl+Shift+Esc for System Monitor,
+Super+D for Show Desktop, Super+L to lock, Super+Tab for the window overview,
+Super+Left/Right to tile, Super+Up/Down to maximize/restore, and Super+Shift+S
+for an area screenshot. Super is usually the Windows-logo key on PC keyboards.
+
 Start with the OminX Welcome application. Compatibility and performance notes
 are in compatibility.md and performance.md. Full build instructions are in the
 project README at:

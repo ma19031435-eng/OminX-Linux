@@ -8,6 +8,10 @@ This repository contains the **live-build recipe** and source assets, not a preb
 
 OminX uses Cinnamon to provide a familiar desktop layout: a bottom taskbar with a centered O Start button, pinned and grouped app icons, a searchable Start menu, system tray and clock on the right, right-side window controls, and common desktop icons. Original OminX blue/cyan shell styling is designed for people moving from Windows, while using Linux components and original artwork—not Microsoft code, Windows binaries, or copied Windows artwork. The desktop also provides workspaces, file search, notifications, settings, software installation and updates, networking, Bluetooth, printing/scanning, backups, firewall controls, accessibility tools, and remote desktop access.
 
+Nemo (Files) is configured for a familiar file-browser workflow: double-click to open, a details/list view sorted by name with folders first, a Places sidebar for Home and common folders, mounted devices and network locations, breadcrumb navigation, search, a new-folder action, and a status bar. Home, Computer, Trash, mounted volumes, and Network icons are enabled on the desktop. These use Nemo's native Linux behavior and are not a copy of Windows Explorer.
+
+Common keyboard workflows are included: **Super+E** opens Files, **Super+R** opens the Run dialog, **Super+I** opens System Settings, **Ctrl+Shift+Esc** opens System Monitor, **Super+D** shows the desktop, **Super+L** locks the session, **Super+Tab** opens the window overview, **Super+Left/Right** tiles a window, **Super+Up/Down** maximizes or restores it, and **Super+Shift+S** selects an area for a screenshot. Super is the key marked with the computer manufacturer's logo (often the Windows-logo key). Shortcuts are provided by Cinnamon and can be changed in Keyboard settings.
+
 Included applications cover everyday work and system care:
 
 - **Software centers:** GNOME Software manages Debian packages and Flatpak apps; the Flathub catalog is configured. Synaptic is included as an advanced package manager.

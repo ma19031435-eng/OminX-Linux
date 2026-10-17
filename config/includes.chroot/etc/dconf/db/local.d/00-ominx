@@ -32,8 +32,97 @@ titlebar-font='Noto Sans Bold 10'
 
 [org/nemo/desktop]
 show-desktop-icons=true
+use-desktop-grid=true
 home-icon-visible=true
 computer-icon-visible=true
 trash-icon-visible=true
 volumes-visible=true
 network-icon-visible=true
+
+# Nemo is arranged like a modern Explorer-style file browser: places and
+# devices at the left, breadcrumb navigation above a details list, and a
+# status bar below. All behavior and artwork remain native Linux components.
+[org/nemo/preferences]
+always-use-browser=true
+click-policy='double'
+default-folder-viewer='list-view'
+default-sort-order='name'
+default-sort-in-reverse-order=false
+sort-directories-first=true
+sort-favorites-first=true
+show-hidden-files=false
+show-location-entry=false
+show-directory-item-counts='local-only'
+show-image-thumbnails='local-only'
+show-full-path-titles=false
+show-bookmarks-in-to-menus=true
+show-advanced-permissions=false
+start-with-dual-pane=false
+executable-text-activation='ask'
+enable-delete=true
+confirm-move-to-trash=false
+confirm-trash=true
+date-format='locale'
+tabs-open-position='after-current-tab'
+show-previous-icon-toolbar=true
+show-next-icon-toolbar=true
+show-up-icon-toolbar=true
+show-reload-icon-toolbar=true
+show-edit-icon-toolbar=true
+show-home-icon-toolbar=true
+show-computer-icon-toolbar=true
+show-search-icon-toolbar=true
+show-new-folder-icon-toolbar=true
+show-icon-view-icon-toolbar=true
+show-list-view-icon-toolbar=true
+show-compact-view-icon-toolbar=true
+
+[org/nemo/window-state]
+sidebar-width=200
+start-with-toolbar=true
+start-with-location-bar=true
+start-with-status-bar=true
+start-with-sidebar=true
+start-with-menu-bar=false
+side-pane-view='places'
+my-computer-expanded=true
+bookmarks-expanded=true
+devices-expanded=true
+network-expanded=true
+
+# Familiar keyboard workflows, implemented with Cinnamon and Linux apps.
+[org/cinnamon/desktop/keybindings]
+custom-list=['custom0', 'custom1', 'custom2']
+
+[org/cinnamon/desktop/keybindings/custom-keybindings/custom0]
+name='Open Files'
+command='nemo'
+binding=['<Super>e']
+
+[org/cinnamon/desktop/keybindings/custom-keybindings/custom1]
+name='Open System Settings'
+command='cinnamon-settings'
+binding=['<Super>i']
+
+[org/cinnamon/desktop/keybindings/custom-keybindings/custom2]
+name='Open System Monitor'
+command='gnome-system-monitor'
+binding=['<Control><Shift>Escape']
+
+[org/cinnamon/desktop/keybindings/wm]
+panel-run-dialog=['<Alt>F2', '<Super>r']
+show-desktop=['<Super>d']
+switch-to-workspace-down=['<Super>Tab']
+switch-to-workspace-up=['<Super><Control>Up']
+maximize=['<Super>Up']
+unmaximize=['<Super>Down']
+push-tile-left=['<Super>Left']
+push-tile-right=['<Super>Right']
+
+[org/cinnamon/desktop/keybindings/media-keys]
+screensaver=['<Super>l']
+area-screenshot=['<Shift>Print', '<Super><Shift>s']
+
+[org/cinnamon/muffin]
+edge-tiling=true
+tile-maximize=true

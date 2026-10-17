@@ -112,7 +112,7 @@ class WelcomeWindow(Gtk.Window):
         grid.attach(
             self._card(
                 "Everyday apps",
-                "Browse the web, write documents, manage files, and play media. More apps are available in Software.",
+                "Browse the web, write documents, manage files, and play media. Press Super+E for Files; find more apps in Software.",
                 "Browse apps",
                 self._open_store,
             ),
@@ -149,7 +149,7 @@ class WelcomeWindow(Gtk.Window):
         grid.attach(
             self._card(
                 "Make it yours",
-                "Configure displays, sound, network, Bluetooth, printers, accounts, and more.",
+                "Configure displays, sound, network, Bluetooth, printers, accounts, and more. Press Super+I for Settings.",
                 "Open system settings",
                 lambda: self._launch("cinnamon-settings"),
                 secondary=True,
@@ -162,7 +162,7 @@ class WelcomeWindow(Gtk.Window):
 
         bottom = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
         note = Gtk.Label(
-            label="Zstd zram compresses less-active memory pages; apps stay running. Game Mode is per-game and results vary."
+            label="Quick keys: Super+R for Run, Ctrl+Shift+Esc for System Monitor, Super+L to lock. Zstd zram compresses less-active pages; apps stay running. Game Mode is per-game and results vary."
         )
         note.set_xalign(0)
         note.set_line_wrap(True)

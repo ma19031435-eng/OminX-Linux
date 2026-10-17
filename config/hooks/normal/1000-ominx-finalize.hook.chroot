@@ -34,6 +34,72 @@ python3 - <<'PY'
 import json
 from pathlib import Path
 
+import gi
+
+gi.require_version("Gio", "2.0")
+from gi.repository import Gio
+
+# Fail the image build rather than shipping defaults that a package update
+# silently drops. Inspecting schemas needs no running desktop session.
+required_schema_keys = {
+    "org.nemo.preferences": {
+        "always-use-browser",
+        "click-policy",
+        "default-folder-viewer",
+        "default-sort-order",
+        "sort-directories-first",
+        "show-location-entry",
+        "show-directory-item-counts",
+        "show-image-thumbnails",
+        "show-home-icon-toolbar",
+        "show-computer-icon-toolbar",
+        "show-new-folder-icon-toolbar",
+    },
+    "org.nemo.window-state": {
+        "sidebar-width",
+        "start-with-toolbar",
+        "start-with-location-bar",
+        "start-with-status-bar",
+        "start-with-sidebar",
+        "start-with-menu-bar",
+        "side-pane-view",
+        "my-computer-expanded",
+        "bookmarks-expanded",
+        "devices-expanded",
+        "network-expanded",
+    },
+    "org.nemo.desktop": {"use-desktop-grid"},
+    "org.cinnamon.desktop.keybindings": {"custom-list"},
+    "org.cinnamon.desktop.keybindings.custom-keybinding": {
+        "name",
+        "command",
+        "binding",
+    },
+    "org.cinnamon.desktop.keybindings.wm": {
+        "panel-run-dialog",
+        "show-desktop",
+        "switch-to-workspace-down",
+        "switch-to-workspace-up",
+        "maximize",
+        "unmaximize",
+        "push-tile-left",
+        "push-tile-right",
+    },
+    "org.cinnamon.desktop.keybindings.media-keys": {
+        "screensaver",
+        "area-screenshot",
+    },
+    "org.cinnamon.muffin": {"edge-tiling", "tile-maximize"},
+}
+schema_source = Gio.SettingsSchemaSource.get_default()
+for schema_id, expected_keys in required_schema_keys.items():
+    schema = schema_source.lookup(schema_id, True)
+    if schema is None:
+        raise SystemExit(f"Missing GSettings schema {schema_id}")
+    missing = sorted(expected_keys - set(schema.list_keys()))
+    if missing:
+        raise SystemExit(f"Missing keys in GSettings schema {schema_id}: {', '.join(missing)}")
+
 applets = Path("/usr/share/cinnamon/applets")
 for uuid in ("menu@cinnamon.org", "grouped-window-list@cinnamon.org"):
     applet_dir = applets / uuid
