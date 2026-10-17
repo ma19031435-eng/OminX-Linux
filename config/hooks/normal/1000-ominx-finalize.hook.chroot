@@ -58,7 +58,13 @@ for stylesheet in (
         raise SystemExit(f"Could not load OminX GTK stylesheet: {stylesheet}")
 PY
 
-gjs -c 'const St = imports.gi.St; const theme = new St.Theme({}); for (const stylesheet of ["/usr/share/themes/OminX/cinnamon/cinnamon.css", "/usr/share/cinnamon/applets/ominx-start@ominx/stylesheet.css"]) { if (!theme.load_stylesheet(stylesheet)) throw new Error("Could not load Cinnamon stylesheet: " + stylesheet); }'
+st_typelib=$(find /usr/lib -name 'St-1.0.typelib' -print -quit)
+if [ -z "$st_typelib" ]; then
+    echo "Cinnamon's St introspection typelib was not found under /usr/lib" >&2
+    exit 1
+fi
+GI_TYPELIB_PATH="$(dirname "$st_typelib")${GI_TYPELIB_PATH:+:$GI_TYPELIB_PATH}" \
+    gjs -c 'const St = imports.gi.St; const theme = new St.Theme({}); for (const stylesheet of ["/usr/share/themes/OminX/cinnamon/cinnamon.css", "/usr/share/cinnamon/applets/ominx-start@ominx/stylesheet.css"]) { if (!theme.load_stylesheet(stylesheet)) throw new Error("Could not load Cinnamon stylesheet: " + stylesheet); }'
 
 # Validate Cinnamon applet defaults against the version actually installed in
 # this image so a package update cannot silently discard the OminX taskbar.
