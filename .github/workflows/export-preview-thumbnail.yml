@@ -43,8 +43,8 @@ jobs:
           import sys
           from PIL import Image
           image = Image.open(sys.argv[1]).convert("RGB")
-          image.thumbnail((320, 200), Image.Resampling.LANCZOS)
-          image.save("ominx-boot-preview-thumbnail.jpg", "JPEG", quality=45, optimize=True)
+          image.thumbnail((160, 100), Image.Resampling.LANCZOS)
+          image.save("ominx-boot-preview-thumbnail.jpg", "JPEG", quality=30, optimize=True)
           print(f"Thumbnail: {image.width}x{image.height}")
           PY
           printf 'OMINX_PREVIEW_THUMBNAIL_BASE64_BEGIN\n'
