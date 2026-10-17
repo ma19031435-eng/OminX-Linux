@@ -206,8 +206,8 @@ if any(".set_group(" in source for source in (store_source, settings_source)):
     raise SystemExit("GTK3 navigation must not call the unsupported ToggleButton.set_group() API")
 if "_desktop_app_info(product[\"desktop_id\"])" not in store_source or "except TypeError:" not in store_source:
     raise SystemExit("OminX Store must tolerate catalog apps whose desktop entries are not installed")
-if "St-1.0.typelib" not in hook or "GI_TYPELIB_PATH=" not in hook:
-    raise SystemExit("Cinnamon stylesheet validation must search the installed St typelib directory")
+if any(typelib not in hook for typelib in ("St-1.0.typelib", "Meta-0.typelib", "GI_TYPELIB_PATH=")):
+    raise SystemExit("Cinnamon stylesheet validation must search the installed St and Meta typelib directories")
 if "gnome-software" not in store_source or "--search=" not in store_source or 'mode="updates"' not in store_source:
     raise SystemExit("OminX Store must forward catalog search, library, and update actions to the real backend")
 registered_mimes = {
