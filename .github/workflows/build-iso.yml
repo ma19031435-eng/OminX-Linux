@@ -40,6 +40,17 @@ jobs:
       - name: Validate OminX configuration
         run: make check
 
+      - name: Stamp source revision into the image
+        run: |
+          mkdir -p config/includes.chroot/usr/share/doc/ominx
+          cat > config/includes.chroot/usr/share/doc/ominx/build-info.txt <<EOF
+          OminX automated ISO build
+          Source commit: ${GITHUB_SHA}
+          Branch: ${GITHUB_REF_NAME}
+          Workflow run: ${GITHUB_RUN_ID}
+          Built at (UTC): $(date -u +'%Y-%m-%dT%H:%M:%SZ')
+          EOF
+
       - name: Build ISO in a Debian 13 container
         run: |
           set -o pipefail
@@ -88,6 +99,8 @@ jobs:
           sha256sum -c SHA256SUMS
           echo "## OminX installable ISO" >> "$GITHUB_STEP_SUMMARY"
           echo "- Base: Debian 13 Trixie amd64" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Source commit: $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Workflow run: $GITHUB_RUN_ID" >> "$GITHUB_STEP_SUMMARY"
           echo "- Size: $(du -h live-image-amd64.hybrid.iso | cut -f1)" >> "$GITHUB_STEP_SUMMARY"
           echo "- SHA-256: $(cut -d ' ' -f1 SHA256SUMS)" >> "$GITHUB_STEP_SUMMARY"
           echo "The ISO is available as a workflow artifact." >> "$GITHUB_STEP_SUMMARY"

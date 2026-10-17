@@ -29,6 +29,9 @@ are in compatibility.md and performance.md. Full build instructions are in the
 project README at:
 https://github.com/ma19031435-eng/OminX-Linux
 
+Automated ISO builds include build-info.txt in this directory. It records the
+source commit, GitHub Actions run ID, branch, and UTC build time for that image.
+
 The base system and bundled applications retain their upstream licenses and
 identities. OminX does not include Microsoft code or claim that every Windows
 application is compatible. No universal 50% latency reduction is promised.
