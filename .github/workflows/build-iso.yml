@@ -42,6 +42,7 @@ jobs:
 
       - name: Build ISO in a Debian 13 container
         run: |
+          set -o pipefail
           docker run --privileged --rm \
             --volume "${GITHUB_WORKSPACE}:/workspace" \
             --workdir /workspace \
@@ -54,7 +55,32 @@ jobs:
                 grub-pc-bin grub-efi-amd64-bin isolinux syslinux-common \
                 syslinux-utils debian-archive-keyring
               ./build.sh
-            '
+            ' 2>&1 | tee live-build.log
+
+      - name: Summarize image build failure
+        if: failure()
+        run: |
+          if [[ ! -s live-build.log ]]; then
+            exit 0
+          fi
+          python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          from pathlib import Path
+          lines = Path("live-build.log").read_text(errors="replace").splitlines()
+          print("## OminX image build log tail")
+          print("```text")
+          print("\n".join(lines[-60:]))
+          print("```")
+          PY
+          MESSAGE="$(python3 - <<'PY'
+          from pathlib import Path
+          lines = Path("live-build.log").read_text(errors="replace").splitlines()
+          print(" | ".join(lines[-18:])[:3000])
+          PY
+          )"
+          MESSAGE="${MESSAGE//'%'/'%25'}"
+          MESSAGE="${MESSAGE//$'\r'/'%0D'}"
+          MESSAGE="${MESSAGE//$'\n'/'%0A'}"
+          echo "::error file=live-build.log,line=1,title=ISO build log::$MESSAGE"
 
       - name: Verify ISO and write build summary
         run: |
