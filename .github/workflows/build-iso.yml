@@ -43,12 +43,13 @@ jobs:
           node --check config/includes.chroot/usr/share/cinnamon/applets/ominx-start@ominx/applet.js
 
       - name: Smoke-test OminX GTK apps in Debian 13
+        id: gtk_smoke
         run: |
+          set -o pipefail
           docker run --rm \
             --volume "${GITHUB_WORKSPACE}:/workspace:ro" \
             --volume "${GITHUB_WORKSPACE}/config/includes.chroot/usr/lib/ominx:/usr/lib/ominx:ro" \
             --volume "${GITHUB_WORKSPACE}/config/includes.chroot/usr/share/ominx:/usr/share/ominx:ro" \
-            --volume "${GITHUB_WORKSPACE}/config/includes.chroot/usr/share/icons/hicolor:/usr/share/icons/hicolor:ro" \
             --volume "${GITHUB_WORKSPACE}/config/includes.chroot/usr/share/themes/OminX:/usr/share/themes/OminX:ro" \
             --volume "${GITHUB_WORKSPACE}/config/includes.chroot/usr/local/bin/ominx-store:/usr/local/bin/ominx-store:ro" \
             --volume "${GITHUB_WORKSPACE}/config/includes.chroot/usr/local/bin/ominx-settings:/usr/local/bin/ominx-settings:ro" \
@@ -59,10 +60,32 @@ jobs:
               apt-get install --yes --no-install-recommends \
                 python3-gi gir1.2-gtk-3.0 xvfb xauth \
                 adwaita-icon-theme hicolor-icon-theme fonts-noto-core librsvg2-common
+              mkdir -p /usr/share/icons/hicolor/scalable/apps
+              cp /workspace/config/includes.chroot/usr/share/icons/hicolor/scalable/apps/ominx-*.svg \
+                /usr/share/icons/hicolor/scalable/apps/
               xvfb-run --auto-servernum --server-args="-screen 0 1440x900x24" \
                 env GTK_THEME=OminX GDK_BACKEND=x11 \
                 /usr/bin/python3 /workspace/scripts/smoke-gtk-apps.py
-            '
+            ' 2>&1 | tee gtk-smoke.log
+
+      - name: Summarize GTK smoke failure
+        if: failure() && steps.gtk_smoke.outcome == 'failure'
+        run: |
+          python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          from pathlib import Path
+          lines = Path("gtk-smoke.log").read_text(errors="replace").splitlines()
+          print("## OminX GTK smoke-test log tail")
+          print("```text")
+          print("\n".join(lines[-60:]))
+          print("```")
+          PY
+          python3 - <<'PY'
+          from pathlib import Path
+          lines = Path("gtk-smoke.log").read_text(errors="replace").splitlines()
+          message = " | ".join(lines[-18:])[:3000]
+          message = message.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+          print(f"::error file=gtk-smoke.log,line=1,title=GTK startup smoke test::{message}")
+          PY
 
       - name: Stamp source revision into the image
         run: |
