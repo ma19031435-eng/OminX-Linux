@@ -24,9 +24,39 @@ apt-get install --yes --no-install-recommends \
     libpulse0:i386 \
     libasound2-plugins:i386
 
-# Register OminX's Windows-app handler for double-click and Open With actions.
-desktop-file-validate /usr/share/applications/ominx-windows-app.desktop
+# Validate the native OminX app hubs and the Windows-app handler before the
+# image is finalized. Keep GNOME Software callable as the catalog/install
+# backend, but present OminX Store as the user's software-center entry point.
+desktop-file-edit --set-key=NoDisplay --set-value=true \
+    /usr/share/applications/org.gnome.Software.desktop
+for executable in /usr/local/bin/ominx-store /usr/local/bin/ominx-settings; do
+    test -x "$executable"
+done
+desktop-file-validate \
+    /usr/share/applications/ominx-store.desktop \
+    /usr/share/applications/ominx-settings.desktop \
+    /usr/share/applications/ominx-windows-app.desktop \
+    /usr/local/share/applications/org.gnome.Software.desktop
 update-desktop-database --quiet /usr/share/applications
+update-desktop-database --quiet /usr/local/share/applications
+
+# Parse the shared GTK stylesheet during the image build so a typo cannot
+# silently fall back to stock styling on first launch.
+grep -q '^GtkTheme=OminX$' /usr/share/themes/OminX/index.theme
+python3 - <<'PY'
+import gi
+
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk
+
+for stylesheet in (
+    "/usr/share/ominx/ui/ominx-ui.css",
+    "/usr/share/themes/OminX/gtk-3.0/gtk.css",
+):
+    provider = Gtk.CssProvider()
+    if not provider.load_from_path(stylesheet):
+        raise SystemExit(f"Could not load OminX GTK stylesheet: {stylesheet}")
+PY
 
 # Validate Cinnamon applet defaults against the version actually installed in
 # this image so a package update cannot silently discard the OminX taskbar.
@@ -115,8 +145,15 @@ for uuid in ("menu@cinnamon.org", "grouped-window-list@cinnamon.org"):
             raise SystemExit(f"Missing default override flag for {uuid}:{key}")
 PY
 
-for desktop_id in nemo.desktop firefox-esr.desktop org.gnome.Software.desktop libreoffice-writer.desktop; do
+for desktop_id in nemo.desktop firefox-esr.desktop ominx-store.desktop libreoffice-writer.desktop; do
     test -r "/usr/share/applications/$desktop_id"
+done
+test -r /usr/share/applications/ominx-settings.desktop
+test -r /usr/share/applications/org.gnome.Software.desktop
+test -x /usr/bin/gnome-software
+grep -q '^NoDisplay=true$' /usr/local/share/applications/org.gnome.Software.desktop
+for applet in menu@cinnamon.org expo@cinnamon.org grouped-window-list@cinnamon.org; do
+    test -r "/usr/share/cinnamon/applets/$applet/applet.js"
 done
 
 # Make the official Flathub catalog available in the desktop software center.

@@ -5,9 +5,15 @@ OminX is a Debian 13 (Trixie) amd64 live desktop with Cinnamon, an installer,
 core desktop apps, a Debian/Flatpak software center, Steam/Proton support,
 Wine/Lutris, compressed zram memory, and per-game Feral GameMode.
 
-The OminX shell theme provides a familiar bottom taskbar, centered O Start
-button, pinned and grouped apps, searchable menu, system tray, and common
-desktop icons. It uses original OminX styling and artwork with Linux components.
+The OminX shell theme provides a familiar bottom taskbar arranged as O Start,
+Task View, and pinned/grouped apps, with search, system tray, and common desktop
+icons. It uses original OminX styling and artwork with Linux components.
+
+OminX Store adds a search-led storefront, category navigation, app/game cards,
+Library, and Updates. It delegates real catalog and install tasks to GNOME
+Software's Debian and Flatpak backends. OminX Settings groups native Linux
+controls under familiar System, Devices, Network, Personalization, Apps,
+Accounts, Gaming, Accessibility, Privacy, and Updates headings.
 
 Nemo (Files) opens in a details/list view with folders first, double-click
 navigation, a Places sidebar, breadcrumb path, toolbar search/new-folder actions,

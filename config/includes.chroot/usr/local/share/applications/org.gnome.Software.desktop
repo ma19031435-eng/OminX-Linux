@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=GNOME Software
+GenericName=Software Center
+Comment=OminX Store catalog and installation backend
+Exec=gnome-software
+Icon=org.gnome.Software
+Terminal=false
+NoDisplay=true

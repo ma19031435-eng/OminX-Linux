@@ -4,7 +4,7 @@
     "default": [
       "nemo.desktop",
       "firefox-esr.desktop",
-      "org.gnome.Software.desktop",
+      "ominx-store.desktop",
       "libreoffice-writer.desktop"
     ]
   },

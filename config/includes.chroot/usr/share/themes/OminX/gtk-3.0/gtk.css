@@ -1,0 +1,80 @@
+/* OminX GTK3 theme: Adwaita dark controls with original OminX colors and shape. */
+@import url("resource:///org/gtk/libgtk/theme/Adwaita/gtk-contained-dark.css");
+
+window, .background {
+  background-color: #0a111d;
+  color: #eaf2fc;
+}
+
+headerbar, .titlebar {
+  background-color: #0d1725;
+  color: #f2f7ff;
+  border-bottom: 1px solid #243850;
+  box-shadow: none;
+}
+
+button {
+  background-image: none;
+  background-color: #19283b;
+  color: #e8f1ff;
+  border: 1px solid #304962;
+  border-radius: 8px;
+  box-shadow: none;
+  padding: 6px 10px;
+}
+
+button:hover {
+  background-color: #243a56;
+  color: #ffffff;
+  border-color: #3a6283;
+}
+
+button:active, button:checked {
+  background-color: #173c5b;
+  color: #ffffff;
+}
+
+button.suggested-action, button.suggested-action:hover {
+  background-color: #176fdb;
+  color: #ffffff;
+  border-color: #3186e8;
+}
+
+entry, spinbutton, .view {
+  background-color: #101b2a;
+  color: #eaf2fc;
+  border: 1px solid #2e425c;
+  border-radius: 7px;
+  caret-color: #6bd6e7;
+}
+
+entry:focus, spinbutton:focus {
+  background-color: #142338;
+  border-color: #4dc6df;
+}
+
+treeview, list, row {
+  background-color: #0d1725;
+  color: #eaf2fc;
+}
+
+treeview:selected, row:selected {
+  background-color: #1b5a88;
+  color: #ffffff;
+}
+
+menubar, menu, popover {
+  background-color: #101b2a;
+  color: #eaf2fc;
+  border: 1px solid #2b405a;
+}
+
+scrollbar slider {
+  background-color: #405b79;
+  border-radius: 6px;
+}
+
+selection {
+  background-color: #176fdb;
+  color: #ffffff;
+}

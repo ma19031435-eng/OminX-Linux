@@ -1,5 +1,6 @@
 [Desktop Entry]
 Type=X-GNOME-Metatheme
 Name=OminX
-Comment=Original OminX Cinnamon desktop theme
+Comment=Original OminX Cinnamon and GTK desktop theme
 Encoding=UTF-8
+GtkTheme=OminX

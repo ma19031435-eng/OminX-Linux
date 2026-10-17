@@ -5,7 +5,7 @@ set -eu
 ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 cd "$ROOT"
 
-shell_files="auto/config build.sh config/hooks/normal/1000-ominx-finalize.hook.chroot config/includes.chroot/usr/local/bin/ominx-welcome config/includes.chroot/usr/local/bin/ominx-protontricks config/includes.chroot/usr/local/bin/ominx-open-windows"
+shell_files="auto/config build.sh config/hooks/normal/1000-ominx-finalize.hook.chroot config/includes.chroot/usr/local/bin/ominx-welcome config/includes.chroot/usr/local/bin/ominx-protontricks config/includes.chroot/usr/local/bin/ominx-open-windows config/includes.chroot/usr/local/bin/ominx-store config/includes.chroot/usr/local/bin/ominx-settings"
 for file in $shell_files; do
     sh -n "$file"
 done
@@ -22,7 +22,8 @@ from pathlib import Path
 root = Path.cwd()
 config_root = root / "config/includes.chroot"
 
-ast.parse((config_root / "usr/lib/ominx/welcome.py").read_text(encoding="utf-8"))
+for python_app in ("welcome.py", "store.py", "settings.py", "ui.py"):
+    ast.parse((config_root / "usr/lib/ominx" / python_app).read_text(encoding="utf-8"))
 for svg in config_root.rglob("*.svg"):
     ET.parse(svg)
 
@@ -30,10 +31,13 @@ shell_defaults = (config_root / "etc/dconf/db/local.d/00-ominx").read_text(encod
 for required_setting in (
     "[org/cinnamon/theme]",
     "name='OminX'",
-    "gtk-theme='Adwaita-dark'",
+    "gtk-theme='OminX'",
     "panel1:center:0:menu@cinnamon.org:0",
-    "panel1:center:1:grouped-window-list@cinnamon.org:1",
+    "panel1:center:1:expo@cinnamon.org:14",
+    "panel1:center:2:grouped-window-list@cinnamon.org:1",
+    "favorite-apps=['nemo.desktop', 'firefox-esr.desktop', 'ominx-store.desktop', 'libreoffice-writer.desktop', 'ominx-settings.desktop']",
     "button-layout=':minimize,maximize,close'",
+    "command='ominx-settings'",
     "home-icon-visible=true",
     "computer-icon-visible=true",
     "[org/nemo/preferences]",
@@ -78,7 +82,7 @@ window_list_defaults = json.loads(
 expected_pins = [
     "nemo.desktop",
     "firefox-esr.desktop",
-    "org.gnome.Software.desktop",
+    "ominx-store.desktop",
     "libreoffice-writer.desktop",
 ]
 if window_list_defaults["pinned-apps"]["default"] != expected_pins:
@@ -86,6 +90,8 @@ if window_list_defaults["pinned-apps"]["default"] != expected_pins:
 for app_id in expected_pins:
     if f"'{app_id}'" not in shell_defaults:
         raise SystemExit(f"The Start menu favorite list is missing {app_id}")
+if "'ominx-settings.desktop'" not in shell_defaults:
+    raise SystemExit("The Start menu favorites are missing OminX Settings")
 
 shell_theme = config_root / "usr/share/themes/OminX/cinnamon/cinnamon.css"
 theme_css = shell_theme.read_text(encoding="utf-8")
@@ -94,6 +100,20 @@ if theme_css.count("{") != theme_css.count("}"):
 for selector in ("#panel", ".window-list-item-box", ".appmenu-background .popup-menu-content"):
     if selector not in theme_css:
         raise SystemExit(f"OminX Cinnamon theme is missing {selector}")
+
+ui_css = (config_root / "usr/share/ominx/ui/ominx-ui.css").read_text(encoding="utf-8")
+if ui_css.count("{") != ui_css.count("}"):
+    raise SystemExit("OminX Store and Settings stylesheet has unbalanced braces")
+gtk_css_path = config_root / "usr/share/themes/OminX/gtk-3.0/gtk.css"
+gtk_css = gtk_css_path.read_text(encoding="utf-8")
+theme_index = (config_root / "usr/share/themes/OminX/index.theme").read_text(encoding="utf-8")
+if "GtkTheme=OminX" not in theme_index:
+    raise SystemExit("OminX GTK theme is not registered")
+if gtk_css.count("{") != gtk_css.count("}") or "Adwaita/gtk-contained-dark.css" not in gtk_css:
+    raise SystemExit("OminX GTK3 theme must extend the installed dark base with balanced CSS")
+for selector in (".ominx-sidebar", ".ominx-hero", ".ominx-card", ".ominx-primary"):
+    if selector not in ui_css:
+        raise SystemExit(f"OminX app hub styling is missing {selector}")
 
 required = {
     "cinnamon-desktop-environment",
@@ -113,8 +133,11 @@ required = {
     "lutris",
     "zenity",
     "mesa-vulkan-drivers:i386",
+    "gnome-software",
     "gnome-software-plugin-deb",
     "gnome-software-plugin-flatpak",
+    "python3-gi",
+    "gir1.2-gtk-3.0",
     "systemd-zram-generator",
     "gamemode",
     "orca",
@@ -127,10 +150,27 @@ if missing:
     raise SystemExit("Missing required image components: " + ", ".join(missing))
 
 applications = config_root / "usr/share/applications"
+store_entry = applications / "ominx-store.desktop"
+settings_entry = applications / "ominx-settings.desktop"
 handler_entry = applications / "ominx-windows-app.desktop"
 mime_defaults = applications / "mimeapps.list"
+store_text = store_entry.read_text(encoding="utf-8")
+settings_text = settings_entry.read_text(encoding="utf-8")
+backend_override = (config_root / "usr/local/share/applications/org.gnome.Software.desktop").read_text(encoding="utf-8")
 handler_text = handler_entry.read_text(encoding="utf-8")
 mime_defaults_text = mime_defaults.read_text(encoding="utf-8")
+if "Exec=ominx-store" not in store_text or "ominx-store.svg" not in store_text:
+    raise SystemExit("OminX Store must have a searchable desktop launcher and original icon")
+if "Exec=ominx-settings" not in settings_text or "ominx-settings.svg" not in settings_text:
+    raise SystemExit("OminX Settings must have a desktop launcher and original icon")
+if "NoDisplay=true" not in backend_override or "Exec=gnome-software" not in backend_override:
+    raise SystemExit("GNOME Software should remain available as the hidden OminX Store backend")
+for launcher in ("ominx-store", "ominx-settings"):
+    if not os.access(config_root / "usr/local/bin" / launcher, os.X_OK):
+        raise SystemExit(f"{launcher} must be executable")
+store_source = (config_root / "usr/lib/ominx/store.py").read_text(encoding="utf-8")
+if "gnome-software" not in store_source or "--search=" not in store_source or 'mode="updates"' not in store_source:
+    raise SystemExit("OminX Store must forward catalog search, library, and update actions to the real backend")
 registered_mimes = {
     "application/x-msdos-program",
     "application/x-ms-dos-executable",
@@ -156,8 +196,15 @@ skeleton_mime_defaults = (config_root / "etc/skel/.config/mimeapps.list").read_t
 for mime in registered_mimes:
     if f"{mime}=ominx-windows-app.desktop;" not in skeleton_mime_defaults:
         raise SystemExit(f"New users will not get the OminX Windows app default for {mime}")
-if "desktop-file-validate /usr/share/applications/ominx-windows-app.desktop" not in hook:
-    raise SystemExit("The image hook must validate the OminX Windows app desktop entry")
+for desktop_id in ("ominx-store.desktop", "ominx-settings.desktop", "ominx-windows-app.desktop"):
+    if f"/usr/share/applications/{desktop_id}" not in hook:
+        raise SystemExit(f"The image hook must validate {desktop_id}")
+if "/usr/local/share/applications/org.gnome.Software.desktop" not in hook:
+    raise SystemExit("The image hook must validate the OminX Store backend launcher override")
+if "desktop-file-edit --set-key=NoDisplay --set-value=true" not in hook:
+    raise SystemExit("GNOME Software should be hidden from the app menu behind OminX Store")
+if "desktop-file-validate" not in hook:
+    raise SystemExit("The image hook must validate desktop entries before packaging")
 if "update-desktop-database --quiet /usr/share/applications" not in hook:
     raise SystemExit("The image hook must refresh desktop application MIME registrations")
 

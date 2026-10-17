@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="OminX Store">
+  <defs>
+    <linearGradient id="surface" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1b3b61"/>
+      <stop offset="1" stop-color="#0b1728"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#9af6ee"/>
+      <stop offset=".52" stop-color="#43cee5"/>
+      <stop offset="1" stop-color="#5284ff"/>
+    </linearGradient>
+  </defs>
+  <rect x="24" y="24" width="464" height="464" rx="128" fill="url(#surface)"/>
+  <rect x="25" y="25" width="462" height="462" rx="127" fill="none" stroke="#a9dcff" stroke-opacity=".22" stroke-width="2"/>
+  <path d="M142 210h228l-18 190H160z" fill="#142b46" stroke="url(#accent)" stroke-width="18" stroke-linejoin="round"/>
+  <path d="M198 213v-28a69 69 0 0 1 138 0v28" fill="none" stroke="#d4f8ff" stroke-width="18" stroke-linecap="round"/>
+  <path d="M257 257a54 54 0 1 0 47 81" fill="none" stroke="url(#accent)" stroke-width="19" stroke-linecap="round"/>
+  <path d="M299 320h34" fill="none" stroke="#e4fffc" stroke-width="13" stroke-linecap="round"/>
+</svg>

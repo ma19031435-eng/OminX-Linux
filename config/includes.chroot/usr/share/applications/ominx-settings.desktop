@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=OminX Settings
+GenericName=Desktop Settings
+Comment=Personalize your OminX desktop and devices
+Exec=ominx-settings
+Icon=/usr/share/icons/hicolor/scalable/apps/ominx-settings.svg
+Terminal=false
+Categories=Settings;X-GNOME-SystemSettings;
+Keywords=system;display;network;personalization;settings;devices;
+StartupNotify=true

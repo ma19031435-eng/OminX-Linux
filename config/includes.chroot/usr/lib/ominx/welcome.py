@@ -112,7 +112,7 @@ class WelcomeWindow(Gtk.Window):
         grid.attach(
             self._card(
                 "Everyday apps",
-                "Browse the web, write documents, manage files, and play media. Press Super+E for Files; find more apps in Software.",
+                "Browse the web, write documents, manage files, and play media. Press Super+E for Files; find more apps in OminX Store.",
                 "Browse apps",
                 self._open_store,
             ),
@@ -151,7 +151,7 @@ class WelcomeWindow(Gtk.Window):
                 "Make it yours",
                 "Configure displays, sound, network, Bluetooth, printers, accounts, and more. Press Super+I for Settings.",
                 "Open system settings",
-                lambda: self._launch("cinnamon-settings"),
+                lambda: self._launch("ominx-settings"),
                 secondary=True,
             ),
             1,
@@ -273,7 +273,7 @@ class WelcomeWindow(Gtk.Window):
             self._show_message("Could not open app", str(error))
 
     def _open_store(self) -> None:
-        self._launch("gnome-software")
+        self._launch("ominx-store")
 
     def _open_protontricks(self, _button) -> None:
         search_path = os.environ.get("PATH", "") + os.pathsep + "/usr/games:/usr/local/games"
