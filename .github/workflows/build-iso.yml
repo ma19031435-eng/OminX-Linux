@@ -37,19 +37,24 @@ jobs:
           fi
           df -h /
 
-      - name: Install ISO build dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install --yes --no-install-recommends \
-            live-build debootstrap xorriso squashfs-tools dosfstools mtools \
-            grub-pc-bin grub-efi-amd64-bin isolinux syslinux-common \
-            syslinux-utils debian-archive-keyring
-
       - name: Validate OminX configuration
         run: make check
 
-      - name: Build installable ISO
-        run: sudo ./build.sh
+      - name: Build ISO in a Debian 13 container
+        run: |
+          docker run --privileged --rm \
+            --volume "${GITHUB_WORKSPACE}:/workspace" \
+            --workdir /workspace \
+            debian:trixie \
+            sh -ec '
+              export DEBIAN_FRONTEND=noninteractive
+              apt-get update
+              apt-get install --yes --no-install-recommends \
+                live-build debootstrap xorriso squashfs-tools dosfstools mtools \
+                grub-pc-bin grub-efi-amd64-bin isolinux syslinux-common \
+                syslinux-utils debian-archive-keyring
+              ./build.sh
+            '
 
       - name: Verify ISO and write build summary
         run: |
