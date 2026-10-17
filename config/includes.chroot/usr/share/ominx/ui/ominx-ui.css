@@ -114,4 +114,4 @@ label { color: #eaf2fc; }
 }
 .ominx-flat-button:hover { background-color: #16253a; color: #ffffff; }
 .ominx-divider { background-color: #25384e; min-height: 1px; }
-entry, searchentry { selection-background-color: #176fdb; }
+selection { background-color: #176fdb; color: #ffffff; }

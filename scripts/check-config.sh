@@ -114,6 +114,8 @@ if gtk_css.count("{") != gtk_css.count("}") or "Adwaita/gtk-contained-dark.css" 
 for selector in (".ominx-sidebar", ".ominx-hero", ".ominx-card", ".ominx-primary"):
     if selector not in ui_css:
         raise SystemExit(f"OminX app hub styling is missing {selector}")
+if "selection-background-color" in ui_css:
+    raise SystemExit("OminX app hub CSS must use GTK3 CSS properties")
 
 required = {
     "cinnamon-desktop-environment",
