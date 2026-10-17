@@ -12,7 +12,7 @@ on:
         description: Successful build-iso run ID containing the ISO artifact
         required: true
         type: string
-        default: "39011517168"
+        default: "39022295266"
 
 permissions:
   actions: read
@@ -28,7 +28,7 @@ jobs:
       - name: Download the installable ISO artifact
         uses: actions/download-artifact@v4
         with:
-          run-id: ${{ inputs.source_run_id || '39011517168' }}
+          run-id: ${{ inputs.source_run_id || '39022295266' }}
           repository: ${{ github.repository }}
           github-token: ${{ github.token }}
           path: preview-artifacts
