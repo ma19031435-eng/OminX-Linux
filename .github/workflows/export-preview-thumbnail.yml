@@ -1,0 +1,61 @@
+name: Export OminX boot preview thumbnail
+
+on:
+  push:
+    branches:
+      - "arena/30b7965b-ominx-linux"
+    paths:
+      - ".github/workflows/export-preview-thumbnail.yml"
+  workflow_dispatch:
+    inputs:
+      source_run_id:
+        description: Actions run ID containing an OminX-boot-preview artifact
+        required: true
+        type: string
+        default: "39014158983"
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  export-thumbnail:
+    name: Export boot screenshot thumbnail
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    steps:
+      - name: Download the boot preview artifact
+        uses: actions/download-artifact@v4
+        with:
+          run-id: ${{ inputs.source_run_id || '39014158983' }}
+          repository: ${{ github.repository }}
+          github-token: ${{ github.token }}
+          path: preview-artifacts
+
+      - name: Create compact preview image
+        run: |
+          python3 -m venv "$RUNNER_TEMP/image-venv"
+          "$RUNNER_TEMP/image-venv/bin/pip" install --disable-pip-version-check Pillow
+          PREVIEW="$(find preview-artifacts -type f -name 'ominx-boot-preview.jpg' -print -quit)"
+          test -n "$PREVIEW"
+          "$RUNNER_TEMP/image-venv/bin/python" - "$PREVIEW" <<'PY'
+          import sys
+          from PIL import Image
+          image = Image.open(sys.argv[1]).convert("RGB")
+          image.thumbnail((640, 400), Image.Resampling.LANCZOS)
+          image.save("ominx-boot-preview-thumbnail.jpg", "JPEG", quality=58, optimize=True)
+          print(f"Thumbnail: {image.width}x{image.height}")
+          PY
+          printf 'OMINX_PREVIEW_THUMBNAIL_BASE64_BEGIN\n'
+          base64 -w 76 ominx-boot-preview-thumbnail.jpg
+          printf 'OMINX_PREVIEW_THUMBNAIL_BASE64_END\n'
+
+      - name: Upload compact preview image
+        uses: actions/upload-artifact@v4
+        with:
+          name: OminX-boot-preview-thumbnail-${{ github.run_id }}
+          path: ominx-boot-preview-thumbnail.jpg
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
