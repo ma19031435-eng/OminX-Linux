@@ -6,12 +6,13 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 import gi
 
 gi.require_version("Gtk", "3.0")
-from gi.repository import Gtk  # noqa: E402
+from gi.repository import GLib, Gtk  # noqa: E402
 
 sys.path.insert(0, "/usr/lib/ominx")
 from settings import SettingsWindow  # noqa: E402
@@ -25,9 +26,15 @@ CSS_FILES = (
 )
 
 
-def drain_events() -> None:
-    while Gtk.events_pending():
-        Gtk.main_iteration_do(False)
+def drain_events(wait_ms: int = 0) -> None:
+    deadline = time.monotonic() + wait_ms / 1000
+    context = GLib.MainContext.default()
+    while True:
+        while context.pending():
+            context.iteration(False)
+        if time.monotonic() >= deadline:
+            return
+        time.sleep(0.005)
 
 
 def check_css() -> None:
@@ -43,6 +50,16 @@ def check_css() -> None:
             raise AssertionError(f"GTK CSS parse errors in {stylesheet}: {'; '.join(errors)}")
 
 
+def visible_label_text(widget: Gtk.Widget) -> str:
+    labels: list[str] = []
+    if isinstance(widget, Gtk.Label):
+        labels.append(widget.get_text())
+    if isinstance(widget, Gtk.Container):
+        for child in widget.get_children():
+            labels.append(visible_label_text(child))
+    return " ".join(labels)
+
+
 def check_store_window() -> None:
     window = StoreWindow()
     drain_events()
@@ -54,9 +71,10 @@ def check_store_window() -> None:
         raise AssertionError("Missing desktop entries should fall back to the software catalog")
 
     window.search_entry.set_text("steam")
-    drain_events()
-    if not window.page_box.get_children():
-        raise AssertionError("OminX Store search rendered no results or empty state")
+    drain_events(wait_ms=140)
+    search_text = visible_label_text(window.page_box).casefold()
+    if "results for" not in search_text or "steam" not in search_text:
+        raise AssertionError("OminX Store did not apply its debounced Steam search")
 
     window.search_entry.set_text("")
     window.nav_buttons["games"].clicked()
@@ -78,9 +96,10 @@ def check_settings_window() -> None:
         raise AssertionError("OminX Settings home page rendered no content")
 
     window.search_entry.set_text("Bluetooth")
-    drain_events()
-    if not window.page_box.get_children():
-        raise AssertionError("OminX Settings search rendered no results or empty state")
+    drain_events(wait_ms=140)
+    search_text = visible_label_text(window.page_box).casefold()
+    if "search results" not in search_text or "bluetooth" not in search_text:
+        raise AssertionError("OminX Settings did not apply its debounced Bluetooth search")
 
     window.search_entry.set_text("")
     window.nav_buttons["Gaming"].clicked()

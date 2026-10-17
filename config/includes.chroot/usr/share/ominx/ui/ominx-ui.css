@@ -1,15 +1,17 @@
-/* OminX light surfaces: original blue/cyan identity with clear, native GTK controls. */
+/* Shared OminX light surface system: original cyan/blue accents, native GTK controls. */
 * { font-family: "Noto Sans", "DejaVu Sans", sans-serif; }
-window { background-color: #f3f6fb; color: #1a2b42; }
+window { background-color: #f4f7fb; color: #1a2b42; }
 label { color: #1a2b42; }
-.ominx-shell { background-color: #f3f6fb; }
+.ominx-shell { background-color: #f4f7fb; }
+
 .ominx-sidebar {
-  background-color: #f8faff;
+  background-color: #fafcff;
   border-right: 1px solid #dfe7f0;
   padding: 20px 14px;
 }
 .ominx-brand { color: #14253b; font-size: 17px; font-weight: 700; }
 .ominx-brand-caption { color: #718197; font-size: 10px; }
+
 .ominx-navigation button {
   background-image: none;
   background-color: transparent;
@@ -29,39 +31,59 @@ label { color: #1a2b42; }
   border-color: #d6e5fb;
   border-left: 3px solid #2c7add;
 }
-.ominx-content { background-color: #f3f6fb; padding: 25px 30px; }
+.ominx-navigation button:focus {
+  border-color: #8fb8e4;
+}
+
+.ominx-content { background-color: #f4f7fb; padding: 24px 28px; }
 .ominx-page-title { color: #15263c; font-size: 27px; font-weight: 700; }
 .ominx-section-title { color: #1b2e46; font-size: 18px; font-weight: 700; }
 .ominx-copy { color: #617187; font-size: 12px; }
 .ominx-muted { color: #718197; font-size: 11px; }
+
 .ominx-search {
+  background-image: none;
   background-color: #ffffff;
   color: #1b2d44;
   border: 1px solid #d7e1ec;
   border-radius: 10px;
   padding: 9px 12px;
   caret-color: #1671c8;
+  box-shadow: none;
 }
-.ominx-search:focus { border-color: #4b91e4; background-color: #ffffff; }
+.ominx-search:focus {
+  border-color: #4b91e4;
+  background-color: #ffffff;
+}
+
 .ominx-hero {
   background-image: linear-gradient(115deg, #e5f1ff, #f5f9ff 72%);
   border: 1px solid #d3e4f8;
-  border-radius: 16px;
-  padding: 22px;
+  border-left: 4px solid #2e83d5;
+  border-radius: 15px;
+  padding: 21px;
 }
 .ominx-hero-title { color: #142a45; font-size: 23px; font-weight: 700; }
 .ominx-hero-copy { color: #536a83; font-size: 13px; }
+
 .ominx-card {
   background-color: #ffffff;
   color: #1a2b42;
   border: 1px solid #dfe6ef;
-  border-radius: 13px;
+  border-radius: 12px;
   padding: 14px;
-  box-shadow: 0 2px 9px rgba(31, 54, 82, 0.055);
+  box-shadow: 0 1px 4px rgba(31, 54, 82, 0.045);
 }
-.ominx-card:hover { background-color: #fbfdff; border-color: #b9d0e9; }
+.ominx-card:hover {
+  background-color: #fbfdff;
+  border-color: #b9d0e9;
+}
+.ominx-card:focus {
+  border-color: #77a8dc;
+}
 .ominx-card-title { color: #1a2d45; font-size: 14px; font-weight: 700; }
 .ominx-card-copy { color: #63748a; font-size: 11px; }
+
 .ominx-pill {
   background-color: #edf5ff;
   color: #285887;
@@ -70,6 +92,7 @@ label { color: #1a2b42; }
   padding: 4px 9px;
   font-size: 10px;
 }
+
 .ominx-primary {
   background-image: none;
   background-color: #216ed1;
@@ -80,6 +103,9 @@ label { color: #1a2b42; }
   box-shadow: none;
 }
 .ominx-primary:hover { background-color: #165dbb; color: #ffffff; }
+.ominx-primary:focus { background-color: #165dbb; border-color: #104d9b; color: #ffffff; }
+.ominx-primary:disabled { background-color: #dce5ef; border-color: #dce5ef; color: #718197; }
+
 .ominx-secondary {
   background-image: none;
   background-color: #ffffff;
@@ -90,6 +116,8 @@ label { color: #1a2b42; }
   box-shadow: none;
 }
 .ominx-secondary:hover { background-color: #f0f5fa; color: #1a3554; border-color: #b8cadd; }
+.ominx-secondary:focus { border-color: #77a8dc; }
+
 .ominx-chip {
   background-image: none;
   background-color: #ffffff;
@@ -104,6 +132,8 @@ label { color: #1a2b42; }
   color: #145baa;
   border-color: #bcd6f4;
 }
+.ominx-chip:focus { border-color: #77a8dc; }
+
 .ominx-flat-button {
   background-image: none;
   background-color: transparent;
@@ -114,5 +144,7 @@ label { color: #1a2b42; }
   box-shadow: none;
 }
 .ominx-flat-button:hover { background-color: #eaf1f8; color: #1a3554; }
+.ominx-flat-button:focus { border-color: #77a8dc; }
+
 .ominx-divider { background-color: #dce4ee; min-height: 1px; }
 selection { background-color: #216ed1; color: #ffffff; }

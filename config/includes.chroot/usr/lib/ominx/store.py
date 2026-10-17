@@ -14,7 +14,7 @@ gi.require_version("Gio", "2.0")
 from gi.repository import GLib, Gio, Gtk, Pango  # noqa: E402
 
 sys.path.insert(0, "/usr/lib/ominx")
-from ui import apply_style  # noqa: E402
+from ui import apply_style, set_default_window_size  # noqa: E402
 
 
 PRODUCTS = [
@@ -96,18 +96,19 @@ NAVIGATION = [
 class StoreWindow(Gtk.Window):
     def __init__(self) -> None:
         super().__init__(title="OminX Store")
-        self.set_default_size(1120, 760)
+        set_default_window_size(self, 1120, 760)
         self.set_position(Gtk.WindowPosition.CENTER)
         self.set_icon_from_file("/usr/share/icons/hicolor/scalable/apps/ominx-store.svg")
         self.active_page = "home"
         self.category_filter = "All"
         self.nav_buttons: dict[str, Gtk.ToggleButton] = {}
+        self._search_timeout_id = 0
 
         apply_style()
         self._build_shell()
+        self.connect("destroy", self._on_destroy)
         self._render_page()
         self.show_all()
-        self.maximize()
 
     def _build_shell(self) -> None:
         shell = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
@@ -216,7 +217,7 @@ class StoreWindow(Gtk.Window):
         self.active_page = page
         self.category_filter = "All"
         self._set_active_navigation(page)
-        self.search_entry.set_text("")
+        self._clear_search()
         self._render_page()
 
     def _set_active_navigation(self, page: str) -> None:
@@ -226,18 +227,44 @@ class StoreWindow(Gtk.Window):
     def _show_page(self, page: str) -> None:
         self.active_page = page
         self.category_filter = "All"
-        self.search_entry.set_text("")
+        self._clear_search()
         if page in self.nav_buttons:
             self._set_active_navigation(page)
         self._render_page()
 
-    def _on_search_changed(self, entry: Gtk.SearchEntry) -> None:
-        if entry.get_text().strip():
-            self._render_search(entry.get_text().strip())
+    def _on_search_changed(self, _entry: Gtk.SearchEntry) -> None:
+        self._cancel_search_refresh()
+        self._search_timeout_id = GLib.timeout_add(
+            GLib.PRIORITY_DEFAULT,
+            85,
+            self._apply_search,
+        )
+
+    def _apply_search(self) -> bool:
+        self._search_timeout_id = 0
+        query = self.search_entry.get_text().strip()
+        if query:
+            self._render_search(query)
         else:
             self._render_page()
+        return False
+
+    def _cancel_search_refresh(self) -> None:
+        if self._search_timeout_id:
+            GLib.source_remove(self._search_timeout_id)
+            self._search_timeout_id = 0
+
+    def _clear_search(self) -> None:
+        self._cancel_search_refresh()
+        if self.search_entry.get_text():
+            self.search_entry.set_text("")
+        self._cancel_search_refresh()
+
+    def _on_destroy(self, _window: Gtk.Window) -> None:
+        self._cancel_search_refresh()
 
     def _on_search_activate(self, entry: Gtk.SearchEntry) -> None:
+        self._cancel_search_refresh()
         query = entry.get_text().strip()
         if query:
             self._launch_software(search=query)

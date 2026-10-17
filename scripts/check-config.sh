@@ -76,13 +76,30 @@ start_metadata = json.loads((start_applet / "metadata.json").read_text(encoding=
 if start_metadata.get("uuid") != "ominx-start@ominx":
     raise SystemExit("OminX Start applet metadata has the wrong UUID")
 start_source = (start_applet / "applet.js").read_text(encoding="utf-8")
-for behavior in ("Gio.AppInfo.get_all()", "_onSearchChanged", "_toggleAppView", "Power options", "OminX Store", "Super_L"):
+for behavior in (
+    "Gio.AppInfo.get_all()",
+    "_onSearchChanged",
+    "_toggleAppView",
+    "Power options",
+    "OminX Store",
+    "Super_L",
+    "SEARCH_DEBOUNCE_MS = 80",
+    "RESULTS_PER_PAGE = 32",
+    "this.allApps = null",
+    "searchText:",
+    "Gio.AppInfoMonitor.get()",
+    "Preparing your app list…",
+    "_appendMoreResultsButton",
+):
     if behavior not in start_source:
         raise SystemExit(f"OminX Start is missing {behavior}")
+constructor_body = start_source.split("constructor(", 1)[1].split("\n    _buildMenu()", 1)[0]
+if "_getAllApps()" in constructor_body:
+    raise SystemExit("OminX Start must not scan every installed app during Cinnamon startup")
 start_css = (start_applet / "stylesheet.css").read_text(encoding="utf-8")
 if start_css.count("{") != start_css.count("}"):
     raise SystemExit("OminX Start stylesheet has unbalanced braces")
-for selector in (".ominx-start-root", ".ominx-start-search", ".ominx-start-grid", ".ominx-start-recommendations"):
+for selector in (".ominx-start-root", ".ominx-start-search", ".ominx-start-grid", ".ominx-start-recommendations", ".ominx-start-more-button"):
     if selector not in start_css:
         raise SystemExit(f"OminX Start styling is missing {selector}")
 
@@ -139,8 +156,11 @@ lightdm_greeter = (config_root / "etc/lightdm/lightdm-gtk-greeter.conf").read_te
 if "theme-name=OminX" not in lightdm_greeter or "ominx-wallpaper.svg" not in lightdm_greeter:
     raise SystemExit("The login screen must use OminX branding and its original wallpaper")
 wallpaper = config_root / "usr/share/backgrounds/ominx/ominx-wallpaper.svg"
-if "OMINX" not in wallpaper.read_text(encoding="utf-8"):
+wallpaper_text = wallpaper.read_text(encoding="utf-8")
+if "OMINX" not in wallpaper_text:
     raise SystemExit("The desktop wallpaper is missing OminX branding")
+if "<feGaussianBlur" in wallpaper_text:
+    raise SystemExit("The OminX wallpaper should use lightweight gradients instead of a costly blur filter")
 for selector in (".ominx-sidebar", ".ominx-hero", ".ominx-card", ".ominx-primary"):
     if selector not in ui_css:
         raise SystemExit(f"OminX app hub styling is missing {selector}")
@@ -202,12 +222,25 @@ for launcher in ("ominx-store", "ominx-settings"):
         raise SystemExit(f"{launcher} must be executable")
 store_source = (config_root / "usr/lib/ominx/store.py").read_text(encoding="utf-8")
 settings_source = (config_root / "usr/lib/ominx/settings.py").read_text(encoding="utf-8")
+ui_source = (config_root / "usr/lib/ominx/ui.py").read_text(encoding="utf-8")
+welcome_source = (config_root / "usr/lib/ominx/welcome.py").read_text(encoding="utf-8")
+smoke_source = (root / "scripts/smoke-gtk-apps.py").read_text(encoding="utf-8")
 if any(".set_group(" in source for source in (store_source, settings_source)):
     raise SystemExit("GTK3 navigation must not call the unsupported ToggleButton.set_group() API")
 if "_desktop_app_info(product[\"desktop_id\"])" not in store_source or "except TypeError:" not in store_source:
     raise SystemExit("OminX Store must tolerate catalog apps whose desktop entries are not installed")
-if any(typelib not in hook for typelib in ("St-1.0.typelib", "Meta-0.typelib", "GI_TYPELIB_PATH=", "LD_LIBRARY_PATH=")):
-    raise SystemExit("Cinnamon stylesheet validation must search the installed St and Meta typelib and library directories")
+if any("self.maximize()" in source for source in (store_source, settings_source)):
+    raise SystemExit("OminX app hubs must not force a second maximize-and-resize pass at startup")
+if any("GLib.timeout_add(" not in source or "def _cancel_search_refresh" not in source for source in (store_source, settings_source)):
+    raise SystemExit("OminX Store and Settings search must be debounced and cancel stale refreshes")
+if any("set_default_window_size" not in source for source in (store_source, settings_source, welcome_source)):
+    raise SystemExit("OminX windows must use the shared screen-aware opening size")
+if "Gdk.Screen.get_default()" not in ui_source or "screen.get_width()" not in ui_source or "screen.get_height()" not in ui_source:
+    raise SystemExit("OminX window sizing must adapt to the available display size")
+if "wait_ms=140" not in smoke_source:
+    raise SystemExit("GTK smoke tests must allow the debounced search handler to run")
+if any(typelib not in hook for typelib in ("St-1.0.typelib", "Meta-0.typelib", "GI_TYPELIB_PATH=", "LD_LIBRARY_PATH=", "Gio.AppInfoMonitor.get()")):
+    raise SystemExit("Cinnamon validation must locate its typelibs, libraries, and installed-app monitor")
 if "gnome-software" not in store_source or "--search=" not in store_source or 'mode="updates"' not in store_source:
     raise SystemExit("OminX Store must forward catalog search, library, and update actions to the real backend")
 registered_mimes = {

@@ -2,18 +2,18 @@
 .ominx-start-menu .popup-menu-content {
   padding: 0;
   background-color: transparent;
-  border: 1px solid rgba(165, 183, 204, 0.9);
-  border-radius: 17px;
-  box-shadow: 0 18px 42px rgba(26, 48, 76, 0.22);
+  border: 1px solid rgba(165, 183, 204, 0.82);
+  border-radius: 18px;
+  box-shadow: 0 10px 26px rgba(26, 48, 76, 0.16);
 }
 
 .ominx-start-root {
-  width: 528px;
-  padding: 17px 18px 12px;
-  spacing: 14px;
+  width: 540px;
+  padding: 18px 20px 14px;
+  spacing: 12px;
   color: #1c3048;
-  background-color: #ffffff;
-  border-radius: 17px;
+  background-color: #fbfdff;
+  border-radius: 18px;
 }
 
 .ominx-start-header {
@@ -239,6 +239,22 @@
   color: #173b64;
   background-color: #edf5fd;
   border-color: #dce9f5;
+}
+
+.ominx-start-more-button {
+  min-height: 38px;
+  padding: 5px 10px;
+  color: #155a9a;
+  background-color: #f0f6fd;
+  border: 1px solid #d8e6f5;
+  border-radius: 9px;
+}
+
+.ominx-start-more-button:hover,
+.ominx-start-more-button:focus {
+  color: #124c86;
+  background-color: #e5f1ff;
+  border-color: #bad4ef;
 }
 
 .ominx-start-result-row {

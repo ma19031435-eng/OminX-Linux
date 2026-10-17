@@ -46,7 +46,7 @@ stage {
   color: #344a63;
   font-weight: normal;
   border-radius: 8px;
-  transition-duration: 120;
+  transition-duration: 100;
 }
 
 .panel-button:hover, .panel-status-button:hover {
@@ -75,7 +75,7 @@ stage {
   border-color: transparent;
   padding: 5px 9px;
   margin: 4px 2px;
-  transition-duration: 130;
+  transition-duration: 110;
 }
 
 .window-list-item-box:hover, .window-list-item-box:groupFocus {
@@ -103,7 +103,7 @@ stage {
   -arrow-border-radius: 12px;
   -arrow-base: 22px;
   -arrow-rise: 11px;
-  -arrow-box-shadow: 0 12px 30px rgba(34, 56, 82, 0.18);
+  -arrow-box-shadow: 0 8px 20px rgba(34, 56, 82, 0.14);
   -boxpointer-gap: 6px;
 }
 
@@ -113,7 +113,7 @@ stage {
   border: 1px solid #d9e3ed;
   border-radius: 12px;
   padding: 8px;
-  box-shadow: 0 12px 30px rgba(34, 56, 82, 0.15);
+  box-shadow: 0 8px 20px rgba(34, 56, 82, 0.12);
 }
 
 .popup-menu-item {

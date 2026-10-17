@@ -14,7 +14,7 @@ gi.require_version("Gtk", "3.0")
 from gi.repository import GLib, Gtk  # noqa: E402
 
 sys.path.insert(0, "/usr/lib/ominx")
-from ui import apply_style  # noqa: E402
+from ui import apply_style, set_default_window_size  # noqa: E402
 
 
 SETTINGS = {
@@ -126,17 +126,27 @@ NAVIGATION = [
 class SettingsWindow(Gtk.Window):
     def __init__(self) -> None:
         super().__init__(title="OminX Settings")
-        self.set_default_size(1100, 760)
+        set_default_window_size(self, 1080, 740)
         self.set_position(Gtk.WindowPosition.CENTER)
         self.set_icon_from_file("/usr/share/icons/hicolor/scalable/apps/ominx-settings.svg")
         self.active_category = "System"
         self.nav_buttons: dict[str, Gtk.ToggleButton] = {}
+        self._search_timeout_id = 0
+        self._search_records = [
+            (
+                category,
+                item,
+                " ".join((category, item[0], item[1])).casefold(),
+            )
+            for category, group in SETTINGS.items()
+            for item in group["items"]
+        ]
 
         apply_style()
         self._build_shell()
+        self.connect("destroy", self._on_destroy)
         self._render_page()
         self.show_all()
-        self.maximize()
 
     def _build_shell(self) -> None:
         shell = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
@@ -242,7 +252,7 @@ class SettingsWindow(Gtk.Window):
     def _on_navigation(self, _button: Gtk.ToggleButton, category: str) -> None:
         self.active_category = category
         self._set_active_navigation(category)
-        self.search_entry.set_text("")
+        self._clear_search()
         self._render_page()
 
     def _set_active_navigation(self, category: str) -> None:
@@ -250,7 +260,31 @@ class SettingsWindow(Gtk.Window):
             button.set_active(nav_category == category)
 
     def _on_search_changed(self, _entry: Gtk.SearchEntry) -> None:
+        self._cancel_search_refresh()
+        self._search_timeout_id = GLib.timeout_add(
+            GLib.PRIORITY_DEFAULT,
+            85,
+            self._apply_search,
+        )
+
+    def _apply_search(self) -> bool:
+        self._search_timeout_id = 0
         self._render_page()
+        return False
+
+    def _cancel_search_refresh(self) -> None:
+        if self._search_timeout_id:
+            GLib.source_remove(self._search_timeout_id)
+            self._search_timeout_id = 0
+
+    def _clear_search(self) -> None:
+        self._cancel_search_refresh()
+        if self.search_entry.get_text():
+            self.search_entry.set_text("")
+        self._cancel_search_refresh()
+
+    def _on_destroy(self, _window: Gtk.Window) -> None:
+        self._cancel_search_refresh()
 
     def _render_page(self) -> None:
         for child in self.page_box.get_children():
@@ -260,10 +294,8 @@ class SettingsWindow(Gtk.Window):
         if query:
             candidates = [
                 (category, item)
-                for category, group in SETTINGS.items()
-                for item in group["items"]
-                if query
-                in " ".join((category, item[0], item[1])).casefold()
+                for category, item, search_text in self._search_records
+                if query in search_text
             ]
             title = "Search results"
             subtitle = f"Settings matching ‘{self.search_entry.get_text().strip()}’."

@@ -9,6 +9,8 @@ const St = imports.gi.St;
 const Util = imports.misc.util;
 
 const START_ICON = "/usr/share/icons/hicolor/scalable/apps/ominx-start.svg";
+const SEARCH_DEBOUNCE_MS = 80;
+const RESULTS_PER_PAGE = 32;
 const PINNED_APPS = [
     { id: "nemo.desktop", name: "Files", icon: "system-file-manager" },
     { id: "firefox-esr.desktop", name: "Firefox ESR", icon: "firefox-esr" },
@@ -39,12 +41,26 @@ class OminXStartApplet extends Applet.IconApplet {
             icon: item.icon,
             appInfo: Gio.DesktopAppInfo.new(item.id)
         }));
-        this.allApps = this._getAllApps();
+        // Defer the desktop-file scan until the user searches or opens All apps.
+        this.allApps = null;
+        this.searchCache = Object.create(null);
         this.showAllApps = false;
         this.currentResults = [];
+        this.visibleResultCount = 0;
+        this.moreResultsButton = null;
+        this.resultsCountLabel = null;
+        this.currentQuery = "";
+        this.pendingSearchSource = 0;
+        this.pendingAppIndexSource = 0;
+        this.pendingLaunchQuery = null;
 
         this._buildMenu();
         this.menu.connect("open-state-changed", Lang.bind(this, this._onOpenStateChanged));
+        this.appInfoMonitor = Gio.AppInfoMonitor.get();
+        this.appInfoMonitorId = this.appInfoMonitor.connect(
+            "changed",
+            Lang.bind(this, this._onAppInfoChanged)
+        );
         this.keybindingName = "ominx-start-open-" + instanceId;
         Main.keybindingManager.addHotKey(this.keybindingName, "Super_L", Lang.bind(this, this._openMenu));
     }
@@ -243,15 +259,26 @@ class OminXStartApplet extends Applet.IconApplet {
     }
 
     _getAllApps() {
-        let applications = [];
         try {
-            applications = Gio.AppInfo.get_all()
+            return Gio.AppInfo.get_all()
                 .filter(appInfo => appInfo.should_show() && appInfo.get_name())
-                .sort((left, right) => left.get_name().localeCompare(right.get_name()));
+                .map(appInfo => {
+                    const name = appInfo.get_name() || "";
+                    const description = appInfo.get_description() || "";
+                    const id = appInfo.get_id() || "";
+                    return {
+                        id: id,
+                        name: name,
+                        appInfo: appInfo,
+                        icon: "application-x-executable-symbolic",
+                        searchText: (name + " " + description + " " + id).toLowerCase()
+                    };
+                })
+                .sort((left, right) => left.name.localeCompare(right.name));
         } catch (error) {
             global.logError("OminX Start could not enumerate installed applications: " + error);
+            return [];
         }
-        return applications;
     }
 
     _onOpenStateChanged(_menu, isOpen) {
@@ -259,14 +286,20 @@ class OminXStartApplet extends Applet.IconApplet {
             this.searchEntry.grab_key_focus();
             return;
         }
+        this._cancelPendingSearch();
+        this._cancelPendingAppIndex();
+        this.pendingLaunchQuery = null;
         this.showAllApps = false;
         this.searchEntry.set_text("");
+        this._cancelPendingSearch();
         this._refreshView();
     }
 
     _toggleAppView() {
         this.showAllApps = !this.showAllApps;
+        this._cancelPendingSearch();
         this.searchEntry.set_text("");
+        this._cancelPendingSearch();
         this._refreshView();
         this._setViewButtonLabel(this.showAllApps ? "Pinned  ›" : "All apps  ›");
         if (this.showAllApps) {
@@ -279,12 +312,27 @@ class OminXStartApplet extends Applet.IconApplet {
     }
 
     _onSearchChanged(textActor) {
-        this._refreshView(textActor.get_text());
+        this._cancelPendingSearch();
+        const query = textActor.get_text();
+        this.pendingSearchSource = GLib.timeout_add(
+            GLib.PRIORITY_DEFAULT,
+            SEARCH_DEBOUNCE_MS,
+            Lang.bind(this, function() {
+                this.pendingSearchSource = 0;
+                this._refreshView(query);
+                return GLib.SOURCE_REMOVE;
+            })
+        );
     }
 
     _onSearchActivated(textActor) {
-        const query = textActor.get_text().trim().toLocaleLowerCase();
+        const query = textActor.get_text().trim().toLowerCase();
         if (!query) {
+            return;
+        }
+        if (this.allApps === null) {
+            this.pendingLaunchQuery = query;
+            this._refreshView(query);
             return;
         }
         const matches = this._findApps(query);
@@ -294,9 +342,11 @@ class OminXStartApplet extends Applet.IconApplet {
     }
 
     _refreshView(queryText) {
-        const query = (queryText || "").trim().toLocaleLowerCase();
+        const query = (queryText || "").trim().toLowerCase();
         const showResults = this.showAllApps || query.length > 0;
         if (!showResults) {
+            this._cancelPendingAppIndex();
+            this.pendingLaunchQuery = null;
             this.resultsScroll.hide();
             this.homeBox.show();
             this._setViewButtonLabel("All apps  ›");
@@ -306,54 +356,141 @@ class OminXStartApplet extends Applet.IconApplet {
         this.homeBox.hide();
         this.resultsScroll.show();
         this._setViewButtonLabel(this.showAllApps ? "Pinned  ›" : "All apps  ›");
+        if (this.allApps === null) {
+            this._renderLoadingResults(query);
+            this._scheduleAppIndex();
+            return;
+        }
         this._renderResults(query);
     }
 
+    _scheduleAppIndex() {
+        if (this.pendingAppIndexSource) {
+            return;
+        }
+        this.pendingAppIndexSource = GLib.idle_add(
+            GLib.PRIORITY_DEFAULT_IDLE,
+            Lang.bind(this, function() {
+                this.pendingAppIndexSource = 0;
+                this.allApps = this._getAllApps();
+                this.searchCache = Object.create(null);
+                const query = this.searchEntry.get_text().trim().toLowerCase();
+                this._renderResults(query);
+
+                const pendingQuery = this.pendingLaunchQuery;
+                this.pendingLaunchQuery = null;
+                if (pendingQuery && pendingQuery === query) {
+                    const matches = this._findApps(pendingQuery);
+                    if (matches.length > 0) {
+                        this._launchApp(null, matches[0]);
+                    }
+                }
+                return GLib.SOURCE_REMOVE;
+            })
+        );
+    }
+
+    _cancelPendingSearch() {
+        if (this.pendingSearchSource) {
+            GLib.source_remove(this.pendingSearchSource);
+            this.pendingSearchSource = 0;
+        }
+    }
+
+    _cancelPendingAppIndex() {
+        if (this.pendingAppIndexSource) {
+            GLib.source_remove(this.pendingAppIndexSource);
+            this.pendingAppIndexSource = 0;
+        }
+    }
+
+    _renderLoadingResults(query) {
+        this.resultsBox.get_children().forEach(child => child.destroy());
+        this.currentResults = [];
+        this.visibleResultCount = 0;
+        this.moreResultsButton = null;
+        this.resultsCountLabel = null;
+        this.currentQuery = query;
+        this.resultsBox.add_actor(new St.Label({
+            text: query ? "Searching installed apps…" : "Preparing your app list…",
+            style_class: "ominx-start-empty-state"
+        }));
+    }
+
+    _onAppInfoChanged() {
+        this._cancelPendingAppIndex();
+        this.allApps = null;
+        this.searchCache = Object.create(null);
+        if (this.showAllApps || this.searchEntry.get_text().trim()) {
+            this._refreshView(this.searchEntry.get_text());
+        }
+    }
+
     _findApps(query) {
-        if (!query) {
+        if (this.allApps === null) {
+            return [];
+        }
+        const normalizedQuery = (query || "").trim().toLowerCase();
+        if (!normalizedQuery) {
             return this.allApps;
         }
-        return this.allApps.filter(appInfo => {
-            const name = (appInfo.get_name() || "").toLocaleLowerCase();
-            const description = (appInfo.get_description() || "").toLocaleLowerCase();
-            const id = (appInfo.get_id() || "").toLocaleLowerCase();
-            return name.includes(query) || description.includes(query) || id.includes(query);
-        });
+        if (Object.prototype.hasOwnProperty.call(this.searchCache, normalizedQuery)) {
+            return this.searchCache[normalizedQuery];
+        }
+
+        const matches = this.allApps.filter(app => app.searchText.includes(normalizedQuery));
+        if (Object.keys(this.searchCache).length >= 64) {
+            this.searchCache = Object.create(null);
+        }
+        this.searchCache[normalizedQuery] = matches;
+        return matches;
     }
 
     _renderResults(query) {
         this.resultsBox.get_children().forEach(child => child.destroy());
+        this.moreResultsButton = null;
         const matches = this._findApps(query);
         this.currentResults = matches;
+        this.currentQuery = query;
+        this.visibleResultCount = Math.min(RESULTS_PER_PAGE, matches.length);
 
         const heading = query ? "Search results" : "All apps";
-        const subtitle = query
-            ? matches.length + (matches.length === 1 ? " app found" : " apps found")
-            : "Installed applications, sorted by name";
         this.resultsBox.add_actor(new St.Label({
             text: heading,
             style_class: "ominx-start-section-title ominx-start-results-title"
         }));
-        this.resultsBox.add_actor(new St.Label({
-            text: subtitle,
+        this.resultsCountLabel = new St.Label({
+            text: this._resultsCountText(),
             style_class: "ominx-start-results-note"
-        }));
+        });
+        this.resultsBox.add_actor(this.resultsCountLabel);
 
         if (matches.length === 0) {
             this.resultsBox.add_actor(new St.Label({
-                text: "No matching apps. Try another name or keyword.",
+                text: "Try another name or keyword.",
                 style_class: "ominx-start-empty-state"
             }));
             return;
         }
 
-        matches.forEach(appInfo => {
-            const app = {
-                id: appInfo.get_id(),
-                name: appInfo.get_name(),
-                appInfo: appInfo,
-                icon: "application-x-executable-symbolic"
-            };
+        this._appendResultRows(0, this.visibleResultCount);
+        this._appendMoreResultsButton();
+    }
+
+    _resultsCountText() {
+        const total = this.currentResults.length;
+        const shown = this.visibleResultCount;
+        if (this.currentQuery) {
+            return total === 0
+                ? "No matching apps found"
+                : "Showing " + shown + " of " + total + " matching apps";
+        }
+        return total + " installed apps · showing " + shown + " at a time";
+    }
+
+    _appendResultRows(start, end) {
+        for (let index = start; index < end; index++) {
+            const app = this.currentResults[index];
             const button = new St.Button({
                 style_class: "ominx-start-result-button",
                 can_focus: true,
@@ -361,12 +498,47 @@ class OminXStartApplet extends Applet.IconApplet {
                 x_expand: true
             });
             const row = new St.BoxLayout({ vertical: false, style_class: "ominx-start-result-row" });
-            row.add_actor(this._createIcon(appInfo, app.icon, 28));
+            row.add_actor(this._createIcon(app.appInfo, app.icon, 28));
             row.add_actor(new St.Label({ text: app.name, style_class: "ominx-start-result-label" }));
             button.set_child(row);
             button.connect("clicked", Lang.bind(this, this._launchApp, app));
             this.resultsBox.add_actor(button);
+        }
+    }
+
+    _appendMoreResultsButton() {
+        if (this.visibleResultCount >= this.currentResults.length) {
+            return;
+        }
+        const remaining = this.currentResults.length - this.visibleResultCount;
+        const button = new St.Button({
+            style_class: "ominx-start-more-button",
+            can_focus: true,
+            reactive: true,
+            x_expand: true
         });
+        button.set_child(new St.Label({ text: "Show more apps · " + remaining + " remaining" }));
+        button.connect("clicked", Lang.bind(this, this._showMoreResults));
+        this.moreResultsButton = button;
+        this.resultsBox.add_actor(button);
+    }
+
+    _showMoreResults() {
+        if (this.moreResultsButton) {
+            this.resultsBox.remove_actor(this.moreResultsButton);
+            this.moreResultsButton.destroy();
+            this.moreResultsButton = null;
+        }
+        const start = this.visibleResultCount;
+        this.visibleResultCount = Math.min(
+            start + RESULTS_PER_PAGE,
+            this.currentResults.length
+        );
+        this._appendResultRows(start, this.visibleResultCount);
+        if (this.resultsCountLabel) {
+            this.resultsCountLabel.set_text(this._resultsCountText());
+        }
+        this._appendMoreResultsButton();
     }
 
     _launchApp(_button, app) {
@@ -416,7 +588,14 @@ class OminXStartApplet extends Applet.IconApplet {
     }
 
     on_applet_removed_from_panel() {
+        this._cancelPendingSearch();
+        this._cancelPendingAppIndex();
+        this.pendingLaunchQuery = null;
         Main.keybindingManager.removeHotKey(this.keybindingName);
+        if (this.appInfoMonitor && this.appInfoMonitorId) {
+            this.appInfoMonitor.disconnect(this.appInfoMonitorId);
+            this.appInfoMonitorId = 0;
+        }
     }
 
     on_orientation_changed(orientation) {

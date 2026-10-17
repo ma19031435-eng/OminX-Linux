@@ -14,6 +14,9 @@ import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gdk, Gtk  # noqa: E402
 
+sys.path.insert(0, "/usr/lib/ominx")
+from ui import set_default_window_size  # noqa: E402
+
 
 CSS = b"""
 * { font-family: 'Noto Sans', 'DejaVu Sans', sans-serif; }
@@ -26,7 +29,7 @@ window { background-color: #f3f6fb; color: #1a2b42; }
   border: 1px solid #dce5ef;
   border-radius: 14px;
   padding: 16px;
-  box-shadow: 0 2px 9px rgba(31, 54, 82, 0.055);
+  box-shadow: 0 1px 4px rgba(31, 54, 82, 0.045);
 }
 .ominx-card-title { color: #1a2d45; font-size: 15px; font-weight: 700; }
 .ominx-card-copy { color: #61748c; font-size: 12px; }
@@ -40,6 +43,7 @@ button.ominx-primary {
   padding: 8px 13px;
 }
 button.ominx-primary:hover { background-color: #165dbb; }
+button.ominx-primary:focus { border-color: #104d9b; }
 button.ominx-secondary {
   background-image: none;
   background-color: #ffffff;
@@ -49,13 +53,23 @@ button.ominx-secondary {
   padding: 8px 13px;
 }
 button.ominx-secondary:hover { background-color: #f0f5fa; }
+button.ominx-secondary:focus { border-color: #77a8dc; }
+.ominx-version {
+  color: #155a9a;
+  background-color: #edf5ff;
+  border: 1px solid #d7e8f8;
+  border-radius: 999px;
+  padding: 5px 9px;
+  font-size: 10px;
+  font-weight: 700;
+}
 """
 
 
 class WelcomeWindow(Gtk.Window):
     def __init__(self) -> None:
         super().__init__(title="Welcome to OminX")
-        self.set_default_size(850, 620)
+        set_default_window_size(self, 960, 680)
         self.set_border_width(26)
         self.set_position(Gtk.WindowPosition.CENTER)
         self.set_icon_name("ominx")
@@ -90,8 +104,8 @@ class WelcomeWindow(Gtk.Window):
         brand_text.pack_start(subtitle, False, False, 0)
         brand.pack_start(brand_text, True, True, 0)
 
-        version = Gtk.Label(label="0.2  ·  DEBIAN 13")
-        version.get_style_context().add_class("ominx-note")
+        version = Gtk.Label(label="BETA  ·  DEBIAN 13")
+        version.get_style_context().add_class("ominx-version")
         brand.pack_end(version, False, False, 4)
         root.pack_start(brand, False, False, 0)
 

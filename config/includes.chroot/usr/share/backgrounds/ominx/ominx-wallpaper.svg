@@ -20,9 +20,16 @@
       <stop offset="0" stop-color="#48ced6" stop-opacity=".56"/>
       <stop offset="1" stop-color="#706ce9" stop-opacity=".28"/>
     </linearGradient>
-    <filter id="blur" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="72"/>
-    </filter>
+    <radialGradient id="bloomCyan" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#6bd8e4" stop-opacity=".25"/>
+      <stop offset=".55" stop-color="#6bd8e4" stop-opacity=".10"/>
+      <stop offset="1" stop-color="#6bd8e4" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="bloomViolet" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#708aeb" stop-opacity=".19"/>
+      <stop offset=".58" stop-color="#708aeb" stop-opacity=".08"/>
+      <stop offset="1" stop-color="#708aeb" stop-opacity="0"/>
+    </radialGradient>
     <linearGradient id="wordFade" x1="0" y1="0" x2="1" y2="0">
       <stop offset="0" stop-color="#f5f8fc" stop-opacity=".94"/>
       <stop offset="1" stop-color="#f5f8fc" stop-opacity="0"/>
@@ -30,8 +37,8 @@
   </defs>
   <rect width="2560" height="1440" fill="url(#base)"/>
   <rect width="2560" height="1440" fill="url(#aura)"/>
-  <ellipse cx="2070" cy="480" rx="490" ry="300" fill="#6bd8e4" opacity=".25" filter="url(#blur)"/>
-  <ellipse cx="1810" cy="1040" rx="620" ry="350" fill="#708aeb" opacity=".17" filter="url(#blur)"/>
+  <ellipse cx="2070" cy="480" rx="490" ry="300" fill="url(#bloomCyan)"/>
+  <ellipse cx="1810" cy="1040" rx="620" ry="350" fill="url(#bloomViolet)"/>
   <path d="M1130 0C1410 180 1500 390 1730 520c250 142 470 97 830 10" fill="none" stroke="#ffffff" stroke-opacity=".58" stroke-width="2"/>
   <path d="M1180 0C1470 215 1530 445 1760 585c263 160 494 117 800 51" fill="none" stroke="#ffffff" stroke-opacity=".33" stroke-width="1.5"/>
   <path d="M1380 1440c210-244 316-513 640-674 185-92 357-106 540-116" fill="none" stroke="#ffffff" stroke-opacity=".44" stroke-width="2"/>

@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-"""Shared original OminX styling for the GTK desktop hubs."""
+"""Shared original OminX styling and comfortable native window sizing."""
 
 from pathlib import Path
 
@@ -20,3 +20,18 @@ def apply_style() -> None:
         Gtk.StyleContext.add_provider_for_screen(
             screen, provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
         )
+
+
+def set_default_window_size(window: Gtk.Window, preferred_width: int, preferred_height: int) -> None:
+    """Open app hubs at a useful, screen-aware size without a maximize redraw."""
+    screen = Gdk.Screen.get_default()
+    if screen is None:
+        window.set_default_size(preferred_width, preferred_height)
+        return
+
+    available_width = max(560, screen.get_width() - 72)
+    available_height = max(420, screen.get_height() - 108)
+    window.set_default_size(
+        min(preferred_width, available_width),
+        min(preferred_height, available_height),
+    )

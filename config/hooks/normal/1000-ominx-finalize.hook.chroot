@@ -68,7 +68,7 @@ cinnamon_libdir=$(dirname "$st_typelib")
 muffin_libdir=$(dirname "$meta_typelib")
 GI_TYPELIB_PATH="$cinnamon_libdir:$muffin_libdir${GI_TYPELIB_PATH:+:$GI_TYPELIB_PATH}" \
 LD_LIBRARY_PATH="$cinnamon_libdir:$muffin_libdir${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" \
-    gjs -c 'const St = imports.gi.St; const theme = new St.Theme({}); for (const stylesheet of ["/usr/share/themes/OminX/cinnamon/cinnamon.css", "/usr/share/cinnamon/applets/ominx-start@ominx/stylesheet.css"]) { if (!theme.load_stylesheet(stylesheet)) throw new Error("Could not load Cinnamon stylesheet: " + stylesheet); }'
+    gjs -c 'const Gio = imports.gi.Gio; if (!Gio.AppInfoMonitor.get()) throw new Error("Could not initialize the installed-app monitor"); const St = imports.gi.St; const theme = new St.Theme({}); for (const stylesheet of ["/usr/share/themes/OminX/cinnamon/cinnamon.css", "/usr/share/cinnamon/applets/ominx-start@ominx/stylesheet.css"]) { if (!theme.load_stylesheet(stylesheet)) throw new Error("Could not load Cinnamon stylesheet: " + stylesheet); }'
 
 # Validate Cinnamon applet defaults against the version actually installed in
 # this image so a package update cannot silently discard the OminX taskbar.
