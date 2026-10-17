@@ -201,6 +201,9 @@ for launcher in ("ominx-store", "ominx-settings"):
     if not os.access(config_root / "usr/local/bin" / launcher, os.X_OK):
         raise SystemExit(f"{launcher} must be executable")
 store_source = (config_root / "usr/lib/ominx/store.py").read_text(encoding="utf-8")
+settings_source = (config_root / "usr/lib/ominx/settings.py").read_text(encoding="utf-8")
+if any(".set_group(" in source for source in (store_source, settings_source)):
+    raise SystemExit("GTK3 navigation must not call the unsupported ToggleButton.set_group() API")
 if "gnome-software" not in store_source or "--search=" not in store_source or 'mode="updates"' not in store_source:
     raise SystemExit("OminX Store must forward catalog search, library, and update actions to the real backend")
 registered_mimes = {

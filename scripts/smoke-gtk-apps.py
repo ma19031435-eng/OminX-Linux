@@ -57,10 +57,12 @@ def check_store_window() -> None:
         raise AssertionError("OminX Store search rendered no results or empty state")
 
     window.search_entry.set_text("")
-    window._show_page("games")
+    window.nav_buttons["games"].clicked()
     drain_events()
-    if not window.page_box.get_children():
-        raise AssertionError("OminX Store Games page rendered no content")
+    if window.active_page != "games" or not window.page_box.get_children():
+        raise AssertionError("OminX Store Games navigation did not render correctly")
+    if not window.nav_buttons["games"].get_active() or window.nav_buttons["home"].get_active():
+        raise AssertionError("OminX Store navigation buttons are not mutually exclusive")
     window.destroy()
     drain_events()
 
@@ -83,6 +85,8 @@ def check_settings_window() -> None:
     drain_events()
     if not window.page_box.get_children():
         raise AssertionError("OminX Settings Gaming page rendered no content")
+    if not window.nav_buttons["Gaming"].get_active() or window.nav_buttons["System"].get_active():
+        raise AssertionError("OminX Settings navigation buttons are not mutually exclusive")
     window.destroy()
     drain_events()
 

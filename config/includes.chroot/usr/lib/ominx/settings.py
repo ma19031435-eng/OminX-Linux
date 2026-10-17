@@ -175,13 +175,8 @@ class SettingsWindow(Gtk.Window):
 
         nav_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3)
         nav_box.get_style_context().add_class("ominx-navigation")
-        first_button = None
         for category, icon_name in NAVIGATION:
             button = Gtk.ToggleButton()
-            if first_button is None:
-                first_button = button
-            else:
-                button.set_group(first_button)
             row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
             icon = self._icon(icon_name, 18)
             row.pack_start(icon, False, False, 0)
@@ -246,8 +241,13 @@ class SettingsWindow(Gtk.Window):
 
     def _on_navigation(self, _button: Gtk.ToggleButton, category: str) -> None:
         self.active_category = category
+        self._set_active_navigation(category)
         self.search_entry.set_text("")
         self._render_page()
+
+    def _set_active_navigation(self, category: str) -> None:
+        for nav_category, button in self.nav_buttons.items():
+            button.set_active(nav_category == category)
 
     def _on_search_changed(self, _entry: Gtk.SearchEntry) -> None:
         self._render_page()

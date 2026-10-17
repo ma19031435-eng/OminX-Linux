@@ -140,13 +140,8 @@ class StoreWindow(Gtk.Window):
 
         nav_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
         nav_box.get_style_context().add_class("ominx-navigation")
-        first_button = None
         for page, label, icon_name in NAVIGATION:
             button = Gtk.ToggleButton()
-            if first_button is None:
-                first_button = button
-            else:
-                button.set_group(first_button)
             row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
             icon = Gtk.Image.new_from_icon_name(icon_name, Gtk.IconSize.MENU)
             row.pack_start(icon, False, False, 0)
@@ -220,15 +215,20 @@ class StoreWindow(Gtk.Window):
     def _on_navigation(self, _button: Gtk.ToggleButton, page: str) -> None:
         self.active_page = page
         self.category_filter = "All"
+        self._set_active_navigation(page)
         self.search_entry.set_text("")
         self._render_page()
+
+    def _set_active_navigation(self, page: str) -> None:
+        for nav_page, button in self.nav_buttons.items():
+            button.set_active(nav_page == page)
 
     def _show_page(self, page: str) -> None:
         self.active_page = page
         self.category_filter = "All"
         self.search_entry.set_text("")
         if page in self.nav_buttons:
-            self.nav_buttons[page].set_active(True)
+            self._set_active_navigation(page)
         self._render_page()
 
     def _on_search_changed(self, entry: Gtk.SearchEntry) -> None:
