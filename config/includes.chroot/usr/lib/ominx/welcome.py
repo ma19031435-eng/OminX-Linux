@@ -233,8 +233,8 @@ class WelcomeWindow(Gtk.Window):
         self._show_message(
             "Windows app and game compatibility",
             "Steam games: open Steam → Settings → Compatibility, then enable Steam Play. Steam installs its Proton runtime when needed.\n\n"
-            "Standalone installers: use Open With → Wine Windows Program Loader, or run wine ~/Downloads/setup.exe. Winetricks and Lutris are also installed.\n\n"
-            "Not every program works. Windows kernel drivers, most Windows Store/UWP apps, some DRM, and games whose anti-cheat blocks Linux are not supported. Check ProtonDB or Wine AppDB first. Only run software you trust.",
+            "Standalone apps: double-click a trusted .exe or .msi installer. OminX Windows App Support runs it through Wine; use Open With → OminX Windows App Support if asked. The first launch creates your Wine environment, and an installed app may add a shortcut to the Applications menu. Winetricks and Lutris are included for apps that need extra setup.\n\n"
+            "Not every program works. Windows kernel drivers, most Windows Store/UWP apps, some DRM, and games whose anti-cheat blocks Linux are not supported. Wine apps can access your user files, so only run software you trust. Check ProtonDB or Wine AppDB first.",
         )
 
     def _show_game_mode(self) -> None:

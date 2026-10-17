@@ -1,0 +1,15 @@
+[Default Applications]
+application/x-msdos-program=ominx-windows-app.desktop;
+application/x-ms-dos-executable=ominx-windows-app.desktop;
+application/x-msdos-executable=ominx-windows-app.desktop;
+application/vnd.microsoft.portable-executable=ominx-windows-app.desktop;
+application/x-msdownload=ominx-windows-app.desktop;
+application/x-msi=ominx-windows-app.desktop;
+
+[Added Associations]
+application/x-msdos-program=ominx-windows-app.desktop;
+application/x-ms-dos-executable=ominx-windows-app.desktop;
+application/x-msdos-executable=ominx-windows-app.desktop;
+application/vnd.microsoft.portable-executable=ominx-windows-app.desktop;
+application/x-msdownload=ominx-windows-app.desktop;
+application/x-msi=ominx-windows-app.desktop;

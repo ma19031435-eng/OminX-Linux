@@ -8,13 +8,13 @@ Steam is included. Sign in to Steam, open **Settings → Compatibility**, and en
 
 ## Standalone Windows applications
 
-Wine, 32-bit Wine support, Winetricks, and Lutris are installed. For a trusted installer, use the file manager's **Open With → Wine Windows Program Loader** option, or run:
+Wine, 32-bit Wine support, Winetricks, and Lutris are installed. Double-click a trusted `.exe` or `.msi` file to open it with **OminX Windows App Support**. EXE installers run through Wine; MSI packages are passed to Wine's Windows Installer. If another app opens the file, use **Open With → OminX Windows App Support**. You can also open **OminX Windows App Support** from the Applications menu and choose a file.
 
-```sh
-wine "$HOME/Downloads/setup.exe"
-```
+The first launch may take longer while Wine creates your personal Windows-compatible environment in `~/.wine`; Wine may also offer to install helper components. Complete the installer's own prompts. A successfully installed program may add a shortcut to the Applications menu; otherwise, double-click its installed `.exe` or open it through Wine. Installers and apps share the default Wine environment unless you use a separate Wine prefix.
 
 Winetricks can add some common Windows libraries and fonts. Lutris can manage many games and launchers. The optional **OminX Protontricks** launcher installs Protontricks into your user account from PyPI the first time it is opened; it requires an internet connection.
+
+Only open files from sources you trust. Wine programs are not sandboxed and can access or modify files in your user account. Double-click support does not make every Windows program compatible; check the limitations below before relying on an app.
 
 ## Compatibility limits
 

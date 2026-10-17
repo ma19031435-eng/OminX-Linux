@@ -9,6 +9,8 @@ lightdm-gtk-greeter
 network-manager
 network-manager-gnome
 nemo-fileroller
+desktop-file-utils
+shared-mime-info
 xdg-user-dirs
 xdg-utils
 

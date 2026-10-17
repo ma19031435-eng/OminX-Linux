@@ -24,6 +24,10 @@ apt-get install --yes --no-install-recommends \
     libpulse0:i386 \
     libasound2-plugins:i386
 
+# Register OminX's Windows-app handler for double-click and Open With actions.
+desktop-file-validate /usr/share/applications/ominx-windows-app.desktop
+update-desktop-database --quiet /usr/share/applications
+
 # Make the official Flathub catalog available in the desktop software center.
 # Apps are not preinstalled from this third-party remote.
 flatpak remote-add --system --if-not-exists flathub \

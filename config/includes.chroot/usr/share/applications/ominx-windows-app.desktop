@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=OminX Windows App Support
+GenericName=Windows application and installer launcher
+Comment=Install or run compatible Windows EXE and MSI applications with Wine
+Exec=/usr/local/bin/ominx-open-windows %f
+TryExec=/usr/local/bin/ominx-open-windows
+Icon=ominx
+Terminal=false
+StartupNotify=true
+Categories=Utility;
+MimeType=application/x-msdos-program;application/x-ms-dos-executable;application/x-msdos-executable;application/vnd.microsoft.portable-executable;application/x-msdownload;application/x-msi;

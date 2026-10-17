@@ -18,7 +18,7 @@ Included applications cover everyday work and system care:
 
 ## Gaming and Windows app compatibility
 
-Steam, Steam device rules, Valve Proton support, Wine 64/32-bit, Winetricks, Lutris, Wine executable integration, and 32-bit graphics/audio libraries are included. Protontricks is available through an optional first-use helper. The exact Proton runtime is downloaded by Steam after sign-in; it is not bundled in this image.
+Steam, Steam device rules, Valve Proton support, Wine 64/32-bit, Winetricks, Lutris, and 32-bit graphics/audio libraries are included in the ISO. Wine and the OminX `.exe`/`.msi` double-click handler are installed while building the image, so they are ready at first boot without downloading Wine then. OminX registers those files to open with **OminX Windows App Support**; its per-user Wine environment is initialized on first use. See `/usr/share/doc/ominx/compatibility.md` for details and compatibility limits. Protontricks is available through an optional first-use helper. The exact Proton runtime is downloaded by Steam after sign-in; it is not bundled in this image.
 
 OminX is Linux, not Windows, and no compatibility layer can run every `.exe`. Windows kernel drivers, Windows Store/UWP apps, some DRM, and games whose anti-cheat blocks Linux generally will not work. Check a specific title on [ProtonDB](https://www.protondb.com/) or [Wine AppDB](https://appdb.winehq.org/) before relying on it. The welcome app and `/usr/share/doc/ominx/compatibility.md` explain setup and limitations.
 
