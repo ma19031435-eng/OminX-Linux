@@ -2,7 +2,7 @@
 panels-enabled=['1:0:bottom']
 panels-height=['1:48']
 panels-resizable=['1:true']
-enabled-applets=['panel1:center:0:menu@cinnamon.org:0', 'panel1:center:1:expo@cinnamon.org:14', 'panel1:center:2:grouped-window-list@cinnamon.org:1', 'panel1:right:0:systray@cinnamon.org:3', 'panel1:right:1:xapp-status@cinnamon.org:4', 'panel1:right:2:notifications@cinnamon.org:5', 'panel1:right:3:printers@cinnamon.org:6', 'panel1:right:4:removable-drives@cinnamon.org:7', 'panel1:right:5:keyboard@cinnamon.org:8', 'panel1:right:6:network@cinnamon.org:9', 'panel1:right:7:sound@cinnamon.org:10', 'panel1:right:8:power@cinnamon.org:11', 'panel1:right:9:calendar@cinnamon.org:12', 'panel1:right:10:cornerbar@cinnamon.org:13']
+enabled-applets=['panel1:center:0:ominx-start@ominx:0', 'panel1:center:1:expo@cinnamon.org:14', 'panel1:center:2:grouped-window-list@cinnamon.org:1', 'panel1:right:0:systray@cinnamon.org:3', 'panel1:right:1:xapp-status@cinnamon.org:4', 'panel1:right:2:notifications@cinnamon.org:5', 'panel1:right:3:printers@cinnamon.org:6', 'panel1:right:4:removable-drives@cinnamon.org:7', 'panel1:right:5:keyboard@cinnamon.org:8', 'panel1:right:6:network@cinnamon.org:9', 'panel1:right:7:sound@cinnamon.org:10', 'panel1:right:8:power@cinnamon.org:11', 'panel1:right:9:calendar@cinnamon.org:12', 'panel1:right:10:cornerbar@cinnamon.org:13']
 favorite-apps=['nemo.desktop', 'firefox-esr.desktop', 'ominx-store.desktop', 'libreoffice-writer.desktop', 'ominx-settings.desktop']
 
 [org/cinnamon/theme]
@@ -12,8 +12,8 @@ name='OminX'
 picture-uri='file:///usr/share/backgrounds/ominx/ominx-wallpaper.svg'
 picture-options='zoom'
 color-shading-type='solid'
-primary-color='#07111f'
-secondary-color='#142544'
+primary-color='#f3f6fb'
+secondary-color='#dfeaf5'
 
 [org/cinnamon/desktop/interface]
 gtk-theme='OminX'

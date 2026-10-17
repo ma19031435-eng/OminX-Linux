@@ -28,6 +28,7 @@ for marker in ("build-info.txt", "${GITHUB_SHA}", "${GITHUB_RUN_ID}", "date -u")
 
 for python_app in ("welcome.py", "store.py", "settings.py", "ui.py"):
     ast.parse((config_root / "usr/lib/ominx" / python_app).read_text(encoding="utf-8"))
+ast.parse((root / "scripts/smoke-gtk-apps.py").read_text(encoding="utf-8"))
 for svg in config_root.rglob("*.svg"):
     ET.parse(svg)
 
@@ -36,7 +37,7 @@ for required_setting in (
     "[org/cinnamon/theme]",
     "name='OminX'",
     "gtk-theme='OminX'",
-    "panel1:center:0:menu@cinnamon.org:0",
+    "panel1:center:0:ominx-start@ominx:0",
     "panel1:center:1:expo@cinnamon.org:14",
     "panel1:center:2:grouped-window-list@cinnamon.org:1",
     "favorite-apps=['nemo.desktop', 'firefox-esr.desktop', 'ominx-store.desktop', 'libreoffice-writer.desktop', 'ominx-settings.desktop']",
@@ -69,6 +70,25 @@ for required_setting in (
 ):
     if required_setting not in shell_defaults:
         raise SystemExit(f"Familiar desktop defaults are incomplete: {required_setting}")
+
+start_applet = config_root / "usr/share/cinnamon/applets/ominx-start@ominx"
+start_metadata = json.loads((start_applet / "metadata.json").read_text(encoding="utf-8"))
+if start_metadata.get("uuid") != "ominx-start@ominx":
+    raise SystemExit("OminX Start applet metadata has the wrong UUID")
+start_source = (start_applet / "applet.js").read_text(encoding="utf-8")
+for behavior in ("Gio.AppInfo.get_all()", "_onSearchChanged", "_toggleAppView", "Power options", "OminX Store", "Super_L"):
+    if behavior not in start_source:
+        raise SystemExit(f"OminX Start is missing {behavior}")
+start_css = (start_applet / "stylesheet.css").read_text(encoding="utf-8")
+if start_css.count("{") != start_css.count("}"):
+    raise SystemExit("OminX Start stylesheet has unbalanced braces")
+for selector in (".ominx-start-root", ".ominx-start-search", ".ominx-start-grid", ".ominx-start-recommendations"):
+    if selector not in start_css:
+        raise SystemExit(f"OminX Start styling is missing {selector}")
+
+enabled_applets = next(line for line in shell_defaults.splitlines() if line.startswith("enabled-applets="))
+if "panel1:center:0:ominx-start@ominx:0" not in enabled_applets:
+    raise SystemExit("The taskbar must use the OminX Start applet")
 
 menu_defaults = json.loads(
     (config_root / "usr/share/cinnamon/applets/menu@cinnamon.org/settings-override.json").read_text(encoding="utf-8")
@@ -113,8 +133,14 @@ gtk_css = gtk_css_path.read_text(encoding="utf-8")
 theme_index = (config_root / "usr/share/themes/OminX/index.theme").read_text(encoding="utf-8")
 if "GtkTheme=OminX" not in theme_index:
     raise SystemExit("OminX GTK theme is not registered")
-if gtk_css.count("{") != gtk_css.count("}") or "Adwaita/gtk-contained-dark.css" not in gtk_css:
-    raise SystemExit("OminX GTK3 theme must extend the installed dark base with balanced CSS")
+if gtk_css.count("{") != gtk_css.count("}") or "Adwaita/gtk-contained.css" not in gtk_css:
+    raise SystemExit("OminX GTK3 theme must extend the installed light base with balanced CSS")
+lightdm_greeter = (config_root / "etc/lightdm/lightdm-gtk-greeter.conf").read_text(encoding="utf-8")
+if "theme-name=OminX" not in lightdm_greeter or "ominx-wallpaper.svg" not in lightdm_greeter:
+    raise SystemExit("The login screen must use OminX branding and its original wallpaper")
+wallpaper = config_root / "usr/share/backgrounds/ominx/ominx-wallpaper.svg"
+if "OMINX" not in wallpaper.read_text(encoding="utf-8"):
+    raise SystemExit("The desktop wallpaper is missing OminX branding")
 for selector in (".ominx-sidebar", ".ominx-hero", ".ominx-card", ".ominx-primary"):
     if selector not in ui_css:
         raise SystemExit(f"OminX app hub styling is missing {selector}")
@@ -165,10 +191,10 @@ settings_text = settings_entry.read_text(encoding="utf-8")
 backend_override = (config_root / "usr/local/share/applications/org.gnome.Software.desktop").read_text(encoding="utf-8")
 handler_text = handler_entry.read_text(encoding="utf-8")
 mime_defaults_text = mime_defaults.read_text(encoding="utf-8")
-if "Exec=ominx-store" not in store_text or "ominx-store.svg" not in store_text:
-    raise SystemExit("OminX Store must have a searchable desktop launcher and original icon")
-if "Exec=ominx-settings" not in settings_text or "ominx-settings.svg" not in settings_text:
-    raise SystemExit("OminX Settings must have a desktop launcher and original icon")
+if "TryExec=/usr/local/bin/ominx-store" not in store_text or "Exec=/usr/local/bin/ominx-store" not in store_text or "ominx-store.svg" not in store_text:
+    raise SystemExit("OminX Store must have an absolute, verifiable launcher path and original icon")
+if "TryExec=/usr/local/bin/ominx-settings" not in settings_text or "Exec=/usr/local/bin/ominx-settings" not in settings_text or "ominx-settings.svg" not in settings_text:
+    raise SystemExit("OminX Settings must have an absolute, verifiable launcher path and original icon")
 if "NoDisplay=true" not in backend_override or "Exec=gnome-software" not in backend_override:
     raise SystemExit("GNOME Software should remain available as the hidden OminX Store backend")
 for launcher in ("ominx-store", "ominx-settings"):

@@ -1,117 +1,118 @@
-/* Original OminX palette for the Store and Settings hubs; no vendor assets. */
+/* OminX light surfaces: original blue/cyan identity with clear, native GTK controls. */
 * { font-family: "Noto Sans", "DejaVu Sans", sans-serif; }
-window { background-color: #0a111d; color: #eaf2fc; }
-label { color: #eaf2fc; }
-.ominx-shell { background-color: #0a111d; }
+window { background-color: #f3f6fb; color: #1a2b42; }
+label { color: #1a2b42; }
+.ominx-shell { background-color: #f3f6fb; }
 .ominx-sidebar {
-  background-color: #0d1725;
-  border-right: 1px solid #243850;
-  padding: 16px 12px;
+  background-color: #f8faff;
+  border-right: 1px solid #dfe7f0;
+  padding: 20px 14px;
 }
-.ominx-brand { color: #f5f8ff; font-size: 17px; font-weight: 700; }
-.ominx-brand-caption { color: #8fa5c0; font-size: 10px; }
+.ominx-brand { color: #14253b; font-size: 17px; font-weight: 700; }
+.ominx-brand-caption { color: #718197; font-size: 10px; }
 .ominx-navigation button {
   background-image: none;
   background-color: transparent;
-  color: #b9c9dd;
+  color: #40536b;
   border: 1px solid transparent;
-  border-radius: 8px;
-  padding: 9px 10px;
+  border-radius: 9px;
+  padding: 9px 11px;
   box-shadow: none;
 }
 .ominx-navigation button:hover {
-  background-color: #15243a;
-  color: #ffffff;
+  background-color: #edf3fa;
+  color: #172c47;
 }
 .ominx-navigation button:checked {
-  background-color: #17324c;
-  color: #ffffff;
-  border-color: #294864;
-  border-left: 3px solid #49c9df;
+  background-color: #e8f1ff;
+  color: #1459ad;
+  border-color: #d6e5fb;
+  border-left: 3px solid #2c7add;
 }
-.ominx-content { background-color: #0a111d; padding: 24px 30px; }
-.ominx-page-title { color: #f3f7ff; font-size: 28px; font-weight: 700; }
-.ominx-section-title { color: #f0f5fd; font-size: 18px; font-weight: 700; }
-.ominx-copy { color: #a9bbd1; font-size: 12px; }
-.ominx-muted { color: #8ea4bf; font-size: 11px; }
+.ominx-content { background-color: #f3f6fb; padding: 25px 30px; }
+.ominx-page-title { color: #15263c; font-size: 27px; font-weight: 700; }
+.ominx-section-title { color: #1b2e46; font-size: 18px; font-weight: 700; }
+.ominx-copy { color: #617187; font-size: 12px; }
+.ominx-muted { color: #718197; font-size: 11px; }
 .ominx-search {
-  background-color: #142338;
-  color: #eff5ff;
-  border: 1px solid #304862;
-  border-radius: 9px;
+  background-color: #ffffff;
+  color: #1b2d44;
+  border: 1px solid #d7e1ec;
+  border-radius: 10px;
   padding: 9px 12px;
-  caret-color: #6bd6e7;
+  caret-color: #1671c8;
 }
-.ominx-search:focus { border-color: #4dc6df; background-color: #182a40; }
+.ominx-search:focus { border-color: #4b91e4; background-color: #ffffff; }
 .ominx-hero {
-  background-color: #132b46;
-  border: 1px solid #31577a;
+  background-image: linear-gradient(115deg, #e5f1ff, #f5f9ff 72%);
+  border: 1px solid #d3e4f8;
   border-radius: 16px;
   padding: 22px;
 }
-.ominx-hero-title { color: #f6faff; font-size: 23px; font-weight: 700; }
-.ominx-hero-copy { color: #c3d4e9; font-size: 13px; }
+.ominx-hero-title { color: #142a45; font-size: 23px; font-weight: 700; }
+.ominx-hero-copy { color: #536a83; font-size: 13px; }
 .ominx-card {
-  background-color: #111d2c;
-  color: #eaf2fc;
-  border: 1px solid #273c55;
-  border-radius: 12px;
+  background-color: #ffffff;
+  color: #1a2b42;
+  border: 1px solid #dfe6ef;
+  border-radius: 13px;
   padding: 14px;
+  box-shadow: 0 2px 9px rgba(31, 54, 82, 0.055);
 }
-.ominx-card:hover { background-color: #15243a; border-color: #3a6283; }
-.ominx-card-title { color: #f0f5fd; font-size: 14px; font-weight: 700; }
-.ominx-card-copy { color: #a9bbd1; font-size: 11px; }
+.ominx-card:hover { background-color: #fbfdff; border-color: #b9d0e9; }
+.ominx-card-title { color: #1a2d45; font-size: 14px; font-weight: 700; }
+.ominx-card-copy { color: #63748a; font-size: 11px; }
 .ominx-pill {
-  background-color: #162b42;
-  color: #c9e9f1;
-  border: 1px solid #2e516c;
+  background-color: #edf5ff;
+  color: #285887;
+  border: 1px solid #d5e7fa;
   border-radius: 999px;
   padding: 4px 9px;
   font-size: 10px;
 }
 .ominx-primary {
   background-image: none;
-  background-color: #176fdb;
+  background-color: #216ed1;
   color: #ffffff;
-  border: 1px solid #3186e8;
+  border: 1px solid #216ed1;
   border-radius: 8px;
   padding: 7px 13px;
   box-shadow: none;
 }
-.ominx-primary:hover { background-color: #2583ed; color: #ffffff; }
+.ominx-primary:hover { background-color: #165dbb; color: #ffffff; }
 .ominx-secondary {
   background-image: none;
-  background-color: #19283b;
-  color: #e8f1ff;
-  border: 1px solid #304962;
+  background-color: #ffffff;
+  color: #29435f;
+  border: 1px solid #d4deea;
   border-radius: 8px;
   padding: 7px 12px;
   box-shadow: none;
 }
-.ominx-secondary:hover { background-color: #243a56; color: #ffffff; }
+.ominx-secondary:hover { background-color: #f0f5fa; color: #1a3554; border-color: #b8cadd; }
 .ominx-chip {
   background-image: none;
-  background-color: #132338;
-  color: #c2d2e5;
-  border: 1px solid #29435e;
+  background-color: #ffffff;
+  color: #465d78;
+  border: 1px solid #d9e2ec;
   border-radius: 999px;
   padding: 6px 13px;
   box-shadow: none;
 }
 .ominx-chip:hover, .ominx-chip:checked {
-  background-color: #173c5b;
-  color: #ffffff;
-  border-color: #3b90b2;
+  background-color: #e8f2ff;
+  color: #145baa;
+  border-color: #bcd6f4;
 }
 .ominx-flat-button {
   background-image: none;
   background-color: transparent;
-  color: #a9c0d8;
+  color: #536a83;
   border: 1px solid transparent;
   border-radius: 8px;
   padding: 7px 10px;
   box-shadow: none;
 }
-.ominx-flat-button:hover { background-color: #16253a; color: #ffffff; }
-.ominx-divider { background-color: #25384e; min-height: 1px; }
-selection { background-color: #176fdb; color: #ffffff; }
+.ominx-flat-button:hover { background-color: #eaf1f8; color: #1a3554; }
+.ominx-divider { background-color: #dce4ee; min-height: 1px; }
+selection { background-color: #216ed1; color: #ffffff; }

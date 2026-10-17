@@ -17,37 +17,38 @@ from gi.repository import Gdk, Gtk  # noqa: E402
 
 CSS = b"""
 * { font-family: 'Noto Sans', 'DejaVu Sans', sans-serif; }
-window { background-color: #0b1220; color: #f1f5fc; }
-.ominx-title { color: #f6f9ff; font-size: 27px; font-weight: 700; }
-.ominx-subtitle { color: #a9bbd5; font-size: 13px; }
-.ominx-section { color: #edf4ff; font-size: 17px; font-weight: 700; }
+window { background-color: #f3f6fb; color: #1a2b42; }
+.ominx-title { color: #172b43; font-size: 27px; font-weight: 700; }
+.ominx-subtitle { color: #60738a; font-size: 13px; }
+.ominx-section { color: #1b2e46; font-size: 17px; font-weight: 700; }
 .ominx-card {
-  background-color: #111e33;
-  border: 1px solid #263a5a;
-  border-radius: 12px;
+  background-color: #ffffff;
+  border: 1px solid #dce5ef;
+  border-radius: 14px;
   padding: 16px;
+  box-shadow: 0 2px 9px rgba(31, 54, 82, 0.055);
 }
-.ominx-card-title { color: #f1f6ff; font-size: 15px; font-weight: 700; }
-.ominx-card-copy { color: #aebdd3; font-size: 12px; }
-.ominx-note { color: #91a5c1; font-size: 11px; }
+.ominx-card-title { color: #1a2d45; font-size: 15px; font-weight: 700; }
+.ominx-card-copy { color: #61748c; font-size: 12px; }
+.ominx-note { color: #718197; font-size: 11px; }
 button.ominx-primary {
   background-image: none;
-  background-color: #176fdb;
+  background-color: #216ed1;
   color: #ffffff;
-  border: 1px solid #3186e8;
+  border: 1px solid #216ed1;
   border-radius: 8px;
   padding: 8px 13px;
 }
-button.ominx-primary:hover { background-color: #2583ed; }
+button.ominx-primary:hover { background-color: #165dbb; }
 button.ominx-secondary {
   background-image: none;
-  background-color: #1a2a43;
-  color: #ecf3ff;
-  border: 1px solid #304565;
+  background-color: #ffffff;
+  color: #29435f;
+  border: 1px solid #d4deea;
   border-radius: 8px;
   padding: 8px 13px;
 }
-button.ominx-secondary:hover { background-color: #243a5a; }
+button.ominx-secondary:hover { background-color: #f0f5fa; }
 """
 
 

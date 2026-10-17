@@ -1,80 +1,80 @@
-/* OminX GTK3 theme: Adwaita dark controls with original OminX colors and shape. */
-@import url("resource:///org/gtk/libgtk/theme/Adwaita/gtk-contained-dark.css");
+/* OminX GTK3 theme: light Adwaita controls with original blue OminX accents. */
+@import url("resource:///org/gtk/libgtk/theme/Adwaita/gtk-contained.css");
 
 window, .background {
-  background-color: #0a111d;
-  color: #eaf2fc;
+  background-color: #f3f6fb;
+  color: #1a2b42;
 }
 
 headerbar, .titlebar {
-  background-color: #0d1725;
-  color: #f2f7ff;
-  border-bottom: 1px solid #243850;
+  background-color: #f8faff;
+  color: #172a43;
+  border-bottom: 1px solid #dce5ef;
   box-shadow: none;
 }
 
 button {
   background-image: none;
-  background-color: #19283b;
-  color: #e8f1ff;
-  border: 1px solid #304962;
+  background-color: #ffffff;
+  color: #29435f;
+  border: 1px solid #d4deea;
   border-radius: 8px;
   box-shadow: none;
   padding: 6px 10px;
 }
 
 button:hover {
-  background-color: #243a56;
-  color: #ffffff;
-  border-color: #3a6283;
+  background-color: #f0f5fa;
+  color: #1a3554;
+  border-color: #b8cadd;
 }
 
 button:active, button:checked {
-  background-color: #173c5b;
-  color: #ffffff;
+  background-color: #e8f2ff;
+  color: #145baa;
 }
 
 button.suggested-action, button.suggested-action:hover {
-  background-color: #176fdb;
+  background-color: #216ed1;
   color: #ffffff;
-  border-color: #3186e8;
+  border-color: #216ed1;
 }
 
 entry, spinbutton, .view {
-  background-color: #101b2a;
-  color: #eaf2fc;
-  border: 1px solid #2e425c;
+  background-color: #ffffff;
+  color: #1a2b42;
+  border: 1px solid #d4deea;
   border-radius: 7px;
-  caret-color: #6bd6e7;
+  caret-color: #1671c8;
 }
 
 entry:focus, spinbutton:focus {
-  background-color: #142338;
-  border-color: #4dc6df;
+  background-color: #ffffff;
+  border-color: #4b91e4;
 }
 
 treeview, list, row {
-  background-color: #0d1725;
-  color: #eaf2fc;
+  background-color: #ffffff;
+  color: #1a2b42;
 }
 
 treeview:selected, row:selected {
-  background-color: #1b5a88;
-  color: #ffffff;
+  background-color: #dcecff;
+  color: #153b68;
 }
 
 menubar, menu, popover {
-  background-color: #101b2a;
-  color: #eaf2fc;
-  border: 1px solid #2b405a;
+  background-color: #ffffff;
+  color: #1a2b42;
+  border: 1px solid #d8e2ed;
 }
 
 scrollbar slider {
-  background-color: #405b79;
+  background-color: #a9bbcf;
   border-radius: 6px;
 }
 
 selection {
-  background-color: #176fdb;
+  background-color: #216ed1;
   color: #ffffff;
 }

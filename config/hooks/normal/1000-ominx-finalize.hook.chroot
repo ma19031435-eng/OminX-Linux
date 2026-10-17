@@ -58,6 +58,8 @@ for stylesheet in (
         raise SystemExit(f"Could not load OminX GTK stylesheet: {stylesheet}")
 PY
 
+gjs -c 'const St = imports.gi.St; const theme = new St.Theme({}); for (const stylesheet of ["/usr/share/themes/OminX/cinnamon/cinnamon.css", "/usr/share/cinnamon/applets/ominx-start@ominx/stylesheet.css"]) { if (!theme.load_stylesheet(stylesheet)) throw new Error("Could not load Cinnamon stylesheet: " + stylesheet); }'
+
 # Validate Cinnamon applet defaults against the version actually installed in
 # this image so a package update cannot silently discard the OminX taskbar.
 python3 - <<'PY'
@@ -152,9 +154,11 @@ test -r /usr/share/applications/ominx-settings.desktop
 test -r /usr/share/applications/org.gnome.Software.desktop
 test -x /usr/bin/gnome-software
 grep -q '^NoDisplay=true$' /usr/local/share/applications/org.gnome.Software.desktop
-for applet in menu@cinnamon.org expo@cinnamon.org grouped-window-list@cinnamon.org; do
+for applet in menu@cinnamon.org ominx-start@ominx expo@cinnamon.org grouped-window-list@cinnamon.org; do
     test -r "/usr/share/cinnamon/applets/$applet/applet.js"
 done
+test -r /usr/share/cinnamon/applets/ominx-start@ominx/metadata.json
+test -r /usr/share/cinnamon/applets/ominx-start@ominx/stylesheet.css
 
 # Make the official Flathub catalog available in the desktop software center.
 # Apps are not preinstalled from this third-party remote.

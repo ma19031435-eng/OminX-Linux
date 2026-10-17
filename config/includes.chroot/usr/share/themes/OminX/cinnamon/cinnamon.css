@@ -1,29 +1,29 @@
-/* OminX Cinnamon shell theme: original blue/cyan styling for a familiar desktop. */
+/* OminX shell theme: bright, clean surfaces and original blue/cyan accents. */
 stage {
-  color: #e8f1ff;
+  color: #20334a;
   font-family: "Noto Sans", sans-serif;
   font-size: 10pt;
 }
 
 #panel {
-  color: #e8f1ff;
+  color: #273a51;
   font-family: "Noto Sans", sans-serif;
   font-size: 10pt;
   font-weight: normal;
   height: 48px;
   width: 36px;
-  background-color: rgba(8, 15, 27, 0.97);
+  background-color: rgba(246, 249, 253, 0.96);
 }
 
 .panel-top, .panel-bottom, .panel-left, .panel-right {
-  color: #e8f1ff;
-  background-color: rgba(8, 15, 27, 0.97);
+  color: #273a51;
+  background-color: rgba(246, 249, 253, 0.96);
   border: none;
   padding: 0;
 }
 
 .panel-bottom {
-  border-top: 1px solid rgba(93, 199, 232, 0.30);
+  border-top: 1px solid rgba(164, 183, 204, 0.72);
 }
 
 #panelLeft, #panelCenter, #panelRight {
@@ -43,32 +43,32 @@ stage {
 .panel-button, .panel-status-button {
   -natural-hpadding: 9px;
   -minimum-hpadding: 4px;
-  color: #d8e6f7;
+  color: #344a63;
   font-weight: normal;
   border-radius: 8px;
   transition-duration: 120;
 }
 
 .panel-button:hover, .panel-status-button:hover {
-  color: #ffffff;
-  background-color: rgba(117, 170, 218, 0.16);
+  color: #173b68;
+  background-color: rgba(83, 135, 188, 0.12);
   border-radius: 8px;
 }
 
 .panel-button:active, .panel-button:checked,
 .panel-status-button:active, .panel-status-button:checked {
-  color: #ffffff;
-  background-color: rgba(57, 169, 205, 0.24);
+  color: #174e89;
+  background-color: rgba(62, 133, 204, 0.16);
   border-radius: 8px;
 }
 
 .panel-button:focus, .panel-status-button:focus {
-  color: #ffffff;
-  background-color: rgba(66, 181, 218, 0.22);
+  color: #174e89;
+  background-color: rgba(62, 133, 204, 0.18);
 }
 
 .window-list-item-box {
-  color: #c9d8ec;
+  color: #354a63;
   background-color: transparent;
   border-radius: 9px;
   border-bottom-width: 2px;
@@ -79,63 +79,63 @@ stage {
 }
 
 .window-list-item-box:hover, .window-list-item-box:groupFocus {
-  color: #ffffff;
-  background-color: rgba(110, 162, 207, 0.16);
+  color: #173451;
+  background-color: rgba(75, 126, 178, 0.12);
   border-radius: 9px;
 }
 
 .window-list-item-box:active, .window-list-item-box:checked,
 .window-list-item-box:focus, .window-list-item-box:running {
-  color: #ffffff;
-  background-color: rgba(76, 153, 204, 0.20);
-  border-bottom-color: #55d5e8;
+  color: #173b68;
+  background-color: rgba(67, 133, 194, 0.15);
+  border-bottom-color: #2582d5;
 }
 
 .window-list-item-box .progress {
-  background-color: #45c7de;
+  background-color: #2795c9;
 }
 
 .popup-menu {
-  color: #e8f1ff;
-  -arrow-background-color: #111c2c;
+  color: #23364d;
+  -arrow-background-color: #ffffff;
   -arrow-border-width: 1px;
-  -arrow-border-color: #2b405a;
+  -arrow-border-color: #d6e1ed;
   -arrow-border-radius: 12px;
   -arrow-base: 22px;
   -arrow-rise: 11px;
-  -arrow-box-shadow: 0 10px 28px rgba(0, 0, 0, 0.42);
+  -arrow-box-shadow: 0 12px 30px rgba(34, 56, 82, 0.18);
   -boxpointer-gap: 6px;
 }
 
 .popup-menu-content {
-  color: #e8f1ff;
-  background-color: #111c2c;
-  border: 1px solid #2b405a;
+  color: #23364d;
+  background-color: #ffffff;
+  border: 1px solid #d9e3ed;
   border-radius: 12px;
   padding: 8px;
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.38);
+  box-shadow: 0 12px 30px rgba(34, 56, 82, 0.15);
 }
 
 .popup-menu-item {
-  color: #e3edfa;
+  color: #314861;
   border-radius: 7px;
   padding: 7px 12px;
   spacing: 10px;
 }
 
 .popup-menu-item:hover, .popup-menu-item:active, .popup-menu-item:checked {
-  color: #ffffff;
-  background-color: rgba(73, 163, 209, 0.20);
+  color: #173d67;
+  background-color: #eaf3fd;
   border-radius: 7px;
 }
 
 .popup-menu-item:insensitive {
-  color: rgba(211, 225, 243, 0.45);
+  color: rgba(65, 84, 106, 0.5);
 }
 
 .appmenu-background .popup-menu-content {
-  background-color: #101a29;
-  border: 1px solid #2c4562;
+  background-color: #ffffff;
+  border: 1px solid #d7e2ee;
   border-radius: 15px;
   padding: 12px;
 }
@@ -150,24 +150,24 @@ stage {
 }
 
 .appmenu-search-box StEntry, .menu-search-box StEntry {
-  color: #f2f7ff;
-  caret-color: #73e3ee;
-  selection-background-color: #197db2;
-  background-color: #19283b;
-  border: 1px solid #344d69;
+  color: #20334a;
+  caret-color: #167ac0;
+  selection-background-color: #cfe4fb;
+  background-color: #f8faff;
+  border: 1px solid #d3dfeb;
   border-radius: 9px;
   padding: 8px 11px;
 }
 
 .appmenu-search-box StEntry:focus, .menu-search-box StEntry:focus {
-  border: 1px solid #48c7df;
-  background-color: #1b2d43;
+  border: 1px solid #5c9de0;
+  background-color: #ffffff;
 }
 
 .appmenu-sidebar {
-  color: #d7e6f7;
-  background-color: #162338;
-  border-color: #263b55;
+  color: #344b64;
+  background-color: #f5f8fc;
+  border-color: #dce5ef;
   border-right-width: 1px;
   border-radius: 11px;
   padding: 11px 7px;
@@ -178,7 +178,7 @@ stage {
 .appmenu-category-button, .appmenu-application-button,
 .menu-category-button, .menu-application-button,
 .menu-favorites-button, .menu-places-button {
-  color: #d9e7f7;
+  color: #344b64;
   border: 1px solid transparent;
   border-radius: 8px;
   padding: 7px;
@@ -188,17 +188,17 @@ stage {
 .appmenu-category-button:hover, .appmenu-application-button:hover,
 .menu-category-button:hover, .menu-application-button:hover,
 .menu-favorites-button:hover, .menu-places-button:hover {
-  color: #ffffff;
-  background-color: rgba(94, 163, 205, 0.17);
+  color: #173b61;
+  background-color: #eaf2fb;
   border-radius: 8px;
 }
 
 .appmenu-application-button-selected, .appmenu-category-button-selected,
 .menu-application-button-selected, .menu-category-button-selected,
 .menu-favorites-button:active {
-  color: #ffffff;
-  background-color: rgba(54, 151, 199, 0.24);
-  border: 1px solid rgba(92, 207, 226, 0.34);
+  color: #15589a;
+  background-color: #e6f1ff;
+  border: 1px solid #c9def5;
   border-radius: 8px;
 }
 
@@ -206,7 +206,7 @@ stage {
 .appmenu-category-button:highlighted,
 .menu-application-button:highlighted,
 .menu-category-button:highlighted {
-  color: #ffffff;
+  color: #173b61;
 }
 
 .appmenu-system-box {
@@ -214,9 +214,9 @@ stage {
 }
 
 StTooltip {
-  color: #f2f7ff;
-  background-color: #111c2c;
-  border: 1px solid #2b405a;
+  color: #20334a;
+  background-color: #ffffff;
+  border: 1px solid #d8e2ed;
   border-radius: 7px;
   padding: 5px 8px;
 }

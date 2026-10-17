@@ -688,6 +688,12 @@ def main() -> int:
     Gtk.init(sys.argv)
     window = StoreWindow()
     window.connect("destroy", lambda _window: Gtk.main_quit())
+    if os.environ.get("OMINX_SMOKE_TEST") == "1":
+        def close_smoke_window() -> bool:
+            window.destroy()
+            return False
+
+        GLib.idle_add(close_smoke_window)
     Gtk.main()
     return 0
 
