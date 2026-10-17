@@ -28,6 +28,31 @@ apt-get install --yes --no-install-recommends \
 desktop-file-validate /usr/share/applications/ominx-windows-app.desktop
 update-desktop-database --quiet /usr/share/applications
 
+# Validate Cinnamon applet defaults against the version actually installed in
+# this image so a package update cannot silently discard the OminX taskbar.
+python3 - <<'PY'
+import json
+from pathlib import Path
+
+applets = Path("/usr/share/cinnamon/applets")
+for uuid in ("menu@cinnamon.org", "grouped-window-list@cinnamon.org"):
+    applet_dir = applets / uuid
+    schema = json.loads((applet_dir / "settings-schema.json").read_text(encoding="utf-8"))
+    override = json.loads((applet_dir / "settings-override.json").read_text(encoding="utf-8"))
+    unknown = sorted(set(override) - set(schema))
+    if unknown:
+        raise SystemExit(f"Unknown settings for {uuid}: {', '.join(unknown)}")
+    for key, values in override.items():
+        if "default" not in schema[key] or "default" not in values:
+            raise SystemExit(f"Invalid default override for {uuid}:{key}")
+        if "default" not in values.get("override-props", []):
+            raise SystemExit(f"Missing default override flag for {uuid}:{key}")
+PY
+
+for desktop_id in nemo.desktop firefox-esr.desktop org.gnome.Software.desktop libreoffice-writer.desktop; do
+    test -r "/usr/share/applications/$desktop_id"
+done
+
 # Make the official Flathub catalog available in the desktop software center.
 # Apps are not preinstalled from this third-party remote.
 flatpak remote-add --system --if-not-exists flathub \

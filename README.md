@@ -6,7 +6,7 @@ This repository contains the **live-build recipe** and source assets, not a preb
 
 ## Desktop features and core apps
 
-OminX brings together common desktop functions using Linux components: a bottom taskbar and application menu, window list and workspaces, file manager, search, notifications, settings, software installation and updates, networking, Bluetooth, printing/scanning, backups, firewall controls, accessibility tools, and remote desktop access. It does not include Microsoft binaries, Windows-only services, or Microsoft artwork.
+OminX uses Cinnamon to provide a familiar desktop layout: a bottom taskbar with a centered O Start button, pinned and grouped app icons, a searchable Start menu, system tray and clock on the right, right-side window controls, and common desktop icons. Original OminX blue/cyan shell styling is designed for people moving from Windows, while using Linux components and original artwork—not Microsoft code, Windows binaries, or copied Windows artwork. The desktop also provides workspaces, file search, notifications, settings, software installation and updates, networking, Bluetooth, printing/scanning, backups, firewall controls, accessibility tools, and remote desktop access.
 
 Included applications cover everyday work and system care:
 

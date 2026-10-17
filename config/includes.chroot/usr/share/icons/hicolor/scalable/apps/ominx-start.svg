@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="OminX Start">
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#172944"/>
+      <stop offset="1" stop-color="#091321"/>
+    </linearGradient>
+    <linearGradient id="ring" x1=".12" y1=".08" x2=".9" y2=".92">
+      <stop offset="0" stop-color="#9af6ee"/>
+      <stop offset=".48" stop-color="#43cee5"/>
+      <stop offset="1" stop-color="#5284ff"/>
+    </linearGradient>
+    <radialGradient id="aura">
+      <stop offset="0" stop-color="#49d4ed" stop-opacity=".24"/>
+      <stop offset="1" stop-color="#49d4ed" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect x="24" y="24" width="464" height="464" rx="132" fill="url(#tile)"/>
+  <rect x="25" y="25" width="462" height="462" rx="131" fill="none" stroke="#a9dcff" stroke-opacity=".18" stroke-width="2"/>
+  <circle cx="256" cy="256" r="190" fill="url(#aura)"/>
+  <path d="M 365 145 A 154 154 0 1 1 379 167" fill="none" stroke="url(#ring)" stroke-width="50" stroke-linecap="round"/>
+  <path d="M 366 124 L 401 89" fill="none" stroke="#d2fffa" stroke-width="12" stroke-linecap="round"/>
+  <circle cx="365" cy="145" r="7" fill="#e4fffc"/>
+</svg>

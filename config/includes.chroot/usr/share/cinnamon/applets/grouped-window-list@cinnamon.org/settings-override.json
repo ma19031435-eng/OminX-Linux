@@ -1,0 +1,23 @@
+{
+  "pinned-apps": {
+    "override-props": ["default"],
+    "default": [
+      "nemo.desktop",
+      "firefox-esr.desktop",
+      "org.gnome.Software.desktop",
+      "libreoffice-writer.desktop"
+    ]
+  },
+  "group-apps": {
+    "override-props": ["default"],
+    "default": true
+  },
+  "title-display": {
+    "override-props": ["default"],
+    "default": 1
+  },
+  "show-thumbnails": {
+    "override-props": ["default"],
+    "default": true
+  }
+}

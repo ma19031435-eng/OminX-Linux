@@ -70,18 +70,14 @@ jobs:
           QEMU_PID=$!
           trap 'kill "$QEMU_PID" 2>/dev/null || true; wait "$QEMU_PID" 2>/dev/null || true' EXIT
 
-          # Give firmware and the boot menu time to appear, then choose the default live entry.
-          sleep 10
-          for _ in $(seq 1 60); do
-            if ! kill -0 "$QEMU_PID" 2>/dev/null; then
-              cat "$QEMU_LOG"
-              exit 1
-            fi
-            if "$RUNNER_TEMP/vnc-venv/bin/vncdo" -s 127.0.0.1::5900 key enter >/dev/null 2>&1; then
-              break
-            fi
-            sleep 1
-          done
+          # VNC is reachable before BIOS/GRUB have painted a menu. Wait long
+          # enough for the ISO boot menu, then launch its default Live system entry.
+          sleep 45
+          if ! kill -0 "$QEMU_PID" 2>/dev/null; then
+            cat "$QEMU_LOG"
+            exit 1
+          fi
+          "$RUNNER_TEMP/vnc-venv/bin/vncdo" -s 127.0.0.1::5900 key enter
 
           # TCG is software emulation, so allow extra time for Cinnamon to start.
           sleep 360
@@ -95,10 +91,6 @@ jobs:
           PY
           cp "$SERIAL_LOG" ominx-serial.log 2>/dev/null || true
           cp "$QEMU_LOG" ominx-qemu.log 2>/dev/null || true
-
-          printf 'OMINX_PREVIEW_JPEG_BASE64_BEGIN\n'
-          base64 -w 76 ominx-boot-preview.jpg
-          printf 'OMINX_PREVIEW_JPEG_BASE64_END\n'
 
       - name: Upload preview and emulator logs
         if: always()

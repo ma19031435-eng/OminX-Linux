@@ -1,0 +1,222 @@
+/* OminX Cinnamon shell theme: original blue/cyan styling for a familiar desktop. */
+stage {
+  color: #e8f1ff;
+  font-family: "Noto Sans", sans-serif;
+  font-size: 10pt;
+}
+
+#panel {
+  color: #e8f1ff;
+  font-family: "Noto Sans", sans-serif;
+  font-size: 10pt;
+  font-weight: normal;
+  height: 48px;
+  width: 36px;
+  background-color: rgba(8, 15, 27, 0.97);
+}
+
+.panel-top, .panel-bottom, .panel-left, .panel-right {
+  color: #e8f1ff;
+  background-color: rgba(8, 15, 27, 0.97);
+  border: none;
+  padding: 0;
+}
+
+.panel-bottom {
+  border-top: 1px solid rgba(93, 199, 232, 0.30);
+}
+
+#panelLeft, #panelCenter, #panelRight {
+  spacing: 3px;
+}
+
+#panelLeft:ltr {
+  padding-left: 8px;
+  padding-right: 4px;
+}
+
+#panelRight:ltr {
+  padding-left: 4px;
+  padding-right: 8px;
+}
+
+.panel-button, .panel-status-button {
+  -natural-hpadding: 9px;
+  -minimum-hpadding: 4px;
+  color: #d8e6f7;
+  font-weight: normal;
+  border-radius: 8px;
+  transition-duration: 120;
+}
+
+.panel-button:hover, .panel-status-button:hover {
+  color: #ffffff;
+  background-color: rgba(117, 170, 218, 0.16);
+  border-radius: 8px;
+}
+
+.panel-button:active, .panel-button:checked,
+.panel-status-button:active, .panel-status-button:checked {
+  color: #ffffff;
+  background-color: rgba(57, 169, 205, 0.24);
+  border-radius: 8px;
+}
+
+.panel-button:focus, .panel-status-button:focus {
+  color: #ffffff;
+  background-color: rgba(66, 181, 218, 0.22);
+}
+
+.window-list-item-box {
+  color: #c9d8ec;
+  background-color: transparent;
+  border-radius: 9px;
+  border-bottom-width: 2px;
+  border-color: transparent;
+  padding: 5px 9px;
+  margin: 4px 2px;
+  transition-duration: 130;
+}
+
+.window-list-item-box:hover, .window-list-item-box:groupFocus {
+  color: #ffffff;
+  background-color: rgba(110, 162, 207, 0.16);
+  border-radius: 9px;
+}
+
+.window-list-item-box:active, .window-list-item-box:checked,
+.window-list-item-box:focus, .window-list-item-box:running {
+  color: #ffffff;
+  background-color: rgba(76, 153, 204, 0.20);
+  border-bottom-color: #55d5e8;
+}
+
+.window-list-item-box .progress {
+  background-color: #45c7de;
+}
+
+.popup-menu {
+  color: #e8f1ff;
+  -arrow-background-color: #111c2c;
+  -arrow-border-width: 1px;
+  -arrow-border-color: #2b405a;
+  -arrow-border-radius: 12px;
+  -arrow-base: 22px;
+  -arrow-rise: 11px;
+  -arrow-box-shadow: 0 10px 28px rgba(0, 0, 0, 0.42);
+  -boxpointer-gap: 6px;
+}
+
+.popup-menu-content {
+  color: #e8f1ff;
+  background-color: #111c2c;
+  border: 1px solid #2b405a;
+  border-radius: 12px;
+  padding: 8px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.38);
+}
+
+.popup-menu-item {
+  color: #e3edfa;
+  border-radius: 7px;
+  padding: 7px 12px;
+  spacing: 10px;
+}
+
+.popup-menu-item:hover, .popup-menu-item:active, .popup-menu-item:checked {
+  color: #ffffff;
+  background-color: rgba(73, 163, 209, 0.20);
+  border-radius: 7px;
+}
+
+.popup-menu-item:insensitive {
+  color: rgba(211, 225, 243, 0.45);
+}
+
+.appmenu-background .popup-menu-content {
+  background-color: #101a29;
+  border: 1px solid #2c4562;
+  border-radius: 15px;
+  padding: 12px;
+}
+
+.appmenu-main-box {
+  spacing: 12px;
+}
+
+.appmenu-search-box, .menu-search-box {
+  spacing: 8px;
+  padding: 8px;
+}
+
+.appmenu-search-box StEntry, .menu-search-box StEntry {
+  color: #f2f7ff;
+  caret-color: #73e3ee;
+  selection-background-color: #197db2;
+  background-color: #19283b;
+  border: 1px solid #344d69;
+  border-radius: 9px;
+  padding: 8px 11px;
+}
+
+.appmenu-search-box StEntry:focus, .menu-search-box StEntry:focus {
+  border: 1px solid #48c7df;
+  background-color: #1b2d43;
+}
+
+.appmenu-sidebar {
+  color: #d7e6f7;
+  background-color: #162338;
+  border-color: #263b55;
+  border-right-width: 1px;
+  border-radius: 11px;
+  padding: 11px 7px;
+  spacing: 5px;
+}
+
+.appmenu-sidebar-button, .appmenu-system-button,
+.appmenu-category-button, .appmenu-application-button,
+.menu-category-button, .menu-application-button,
+.menu-favorites-button, .menu-places-button {
+  color: #d9e7f7;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 7px;
+}
+
+.appmenu-sidebar-button:hover, .appmenu-system-button:hover,
+.appmenu-category-button:hover, .appmenu-application-button:hover,
+.menu-category-button:hover, .menu-application-button:hover,
+.menu-favorites-button:hover, .menu-places-button:hover {
+  color: #ffffff;
+  background-color: rgba(94, 163, 205, 0.17);
+  border-radius: 8px;
+}
+
+.appmenu-application-button-selected, .appmenu-category-button-selected,
+.menu-application-button-selected, .menu-category-button-selected,
+.menu-favorites-button:active {
+  color: #ffffff;
+  background-color: rgba(54, 151, 199, 0.24);
+  border: 1px solid rgba(92, 207, 226, 0.34);
+  border-radius: 8px;
+}
+
+.appmenu-application-button:highlighted,
+.appmenu-category-button:highlighted,
+.menu-application-button:highlighted,
+.menu-category-button:highlighted {
+  color: #ffffff;
+}
+
+.appmenu-system-box {
+  spacing: 6px;
+}
+
+StTooltip {
+  color: #f2f7ff;
+  background-color: #111c2c;
+  border: 1px solid #2b405a;
+  border-radius: 7px;
+  padding: 5px 8px;
+}

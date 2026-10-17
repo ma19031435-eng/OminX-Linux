@@ -12,6 +12,7 @@ done
 
 python3 - <<'PY'
 import ast
+import json
 import os
 import subprocess
 import tempfile
@@ -24,6 +25,53 @@ config_root = root / "config/includes.chroot"
 ast.parse((config_root / "usr/lib/ominx/welcome.py").read_text(encoding="utf-8"))
 for svg in config_root.rglob("*.svg"):
     ET.parse(svg)
+
+shell_defaults = (config_root / "etc/dconf/db/local.d/00-ominx").read_text(encoding="utf-8")
+for required_setting in (
+    "[org/cinnamon/theme]",
+    "name='OminX'",
+    "gtk-theme='Adwaita-dark'",
+    "panel1:center:0:menu@cinnamon.org:0",
+    "panel1:center:1:grouped-window-list@cinnamon.org:1",
+    "button-layout=':minimize,maximize,close'",
+    "home-icon-visible=true",
+    "computer-icon-visible=true",
+):
+    if required_setting not in shell_defaults:
+        raise SystemExit(f"Familiar desktop defaults are incomplete: {required_setting}")
+
+menu_defaults = json.loads(
+    (config_root / "usr/share/cinnamon/applets/menu@cinnamon.org/settings-override.json").read_text(encoding="utf-8")
+)
+if not menu_defaults["menu-custom"]["default"] or menu_defaults["menu-label"]["default"] != "":
+    raise SystemExit("The Start button must use the custom icon without a text label")
+if not menu_defaults["menu-icon"]["default"].endswith("ominx-start.svg"):
+    raise SystemExit("The OminX Start icon is not configured")
+if not menu_defaults["show-favorites"]["default"] or menu_defaults["show-recents"]["default"]:
+    raise SystemExit("The Start menu must surface favorite apps instead of recents")
+
+window_list_defaults = json.loads(
+    (config_root / "usr/share/cinnamon/applets/grouped-window-list@cinnamon.org/settings-override.json").read_text(encoding="utf-8")
+)
+expected_pins = [
+    "nemo.desktop",
+    "firefox-esr.desktop",
+    "org.gnome.Software.desktop",
+    "libreoffice-writer.desktop",
+]
+if window_list_defaults["pinned-apps"]["default"] != expected_pins:
+    raise SystemExit("The taskbar's pinned apps are missing or out of order")
+for app_id in expected_pins:
+    if f"'{app_id}'" not in shell_defaults:
+        raise SystemExit(f"The Start menu favorite list is missing {app_id}")
+
+shell_theme = config_root / "usr/share/themes/OminX/cinnamon/cinnamon.css"
+theme_css = shell_theme.read_text(encoding="utf-8")
+if theme_css.count("{") != theme_css.count("}"):
+    raise SystemExit("OminX Cinnamon theme CSS has unbalanced braces")
+for selector in ("#panel", ".window-list-item-box", ".appmenu-background .popup-menu-content"):
+    if selector not in theme_css:
+        raise SystemExit(f"OminX Cinnamon theme is missing {selector}")
 
 required = {
     "cinnamon-desktop-environment",

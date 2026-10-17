@@ -82,7 +82,7 @@ class WelcomeWindow(Gtk.Window):
         title = Gtk.Label(label="Welcome to OminX")
         title.set_xalign(0)
         title.get_style_context().add_class("ominx-title")
-        subtitle = Gtk.Label(label="A familiar desktop, ready for work, creativity, and play.")
+        subtitle = Gtk.Label(label="A familiar desktop, ready for work, creativity, and play. Click the O on the taskbar to open Start.")
         subtitle.set_xalign(0)
         subtitle.get_style_context().add_class("ominx-subtitle")
         brand_text.pack_start(title, False, False, 0)
