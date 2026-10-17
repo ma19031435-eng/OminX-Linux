@@ -82,6 +82,11 @@ jobs:
           # TCG is software emulation, so allow extra time for Cinnamon to start.
           sleep 360
           "$RUNNER_TEMP/vnc-venv/bin/vncdo" -s 127.0.0.1::5900 capture ominx-boot-preview.png
+          # Dismiss a first-run window or dialog, if present, to capture the
+          # taskbar and desktop as a second view.
+          "$RUNNER_TEMP/vnc-venv/bin/vncdo" -s 127.0.0.1::5900 key esc
+          sleep 5
+          "$RUNNER_TEMP/vnc-venv/bin/vncdo" -s 127.0.0.1::5900 capture ominx-desktop-after-dismiss.png
           "$RUNNER_TEMP/vnc-venv/bin/python" - <<'PY'
           from PIL import Image, ImageStat
           image = Image.open("ominx-boot-preview.png").convert("RGB")
@@ -99,12 +104,16 @@ jobs:
           from io import BytesIO
           from PIL import Image
 
-          image = Image.open("ominx-boot-preview.png").convert("RGB")
-          image.thumbnail((320, 240), Image.Resampling.LANCZOS)
-          output = BytesIO()
-          image.save(output, format="JPEG", quality=35, optimize=True)
-          thumbnail = b64encode(output.getvalue()).decode("ascii")
-          print(f"::notice title=OminX desktop thumbnail::{thumbnail}")
+          for title, path in (
+              ("OminX first boot", "ominx-boot-preview.png"),
+              ("OminX desktop after dismiss", "ominx-desktop-after-dismiss.png"),
+          ):
+              image = Image.open(path).convert("RGB")
+              image.thumbnail((640, 480), Image.Resampling.LANCZOS)
+              output = BytesIO()
+              image.save(output, format="JPEG", quality=45, optimize=True)
+              thumbnail = b64encode(output.getvalue()).decode("ascii")
+              print(f"::notice title={title}::{thumbnail}")
           PY
 
       - name: Upload preview and emulator logs
@@ -115,6 +124,7 @@ jobs:
           path: |
             ominx-boot-preview.jpg
             ominx-boot-preview.png
+            ominx-desktop-after-dismiss.png
             ominx-serial.log
             ominx-qemu.log
           if-no-files-found: warn
