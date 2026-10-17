@@ -1,6 +1,11 @@
 name: Boot OminX ISO preview
 
 on:
+  push:
+    branches:
+      - "arena/30b7965b-ominx-linux"
+    paths:
+      - ".github/workflows/preview-iso.yml"
   workflow_dispatch:
     inputs:
       source_run_id:
@@ -23,7 +28,7 @@ jobs:
       - name: Download the installable ISO artifact
         uses: actions/download-artifact@v4
         with:
-          run-id: ${{ inputs.source_run_id }}
+          run-id: ${{ inputs.source_run_id || '39011517168' }}
           repository: ${{ github.repository }}
           github-token: ${{ github.token }}
           path: preview-artifacts
@@ -81,7 +86,7 @@ jobs:
           # TCG is software emulation, so allow extra time for Cinnamon to start.
           sleep 360
           "$RUNNER_TEMP/vnc-venv/bin/vncdo" -s 127.0.0.1::5900 capture ominx-boot-preview.png
-          python3 - <<'PY'
+          "$RUNNER_TEMP/vnc-venv/bin/python" - <<'PY'
           from PIL import Image, ImageStat
           image = Image.open("ominx-boot-preview.png").convert("RGB")
           mean = sum(ImageStat.Stat(image).mean) / 3
