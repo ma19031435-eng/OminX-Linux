@@ -235,8 +235,8 @@ setup_desktop = applications / "ominx-setup.desktop"
 setup_autostart = config_root / "etc/skel/.config/autostart/ominx-setup.desktop"
 if not os.access(setup_launcher, os.X_OK):
     raise SystemExit("OminX Setup launcher must be executable")
-if "from gi.repository import Gio, GLib, Gtk" not in setup_source:
-    raise SystemExit("OminX Setup must import GLib for Gio error handling")
+if "from gi.repository import Gio, GLib, Gtk" not in setup_source or "except (GLib.Error, TypeError)" not in setup_source:
+    raise SystemExit("OminX Setup must handle an unavailable Firefox desktop entry")
 for step in ("welcome", "network", "software", "gaming", "finish"):
     if f'("{step}",' not in setup_source:
         raise SystemExit(f"OminX Setup is missing its {step} step")

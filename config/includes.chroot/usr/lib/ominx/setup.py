@@ -40,7 +40,10 @@ class SetupWindow(Gtk.Window):
         self.setup_directory = Path.home() / ".config" / "ominx"
         self.complete_marker = self.setup_directory / "setup-complete"
         self.dismissed_marker = self.setup_directory / "setup-dismissed"
-        self.firefox_app = Gio.DesktopAppInfo.new("firefox-esr.desktop")
+        try:
+            self.firefox_app = Gio.DesktopAppInfo.new("firefox-esr.desktop")
+        except (GLib.Error, TypeError):
+            self.firefox_app = None
         self.network_monitor = Gio.NetworkMonitor.get_default()
         self.network_monitor_handler = 0
         if self.network_monitor is not None:
