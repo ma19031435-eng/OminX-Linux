@@ -260,7 +260,7 @@ for boot_marker in ("Try OminX Aurora", "Install OminX", "@LINUX@", "@INITRD@", 
 if "include menu.cfg" not in boot_isolinux_cfg or "timeout 80" not in boot_isolinux_cfg:
     raise SystemExit("OminX ISOLINUX configuration must load its menu with a short timeout")
 boot_verifier = (root / "scripts/verify-boot-menu.sh").read_text(encoding="utf-8")
-for verifier_marker in ("grub-script-check", "binary/install/gtk/vmlinuz", "binary/install/vmlinuz", "KERNEL_(", "Try OminX Aurora"):
+for verifier_marker in ("grub-script-check", "x86_64-efi/grub.cfg", "configfile", "binary/install/gtk/vmlinuz", "binary/install/vmlinuz", "KERNEL_(", "Try OminX Aurora"):
     if verifier_marker not in boot_verifier:
         raise SystemExit(f"Fresh ISO boot-menu verification is missing {verifier_marker}")
 if "scripts/verify-boot-menu.sh" not in (root / "build.sh").read_text(encoding="utf-8"):
