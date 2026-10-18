@@ -13,6 +13,11 @@ if [ "$(id -u)" -ne 0 ]; then
     exit 1
 fi
 
+if ! command -v python3 >/dev/null 2>&1; then
+    echo "Python 3 is required to generate the original OminX boot splash; install python3 and try again." >&2
+    exit 1
+fi
+
 if ! command -v lb >/dev/null 2>&1; then
     cat >&2 <<'EOF'
 Debian live-build is not installed. On Debian 13, install the build tools with:

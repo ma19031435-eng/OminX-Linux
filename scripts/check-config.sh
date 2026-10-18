@@ -26,6 +26,8 @@ build_workflow = (root / ".github/workflows/build-iso.yml").read_text(encoding="
 for marker in ("build-info.txt", "${GITHUB_SHA}", "${GITHUB_RUN_ID}", "date -u"):
     if marker not in build_workflow:
         raise SystemExit(f"ISO build provenance stamp is missing {marker}")
+if "python3 live-build" not in build_workflow:
+    raise SystemExit("The ISO build container must install Python 3 for splash generation")
 
 for python_app in ("welcome.py", "store.py", "settings.py", "setup.py", "ui.py"):
     ast.parse((config_root / "usr/lib/ominx" / python_app).read_text(encoding="utf-8"))

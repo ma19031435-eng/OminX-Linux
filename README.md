@@ -44,7 +44,7 @@ Build on a Debian 13 amd64 host with internet access, at least **8 GB RAM** and 
 
 ```sh
 sudo apt update
-sudo apt install live-build debootstrap xorriso squashfs-tools dosfstools mtools \
+sudo apt install python3 live-build debootstrap xorriso squashfs-tools dosfstools mtools \
   grub-pc-bin grub-efi-amd64-bin isolinux syslinux-common syslinux-utils \
   debian-archive-keyring
 ./build.sh
