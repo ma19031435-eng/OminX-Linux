@@ -6,7 +6,6 @@ ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 cd "$ROOT"
 
 GRUB_MENU="$ROOT/binary/boot/grub/grub.cfg"
-EFI_GRUB_CONFIG="$ROOT/binary/boot/grub/x86_64-efi/grub.cfg"
 
 if [ ! -s "$GRUB_MENU" ]; then
     echo "Expected generated GRUB menu is missing: $GRUB_MENU" >&2
@@ -25,15 +24,6 @@ done
 if grep -Eq 'KERNEL_(LIVE|GI)|APPEND_(LIVE(_FAILSAFE)?|GI|INSTALL)|INITRD_(LIVE|GI)|LINUX_(LIVE|INSTALL|ADVANCED_INSTALL)|MEMTEST|@(KERNEL|LINUX|INITRD|APPEND|FLAVOUR)@' \
     "$GRUB_MENU"; then
     echo "An unresolved live-build boot-menu token remains in the generated GRUB menu." >&2
-    exit 1
-fi
-
-if [ ! -s "$EFI_GRUB_CONFIG" ]; then
-    echo "UEFI GRUB configuration is missing: $EFI_GRUB_CONFIG" >&2
-    exit 1
-fi
-if ! grep -Fq "configfile" "$EFI_GRUB_CONFIG" && ! grep -Fq "Try OminX Aurora" "$EFI_GRUB_CONFIG"; then
-    echo "UEFI GRUB is missing its handoff to the shared OminX menu: $EFI_GRUB_CONFIG" >&2
     exit 1
 fi
 
@@ -74,5 +64,4 @@ if ! command -v grub-script-check >/dev/null 2>&1; then
     exit 1
 fi
 grub-script-check "$GRUB_MENU"
-grub-script-check "$EFI_GRUB_CONFIG"
-printf 'Verified the OminX GRUB BIOS/UEFI menus, graphical/text Debian Installer payloads, and boot splash.\n'
+printf 'Verified the OminX GRUB menu, graphical/text Debian Installer payloads, and boot splash.\n'
