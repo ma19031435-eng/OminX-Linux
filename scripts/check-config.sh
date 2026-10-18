@@ -5,7 +5,7 @@ set -eu
 ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 cd "$ROOT"
 
-shell_files="auto/config build.sh config/hooks/normal/1000-ominx-finalize.hook.chroot config/includes.chroot/usr/local/bin/ominx-welcome config/includes.chroot/usr/local/bin/ominx-protontricks config/includes.chroot/usr/local/bin/ominx-open-windows config/includes.chroot/usr/local/bin/ominx-store config/includes.chroot/usr/local/bin/ominx-settings"
+shell_files="auto/config build.sh scripts/verify-boot-menu.sh config/hooks/normal/1000-ominx-finalize.hook.chroot config/includes.chroot/usr/local/bin/ominx-welcome config/includes.chroot/usr/local/bin/ominx-protontricks config/includes.chroot/usr/local/bin/ominx-open-windows config/includes.chroot/usr/local/bin/ominx-store config/includes.chroot/usr/local/bin/ominx-settings config/includes.chroot/usr/local/bin/ominx-setup"
 for file in $shell_files; do
     sh -n "$file"
 done
@@ -15,6 +15,7 @@ import ast
 import json
 import os
 import subprocess
+import struct
 import tempfile
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -26,9 +27,10 @@ for marker in ("build-info.txt", "${GITHUB_SHA}", "${GITHUB_RUN_ID}", "date -u")
     if marker not in build_workflow:
         raise SystemExit(f"ISO build provenance stamp is missing {marker}")
 
-for python_app in ("welcome.py", "store.py", "settings.py", "ui.py"):
+for python_app in ("welcome.py", "store.py", "settings.py", "setup.py", "ui.py"):
     ast.parse((config_root / "usr/lib/ominx" / python_app).read_text(encoding="utf-8"))
 ast.parse((root / "scripts/smoke-gtk-apps.py").read_text(encoding="utf-8"))
+ast.parse((root / "scripts/generate-boot-splash.py").read_text(encoding="utf-8"))
 for svg in config_root.rglob("*.svg"):
     ET.parse(svg)
 
@@ -163,7 +165,7 @@ if "OMINX" not in wallpaper_text:
     raise SystemExit("The desktop wallpaper is missing OminX branding")
 if "<feGaussianBlur" in wallpaper_text:
     raise SystemExit("The OminX wallpaper should use lightweight gradients instead of a costly blur filter")
-for selector in (".ominx-sidebar", ".ominx-hero", ".ominx-card", ".ominx-primary"):
+for selector in (".ominx-sidebar", ".ominx-hero", ".ominx-card", ".ominx-primary", ".ominx-setup-page", ".ominx-setup-footer"):
     if selector not in ui_css:
         raise SystemExit(f"OminX app hub styling is missing {selector}")
 if "selection-background-color" in ui_css:
@@ -206,6 +208,7 @@ if missing:
 applications = config_root / "usr/share/applications"
 store_entry = applications / "ominx-store.desktop"
 settings_entry = applications / "ominx-settings.desktop"
+setup_entry = applications / "ominx-setup.desktop"
 handler_entry = applications / "ominx-windows-app.desktop"
 mime_defaults = applications / "mimeapps.list"
 store_text = store_entry.read_text(encoding="utf-8")
@@ -219,13 +222,62 @@ if "TryExec=/usr/local/bin/ominx-settings" not in settings_text or "Exec=/usr/lo
     raise SystemExit("OminX Settings must have an absolute, verifiable launcher path and original icon")
 if "NoDisplay=true" not in backend_override or "Exec=gnome-software" not in backend_override:
     raise SystemExit("GNOME Software should remain available as the hidden OminX Store backend")
-for launcher in ("ominx-store", "ominx-settings"):
+for launcher in ("ominx-store", "ominx-settings", "ominx-setup"):
     if not os.access(config_root / "usr/local/bin" / launcher, os.X_OK):
         raise SystemExit(f"{launcher} must be executable")
 store_source = (config_root / "usr/lib/ominx/store.py").read_text(encoding="utf-8")
 settings_source = (config_root / "usr/lib/ominx/settings.py").read_text(encoding="utf-8")
 ui_source = (config_root / "usr/lib/ominx/ui.py").read_text(encoding="utf-8")
 welcome_source = (config_root / "usr/lib/ominx/welcome.py").read_text(encoding="utf-8")
+setup_source = (config_root / "usr/lib/ominx/setup.py").read_text(encoding="utf-8")
+setup_launcher = config_root / "usr/local/bin/ominx-setup"
+setup_desktop = applications / "ominx-setup.desktop"
+setup_autostart = config_root / "etc/skel/.config/autostart/ominx-setup.desktop"
+if not os.access(setup_launcher, os.X_OK):
+    raise SystemExit("OminX Setup launcher must be executable")
+if "from gi.repository import Gio, GLib, Gtk" not in setup_source:
+    raise SystemExit("OminX Setup must import GLib for Gio error handling")
+for step in ("welcome", "network", "software", "gaming", "finish"):
+    if f'("{step}",' not in setup_source:
+        raise SystemExit(f"OminX Setup is missing its {step} step")
+if 'Exec=ominx-setup --first-run' not in setup_autostart.read_text(encoding="utf-8"):
+    raise SystemExit("New users must be offered the OminX first-run setup wizard")
+if "ominx-setup" not in welcome_source:
+    raise SystemExit("OminX Welcome must provide a way to reopen the setup wizard")
+if not setup_desktop.is_file() or "Exec=/usr/local/bin/ominx-setup" not in setup_desktop.read_text(encoding="utf-8"):
+    raise SystemExit("OminX Setup must be available from the desktop applications menu")
+boot_grub = (root / "config/bootloaders/grub-pc/grub.cfg").read_text(encoding="utf-8")
+boot_syslinux = (root / "config/bootloaders/isolinux/live.cfg.in").read_text(encoding="utf-8")
+boot_isolinux_cfg = (root / "config/bootloaders/isolinux/isolinux.cfg").read_text(encoding="utf-8")
+for boot_marker in ("Try OminX Aurora", "Install OminX", "KERNEL_LIVE", "APPEND_LIVE", "KERNEL_GI", "APPEND_GI"):
+    if boot_marker not in boot_grub:
+        raise SystemExit(f"OminX GRUB menu is missing {boot_marker}")
+for boot_marker in ("Try OminX Aurora", "Install OminX", "@LINUX@", "@INITRD@", "@APPEND_INSTALL@"):
+    if boot_marker not in boot_syslinux:
+        raise SystemExit(f"OminX ISOLINUX menu is missing {boot_marker}")
+if "include menu.cfg" not in boot_isolinux_cfg or "timeout 80" not in boot_isolinux_cfg:
+    raise SystemExit("OminX ISOLINUX configuration must load its menu with a short timeout")
+boot_verifier = (root / "scripts/verify-boot-menu.sh").read_text(encoding="utf-8")
+for verifier_marker in ("grub-script-check", "binary/install/gtk/vmlinuz", "binary/install/vmlinuz", "KERNEL_(", "Try OminX Aurora"):
+    if verifier_marker not in boot_verifier:
+        raise SystemExit(f"Fresh ISO boot-menu verification is missing {verifier_marker}")
+if "scripts/verify-boot-menu.sh" not in (root / "build.sh").read_text(encoding="utf-8"):
+    raise SystemExit("The ISO build must verify generated boot menus before reporting success")
+for splash, expected_size in (
+    (root / "config/bootloaders/grub-pc/splash.png", (1280, 720)),
+    (root / "config/bootloaders/isolinux/splash.png", (640, 480)),
+    (root / "config/includes.binary/boot/grub/splash.png", (1280, 720)),
+    (root / "config/includes.binary/isolinux/splash.png", (640, 480)),
+):
+    image = splash.read_bytes()
+    if image[:8] != bytes((137, 80, 78, 71, 13, 10, 26, 10)) or struct.unpack(">II", image[16:24]) != expected_size:
+        raise SystemExit(f"Invalid OminX boot splash image: {splash}")
+for source, included in (
+    (root / "config/bootloaders/grub-pc/splash.png", root / "config/includes.binary/boot/grub/splash.png"),
+    (root / "config/bootloaders/isolinux/splash.png", root / "config/includes.binary/isolinux/splash.png"),
+):
+    if source.read_bytes() != included.read_bytes():
+        raise SystemExit(f"Bootloader and ISO-included splash assets differ: {source}")
 smoke_source = (root / "scripts/smoke-gtk-apps.py").read_text(encoding="utf-8")
 if any(".set_group(" in source for source in (store_source, settings_source)):
     raise SystemExit("GTK3 navigation must not call the unsupported ToggleButton.set_group() API")
@@ -270,7 +322,7 @@ skeleton_mime_defaults = (config_root / "etc/skel/.config/mimeapps.list").read_t
 for mime in registered_mimes:
     if f"{mime}=ominx-windows-app.desktop;" not in skeleton_mime_defaults:
         raise SystemExit(f"New users will not get the OminX Windows app default for {mime}")
-for desktop_id in ("ominx-store.desktop", "ominx-settings.desktop", "ominx-windows-app.desktop"):
+for desktop_id in ("ominx-store.desktop", "ominx-settings.desktop", "ominx-setup.desktop", "ominx-windows-app.desktop"):
     if f"/usr/share/applications/{desktop_id}" not in hook:
         raise SystemExit(f"The image hook must validate {desktop_id}")
 if "/usr/local/share/applications/org.gnome.Software.desktop" not in hook:

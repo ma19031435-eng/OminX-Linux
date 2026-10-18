@@ -154,6 +154,8 @@ label { color: #e0ecf1; }
 .ominx-flat-button:focus { border-color: #4a8589; }
 
 .ominx-divider { background-color: #263a46; min-height: 1px; }
+.ominx-setup-page { padding-bottom: 8px; }
+.ominx-setup-footer { padding-top: 12px; border-top: 1px solid #263a46; }
 selection { background-color: #20595d; color: #f0fffe; }
 
 .ominx-title { color: #edf8fb; font-size: 27px; font-weight: 700; }

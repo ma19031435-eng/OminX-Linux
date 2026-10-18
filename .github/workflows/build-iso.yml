@@ -53,6 +53,7 @@ jobs:
             --volume "${GITHUB_WORKSPACE}/config/includes.chroot/usr/share/themes/OminX:/usr/share/themes/OminX:ro" \
             --volume "${GITHUB_WORKSPACE}/config/includes.chroot/usr/local/bin/ominx-store:/usr/local/bin/ominx-store:ro" \
             --volume "${GITHUB_WORKSPACE}/config/includes.chroot/usr/local/bin/ominx-settings:/usr/local/bin/ominx-settings:ro" \
+            --volume "${GITHUB_WORKSPACE}/config/includes.chroot/usr/local/bin/ominx-setup:/usr/local/bin/ominx-setup:ro" \
             debian:trixie \
             sh -ec '
               export DEBIAN_FRONTEND=noninteractive
@@ -61,7 +62,7 @@ jobs:
                 python3-gi gir1.2-gtk-3.0 xvfb xauth \
                 adwaita-icon-theme hicolor-icon-theme fonts-noto-core librsvg2-common
               mkdir -p /usr/share/icons/hicolor/scalable/apps
-              cp /workspace/config/includes.chroot/usr/share/icons/hicolor/scalable/apps/ominx-*.svg \
+              cp /workspace/config/includes.chroot/usr/share/icons/hicolor/scalable/apps/ominx*.svg \
                 /usr/share/icons/hicolor/scalable/apps/
               xvfb-run --auto-servernum --server-args="-screen 0 1440x900x24" \
                 env GTK_THEME=OminX GDK_BACKEND=x11 \

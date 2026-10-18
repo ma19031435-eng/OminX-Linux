@@ -29,12 +29,13 @@ apt-get install --yes --no-install-recommends \
 # backend, but present OminX Store as the user's software-center entry point.
 desktop-file-edit --set-key=NoDisplay --set-value=true \
     /usr/share/applications/org.gnome.Software.desktop
-for executable in /usr/local/bin/ominx-store /usr/local/bin/ominx-settings; do
+for executable in /usr/local/bin/ominx-store /usr/local/bin/ominx-settings /usr/local/bin/ominx-setup; do
     test -x "$executable"
 done
 desktop-file-validate \
     /usr/share/applications/ominx-store.desktop \
     /usr/share/applications/ominx-settings.desktop \
+    /usr/share/applications/ominx-setup.desktop \
     /usr/share/applications/ominx-windows-app.desktop \
     /usr/local/share/applications/org.gnome.Software.desktop
 update-desktop-database --quiet /usr/share/applications
@@ -161,6 +162,7 @@ for desktop_id in nemo.desktop firefox-esr.desktop ominx-store.desktop libreoffi
     test -r "/usr/share/applications/$desktop_id"
 done
 test -r /usr/share/applications/ominx-settings.desktop
+test -r /usr/share/applications/ominx-setup.desktop
 test -r /usr/share/applications/org.gnome.Software.desktop
 test -x /usr/bin/gnome-software
 grep -q '^NoDisplay=true$' /usr/local/share/applications/org.gnome.Software.desktop

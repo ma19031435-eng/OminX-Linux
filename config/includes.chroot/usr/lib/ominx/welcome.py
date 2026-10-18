@@ -130,6 +130,11 @@ class WelcomeWindow(Gtk.Window):
         bottom.pack_start(note, True, True, 0)
 
         actions = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=7)
+        setup = Gtk.Button(label="Run OminX Setup")
+        setup.get_style_context().add_class("ominx-secondary")
+        setup.connect("clicked", lambda _button: self._launch("ominx-setup"))
+        actions.pack_start(setup, False, False, 0)
+
         game_mode = Gtk.Button(label="Game Mode setup")
         game_mode.get_style_context().add_class("ominx-secondary")
         game_mode.connect("clicked", lambda _button: self._show_game_mode())

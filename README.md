@@ -10,7 +10,7 @@ The shell is composed around a slim command bar at the top: the OminX Launcher a
 
 Nemo (Files) uses its native navigation model: double-click to open, a details/list view sorted by name with folders first, a Places sidebar for Home and common folders, mounted devices and network locations, breadcrumb navigation, search, a new-folder action, and a status bar. Home, Computer, Trash, mounted volumes, and Network icons are enabled on the desktop.
 
-**OminX Store** is an original storefront with a navigation rail, search, app/game categories, featured app cards, Library, and Updates. It highlights included software and forwards catalog searches, installed-app management, and updates to GNOME Software's Debian and Flatpak backends—so package operations are real, not a mock catalog. **OminX Settings** uses the Aurora design system to organize native tools into Workspace, Devices, Connectivity, Appearance, Applications, Accounts, Time & input, Gaming, Accessibility, Privacy & security, and Updates.
+**OminX Store** is an original storefront with a navigation rail, search, app/game categories, featured app cards, Library, and Updates. It highlights included software and forwards catalog searches, installed-app management, and updates to GNOME Software's Debian and Flatpak backends—so package operations are real, not a mock catalog. **OminX Settings** uses the Aurora design system to organize native tools into Workspace, Devices, Connectivity, Appearance, Applications, Accounts, Time & input, Gaming, Accessibility, Privacy & security, and Updates. **OminX Setup** guides new users through connection status, software and browser preferences, and gaming tools; each step is optional, settings can be revisited later, and optional software is never installed without a user action.
 
 Common keyboard workflows are included: **Super+E** opens Files, **Super+R** opens the Run dialog, **Super+I** opens OminX Settings, **Ctrl+Shift+Esc** opens System Monitor, **Super+D** shows the desktop, **Super+L** locks the session, **Super+Tab** opens the window overview, **Super+Left/Right** tiles a window, **Super+Up/Down** maximizes or restores it, and **Super+Shift+S** selects an area for a screenshot. Super is usually the Windows-logo key on PC keyboards. Shortcuts are provided by Cinnamon and can be changed in Keyboard settings.
 
@@ -50,14 +50,14 @@ sudo apt install live-build debootstrap xorriso squashfs-tools dosfstools mtools
 ./build.sh
 ```
 
-`build.sh` uses `sudo` when needed, configures the image via `auto/config`, runs `lb build`, then writes `SHA256SUMS`. The expected output is:
+`build.sh` uses `sudo` when needed, generates original OminX Aurora splash art for the GRUB and ISOLINUX menus, configures the image via `auto/config`, runs `lb build`, verifies both generated menus and the graphical/text Debian Installer payloads, then writes `SHA256SUMS`. The custom menu is authored to offer a live session, graphical install, and safe/advanced modes; the build fails rather than publishing if those menus or installer payloads are missing. The expected output is:
 
 ```text
 live-image-amd64.hybrid.iso
 SHA256SUMS
 ```
 
-The build uses Debian Trixie repositories, including `contrib`, `non-free`, and `non-free-firmware`. It enables i386 multiarch, then installs Steam, Wine, and 32-bit Mesa/Vulkan/audio libraries. Flathub is added as an optional app source; apps from Flathub are not preinstalled. Internet access to Debian mirrors and Flathub is required. Run `make check` for static recipe and asset checks. The GitHub Actions ISO workflow also launches OminX Store and Settings under Xvfb in a Debian 13 GTK environment, exercising their search/navigation views and their installed shell launchers before building the image; a full local ISO build needs the Linux build host above.
+The build uses Debian Trixie repositories, including `contrib`, `non-free`, and `non-free-firmware`. It enables i386 multiarch, then installs Steam, Wine, and 32-bit Mesa/Vulkan/audio libraries. Flathub is added as an optional app source; apps from Flathub are not preinstalled. Internet access to Debian mirrors and Flathub is required. Run `make check` for static recipe, setup-wizard, splash-image, and boot-menu source checks. The GitHub Actions ISO workflow also launches OminX Store, Settings, Welcome, and Setup under Xvfb in a Debian 13 GTK environment, exercising their search/navigation and first-run views plus their installed shell launchers before building the image; it validates the generated GRUB/ISOLINUX menus and installer files before publishing. A full local ISO build needs the Linux build host above.
 
 A GitHub Actions workflow automatically builds the installable ISO when this branch is updated. After a successful run, download the `OminX-installable-ISO-<commit>` artifact from the repository's **Actions** page; it contains the ISO and `SHA256SUMS` and is kept for 30 days. The ISO also contains `/usr/share/doc/ominx/build-info.txt` with its exact source commit, workflow run ID, and UTC build time, so you can verify which revision is installed. Local ISO building remains available with `./build.sh`.
 
@@ -66,7 +66,7 @@ A GitHub Actions workflow automatically builds the installable ISO when this bra
 1. Verify the image with `sha256sum -c SHA256SUMS`.
 2. Test it in a UEFI or BIOS virtual machine before installing on real hardware. A VM with 4 GB RAM and a 30 GB virtual disk is a reasonable starting point.
 3. Write the ISO to a USB drive using a disk-image writer. **Writing an image erases the selected USB drive.**
-4. Boot the live session and choose the **Install** entry in the boot menu.
+4. On a verified refreshed ISO, choose **Try OminX Aurora** to use the live desktop or **Install OminX (graphical)** to start Debian Installer.
 
 Back up important files before installation. Hardware support, proprietary graphics drivers, and Secure Boot behavior vary by machine. The image includes open-source graphics drivers and common (including non-free) firmware, but not every vendor driver.
 
@@ -76,9 +76,13 @@ Back up important files before installation. Hardware support, proprietary graph
 auto/config                         Reproducible live-build configuration
 build.sh                            Root-aware ISO build entry point
 config/package-lists/               Desktop package selection
+config/bootloaders/                 OminX GRUB and ISOLINUX menu templates
 config/hooks/normal/                Multiarch, Steam, Wine, and Flathub setup
 config/includes.chroot/             OminX branding, defaults, apps, and documentation
-scripts/check-config.sh             Static sanity checks
+config/includes.binary/             Boot splash assets included on the ISO
+scripts/check-config.sh             Static recipe and asset checks
+scripts/generate-boot-splash.py     Dependency-free Aurora boot artwork generator
+scripts/verify-boot-menu.sh         Post-build menu and installer verification
 ```
 
 To change packages, edit `config/package-lists/ominx.list.chroot`. Build options live in `auto/config`. Build outputs and ISO artifacts are ignored by Git.

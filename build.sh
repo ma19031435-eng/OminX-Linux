@@ -25,8 +25,10 @@ EOF
     exit 1
 fi
 
+python3 scripts/generate-boot-splash.py
 ./auto/config "$@"
 lb build
+scripts/verify-boot-menu.sh
 
 ISO="$ROOT/live-image-amd64.hybrid.iso"
 if [ -f "$ISO" ]; then
