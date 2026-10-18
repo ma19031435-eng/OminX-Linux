@@ -1,24 +1,24 @@
-/* Original OminX Start styling: bright surfaces, familiar layout, blue accents. */
+/* OminX Aurora launcher — a compact, calm command surface in midnight ink. */
 .ominx-start-menu .popup-menu-content {
   padding: 0;
   background-color: transparent;
-  border: 1px solid rgba(165, 183, 204, 0.82);
-  border-radius: 18px;
-  box-shadow: 0 10px 26px rgba(26, 48, 76, 0.16);
+  border: 1px solid #2b4856;
+  border-radius: 17px;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.42);
 }
 
 .ominx-start-root {
-  width: 540px;
-  padding: 18px 20px 14px;
-  spacing: 12px;
-  color: #1c3048;
-  background-color: #fbfdff;
-  border-radius: 18px;
+  width: 552px;
+  padding: 19px 20px 13px;
+  spacing: 13px;
+  color: #e6f1f5;
+  background-color: #0d1721;
+  border-radius: 17px;
 }
 
 .ominx-start-header {
   spacing: 14px;
-  min-height: 42px;
+  min-height: 44px;
 }
 
 .ominx-start-brand-block {
@@ -26,50 +26,51 @@
 }
 
 .ominx-start-brand {
-  color: #172b43;
-  font-size: 16pt;
+  color: #effcff;
+  font-size: 17pt;
   font-weight: bold;
 }
 
 .ominx-start-subtitle,
 .ominx-start-section-note,
 .ominx-start-results-note {
-  color: #718197;
+  color: #91aab6;
   font-size: 9pt;
 }
 
 .ominx-start-link {
   min-height: 32px;
-  padding: 0 11px;
-  color: #1c5a98;
-  background-color: #f0f6fd;
-  border: 1px solid #d9e5f1;
-  border-radius: 8px;
+  padding: 0 12px;
+  color: #7fe3d8;
+  background-color: #142732;
+  border: 1px solid #2b505a;
+  border-radius: 9px;
   font-size: 9pt;
 }
 
 .ominx-start-link:hover,
 .ominx-start-link:focus {
-  color: #124c86;
-  background-color: #e4f0ff;
-  border-color: #bad4ef;
+  color: #eaffff;
+  background-color: #1a3640;
+  border-color: #4c9b9e;
 }
 
 .ominx-start-search {
-  min-height: 39px;
-  padding: 0 12px;
-  color: #20334a;
-  background-color: #f8faff;
-  border: 1px solid #d4dfeb;
+  min-height: 40px;
+  padding: 0 13px;
+  color: #e9f5f8;
+  background-color: #08121b;
+  border: 1px solid #29404e;
   border-radius: 10px;
-  caret-color: #1671c8;
+  caret-color: #62e2d3;
+  selection-background-color: #24565d;
   font-size: 10pt;
 }
 
 .ominx-start-search:focus {
-  background-color: #ffffff;
-  border-color: #5596df;
-  box-shadow: 0 0 0 1px rgba(85, 150, 223, 0.18);
+  background-color: #0a151f;
+  border-color: #52cfc2;
+  box-shadow: 0 0 0 1px rgba(82, 207, 194, 0.18);
 }
 
 .ominx-start-home {
@@ -82,7 +83,7 @@
 }
 
 .ominx-start-section-title {
-  color: #1b2e46;
+  color: #e7f1f4;
   font-size: 11pt;
   font-weight: bold;
 }
@@ -101,24 +102,25 @@
 
 .ominx-start-app-button {
   min-width: 108px;
-  min-height: 82px;
+  min-height: 83px;
   padding: 7px 5px;
-  color: #263b55;
-  background-color: transparent;
-  border: 1px solid transparent;
-  border-radius: 10px;
+  color: #d6e5ea;
+  background-color: #111e29;
+  border: 1px solid #203542;
+  border-radius: 11px;
+  transition-duration: 110;
 }
 
 .ominx-start-app-button:hover,
 .ominx-start-app-button:focus {
-  color: #17395e;
-  background-color: #f0f6fd;
-  border-color: #dce8f4;
+  color: #f4ffff;
+  background-color: #172b38;
+  border-color: #3f7880;
 }
 
 .ominx-start-app-button:active {
-  background-color: #e5f1ff;
-  border-color: #bad5f1;
+  background-color: #1b3840;
+  border-color: #55b4ad;
 }
 
 .ominx-start-app-contents {
@@ -126,12 +128,12 @@
 }
 
 .ominx-start-app-icon {
-  color: #2f5d89;
+  color: #a9d7dc;
 }
 
 .ominx-start-app-label {
   max-width: 112px;
-  color: #334a64;
+  color: #c9dbe1;
   font-size: 8.5pt;
   text-align: center;
 }
@@ -146,17 +148,17 @@
 
 .ominx-start-recommendation {
   min-height: 42px;
-  padding: 5px 8px;
-  color: #273d56;
-  background-color: transparent;
-  border: 1px solid transparent;
+  padding: 5px 9px;
+  color: #d5e4e9;
+  background-color: #101c26;
+  border: 1px solid #203541;
   border-radius: 9px;
 }
 
 .ominx-start-recommendation:hover,
 .ominx-start-recommendation:focus {
-  background-color: #f1f6fc;
-  border-color: #e0e9f2;
+  background-color: #172b36;
+  border-color: #3d737b;
 }
 
 .ominx-start-recommendation-content {
@@ -168,20 +170,20 @@
 }
 
 .ominx-start-recommendation-title {
-  color: #20364f;
+  color: #e5f2f5;
   font-size: 9.5pt;
   font-weight: bold;
 }
 
 .ominx-start-recommendation-description {
-  color: #718197;
+  color: #91aab6;
   font-size: 8.5pt;
 }
 
 .ominx-start-footer {
   min-height: 44px;
-  padding-top: 8px;
-  border-top: 1px solid #e0e7ef;
+  padding-top: 9px;
+  border-top: 1px solid #223744;
 }
 
 .ominx-start-profile {
@@ -191,8 +193,8 @@
 .ominx-start-avatar {
   width: 29px;
   height: 29px;
-  color: #ffffff;
-  background-color: #2a78c5;
+  color: #07171c;
+  background-color: #55d7c4;
   border-radius: 50%;
   font-size: 11pt;
   font-weight: bold;
@@ -202,7 +204,7 @@
 
 .ominx-start-user {
   max-width: 260px;
-  color: #3c526c;
+  color: #a9bec8;
   font-size: 9pt;
 }
 
@@ -228,7 +230,7 @@
 .ominx-start-result-button {
   min-height: 39px;
   padding: 4px 8px;
-  color: #263c55;
+  color: #d0e0e6;
   background-color: transparent;
   border: 1px solid transparent;
   border-radius: 8px;
@@ -236,25 +238,25 @@
 
 .ominx-start-result-button:hover,
 .ominx-start-result-button:focus {
-  color: #173b64;
-  background-color: #edf5fd;
-  border-color: #dce9f5;
+  color: #efffff;
+  background-color: #172b36;
+  border-color: #2f4d58;
 }
 
 .ominx-start-more-button {
   min-height: 38px;
   padding: 5px 10px;
-  color: #155a9a;
-  background-color: #f0f6fd;
-  border: 1px solid #d8e6f5;
+  color: #79e1d4;
+  background-color: #142832;
+  border: 1px solid #2b505a;
   border-radius: 9px;
 }
 
 .ominx-start-more-button:hover,
 .ominx-start-more-button:focus {
-  color: #124c86;
-  background-color: #e5f1ff;
-  border-color: #bad4ef;
+  color: #edffff;
+  background-color: #1a3940;
+  border-color: #4b9c9f;
 }
 
 .ominx-start-result-row {
@@ -262,18 +264,18 @@
 }
 
 .ominx-start-result-label {
-  color: #2a4059;
+  color: #d1e0e5;
   font-size: 9.5pt;
 }
 
 .ominx-start-empty-state {
-  color: #718197;
+  color: #93aab5;
   font-size: 9pt;
 }
 
 .ominx-start-menu .popup-menu-item {
   min-height: 34px;
-  color: #314860;
+  color: #c5d6dd;
   border-radius: 8px;
   padding: 5px 12px;
   spacing: 9px;
@@ -282,6 +284,6 @@
 .ominx-start-menu .popup-menu-item:hover,
 .ominx-start-menu .popup-menu-item:active,
 .ominx-start-menu .popup-menu-item:focus {
-  color: #173b64;
-  background-color: #edf5fd;
+  color: #edffff;
+  background-color: #1a2d39;
 }

@@ -17,6 +17,7 @@ from gi.repository import GLib, Gtk  # noqa: E402
 sys.path.insert(0, "/usr/lib/ominx")
 from settings import SettingsWindow  # noqa: E402
 from store import StoreWindow  # noqa: E402
+from welcome import WelcomeWindow  # noqa: E402
 
 
 ROOT = Path("/workspace/config/includes.chroot")
@@ -94,6 +95,8 @@ def check_settings_window() -> None:
         raise AssertionError("OminX Settings window did not become visible")
     if not window.page_box.get_children():
         raise AssertionError("OminX Settings home page rendered no content")
+    if "workspace shaped around you" not in visible_label_text(window.page_box).casefold():
+        raise AssertionError("OminX Settings did not render its Aurora workspace hero")
 
     window.search_entry.set_text("Bluetooth")
     drain_events(wait_ms=140)
@@ -106,8 +109,21 @@ def check_settings_window() -> None:
     drain_events()
     if not window.page_box.get_children():
         raise AssertionError("OminX Settings Gaming page rendered no content")
-    if not window.nav_buttons["Gaming"].get_active() or window.nav_buttons["System"].get_active():
+    if not window.nav_buttons["Gaming"].get_active() or window.nav_buttons["Workspace"].get_active():
         raise AssertionError("OminX Settings navigation buttons are not mutually exclusive")
+    window.destroy()
+    drain_events()
+
+
+def check_welcome_window() -> None:
+    window = WelcomeWindow()
+    window.show_all()
+    drain_events()
+    if not window.get_visible() or not window.get_title().startswith("Welcome to OminX"):
+        raise AssertionError("OminX Welcome window did not become visible")
+    welcome_text = visible_label_text(window).casefold()
+    if "top bar" not in welcome_text or "ominx settings" not in welcome_text:
+        raise AssertionError("OminX Welcome did not render its Aurora desktop guidance")
     window.destroy()
     drain_events()
 
@@ -138,8 +154,9 @@ def main() -> int:
     check_css()
     check_store_window()
     check_settings_window()
+    check_welcome_window()
     check_launch_wrappers()
-    print("OminX GTK CSS, Store, Settings, search, navigation, and launch wrappers passed.")
+    print("OminX GTK CSS, Store, Settings, Welcome, search, navigation, and launch wrappers passed.")
     return 0
 
 

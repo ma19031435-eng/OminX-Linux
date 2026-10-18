@@ -12,58 +12,10 @@ from pathlib import Path
 import gi
 
 gi.require_version("Gtk", "3.0")
-from gi.repository import Gdk, Gtk  # noqa: E402
+from gi.repository import Gtk  # noqa: E402
 
 sys.path.insert(0, "/usr/lib/ominx")
-from ui import set_default_window_size  # noqa: E402
-
-
-CSS = b"""
-* { font-family: 'Noto Sans', 'DejaVu Sans', sans-serif; }
-window { background-color: #f3f6fb; color: #1a2b42; }
-.ominx-title { color: #172b43; font-size: 27px; font-weight: 700; }
-.ominx-subtitle { color: #60738a; font-size: 13px; }
-.ominx-section { color: #1b2e46; font-size: 17px; font-weight: 700; }
-.ominx-card {
-  background-color: #ffffff;
-  border: 1px solid #dce5ef;
-  border-radius: 14px;
-  padding: 16px;
-  box-shadow: 0 1px 4px rgba(31, 54, 82, 0.045);
-}
-.ominx-card-title { color: #1a2d45; font-size: 15px; font-weight: 700; }
-.ominx-card-copy { color: #61748c; font-size: 12px; }
-.ominx-note { color: #718197; font-size: 11px; }
-button.ominx-primary {
-  background-image: none;
-  background-color: #216ed1;
-  color: #ffffff;
-  border: 1px solid #216ed1;
-  border-radius: 8px;
-  padding: 8px 13px;
-}
-button.ominx-primary:hover { background-color: #165dbb; }
-button.ominx-primary:focus { border-color: #104d9b; }
-button.ominx-secondary {
-  background-image: none;
-  background-color: #ffffff;
-  color: #29435f;
-  border: 1px solid #d4deea;
-  border-radius: 8px;
-  padding: 8px 13px;
-}
-button.ominx-secondary:hover { background-color: #f0f5fa; }
-button.ominx-secondary:focus { border-color: #77a8dc; }
-.ominx-version {
-  color: #155a9a;
-  background-color: #edf5ff;
-  border: 1px solid #d7e8f8;
-  border-radius: 999px;
-  padding: 5px 9px;
-  font-size: 10px;
-  font-weight: 700;
-}
-"""
+from ui import apply_style, set_default_window_size  # noqa: E402
 
 
 class WelcomeWindow(Gtk.Window):
@@ -73,14 +25,7 @@ class WelcomeWindow(Gtk.Window):
         self.set_border_width(26)
         self.set_position(Gtk.WindowPosition.CENTER)
         self.set_icon_name("ominx")
-
-        provider = Gtk.CssProvider()
-        provider.load_from_data(CSS)
-        screen = Gdk.Screen.get_default()
-        if screen is not None:
-            Gtk.StyleContext.add_provider_for_screen(
-                screen, provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
-            )
+        apply_style()
 
         root = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=19)
         self.add(root)
@@ -97,7 +42,7 @@ class WelcomeWindow(Gtk.Window):
         title = Gtk.Label(label="Welcome to OminX")
         title.set_xalign(0)
         title.get_style_context().add_class("ominx-title")
-        subtitle = Gtk.Label(label="A familiar desktop, ready for work, creativity, and play. Click the O on the taskbar to open Start.")
+        subtitle = Gtk.Label(label="A luminous workspace for work, creativity, and play. Open OminX from the top bar to find apps and controls.")
         subtitle.set_xalign(0)
         subtitle.get_style_context().add_class("ominx-subtitle")
         brand_text.pack_start(title, False, False, 0)
@@ -112,7 +57,7 @@ class WelcomeWindow(Gtk.Window):
         divider = Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL)
         root.pack_start(divider, False, False, 0)
 
-        section = Gtk.Label(label="Your desktop, at a glance")
+        section = Gtk.Label(label="Find your way around OminX")
         section.set_xalign(0)
         section.get_style_context().add_class("ominx-section")
         root.pack_start(section, False, False, 0)
@@ -127,7 +72,7 @@ class WelcomeWindow(Gtk.Window):
         grid.attach(
             self._card(
                 "Everyday apps",
-                "Browse the web, write documents, manage files, and play media. Press Super+E for Files; find more apps in OminX Store.",
+                "Open files, explore the web, create documents, and find new tools in the OminX Store.",
                 "Browse apps",
                 self._open_store,
             ),
@@ -139,7 +84,7 @@ class WelcomeWindow(Gtk.Window):
         grid.attach(
             self._card(
                 "Your game library",
-                "Steam is included. Proton is available through Steam; per-game Feral GameMode can request tuning where supported.",
+                "Steam is included. Enable Proton in Steam for supported games; Feral GameMode can request tuning while a game runs.",
                 "Open Steam",
                 lambda: self._launch("steam"),
             ),
@@ -164,8 +109,8 @@ class WelcomeWindow(Gtk.Window):
         grid.attach(
             self._card(
                 "Make it yours",
-                "Configure displays, sound, network, Bluetooth, printers, accounts, and more. Press Super+I for Settings.",
-                "Open system settings",
+                "Shape your display, sound, network, devices, accounts, privacy, and more in OminX Settings.",
+                "Open OminX Settings",
                 lambda: self._launch("ominx-settings"),
                 secondary=True,
             ),
@@ -177,7 +122,7 @@ class WelcomeWindow(Gtk.Window):
 
         bottom = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
         note = Gtk.Label(
-            label="Quick keys: Super+R for Run, Ctrl+Shift+Esc for System Monitor, Super+L to lock. Zstd zram compresses less-active pages; apps stay running. Game Mode is per-game and results vary."
+            label="Quick keys: Super+E opens Files, Super+R opens Run, Ctrl+Shift+Esc opens System Monitor, and Super+L locks your session. Zstd zram compresses less-active pages; apps stay running. Game Mode works per game, with results that vary by hardware."
         )
         note.set_xalign(0)
         note.set_line_wrap(True)

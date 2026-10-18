@@ -37,9 +37,11 @@ for required_setting in (
     "[org/cinnamon/theme]",
     "name='OminX'",
     "gtk-theme='OminX'",
-    "panel1:center:0:ominx-start@ominx:0",
-    "panel1:center:1:expo@cinnamon.org:14",
-    "panel1:center:2:grouped-window-list@cinnamon.org:1",
+    "panels-enabled=['1:0:top']",
+    "panels-height=['1:44']",
+    "panel1:left:0:ominx-start@ominx:0",
+    "panel1:left:1:expo@cinnamon.org:14",
+    "panel1:center:0:grouped-window-list@cinnamon.org:1",
     "favorite-apps=['nemo.desktop', 'firefox-esr.desktop', 'ominx-store.desktop', 'libreoffice-writer.desktop', 'ominx-settings.desktop']",
     "button-layout=':minimize,maximize,close'",
     "command='ominx-settings'",
@@ -69,7 +71,7 @@ for required_setting in (
     "tile-maximize=true",
 ):
     if required_setting not in shell_defaults:
-        raise SystemExit(f"Familiar desktop defaults are incomplete: {required_setting}")
+        raise SystemExit(f"OminX desktop defaults are incomplete: {required_setting}")
 
 start_applet = config_root / "usr/share/cinnamon/applets/ominx-start@ominx"
 start_metadata = json.loads((start_applet / "metadata.json").read_text(encoding="utf-8"))
@@ -92,30 +94,30 @@ for behavior in (
     "_appendMoreResultsButton",
 ):
     if behavior not in start_source:
-        raise SystemExit(f"OminX Start is missing {behavior}")
+        raise SystemExit(f"OminX Launcher is missing {behavior}")
 constructor_body = start_source.split("constructor(", 1)[1].split("\n    _buildMenu()", 1)[0]
 if "_getAllApps()" in constructor_body:
     raise SystemExit("OminX Start must not scan every installed app during Cinnamon startup")
 start_css = (start_applet / "stylesheet.css").read_text(encoding="utf-8")
 if start_css.count("{") != start_css.count("}"):
-    raise SystemExit("OminX Start stylesheet has unbalanced braces")
+    raise SystemExit("OminX Launcher stylesheet has unbalanced braces")
 for selector in (".ominx-start-root", ".ominx-start-search", ".ominx-start-grid", ".ominx-start-recommendations", ".ominx-start-more-button"):
     if selector not in start_css:
-        raise SystemExit(f"OminX Start styling is missing {selector}")
+        raise SystemExit(f"OminX Launcher styling is missing {selector}")
 
 enabled_applets = next(line for line in shell_defaults.splitlines() if line.startswith("enabled-applets="))
-if "panel1:center:0:ominx-start@ominx:0" not in enabled_applets:
-    raise SystemExit("The taskbar must use the OminX Start applet")
+if "panel1:left:0:ominx-start@ominx:0" not in enabled_applets:
+    raise SystemExit("The top command bar must use the OminX Launcher applet")
 
 menu_defaults = json.loads(
     (config_root / "usr/share/cinnamon/applets/menu@cinnamon.org/settings-override.json").read_text(encoding="utf-8")
 )
 if not menu_defaults["menu-custom"]["default"] or menu_defaults["menu-label"]["default"] != "":
-    raise SystemExit("The Start button must use the custom icon without a text label")
+    raise SystemExit("The Launcher button must use the custom icon without a text label")
 if not menu_defaults["menu-icon"]["default"].endswith("ominx-start.svg"):
-    raise SystemExit("The OminX Start icon is not configured")
+    raise SystemExit("The OminX Launcher icon is not configured")
 if not menu_defaults["show-favorites"]["default"] or menu_defaults["show-recents"]["default"]:
-    raise SystemExit("The Start menu must surface favorite apps instead of recents")
+    raise SystemExit("The Launcher must surface favorite apps instead of recents")
 
 window_list_defaults = json.loads(
     (config_root / "usr/share/cinnamon/applets/grouped-window-list@cinnamon.org/settings-override.json").read_text(encoding="utf-8")
@@ -127,12 +129,12 @@ expected_pins = [
     "libreoffice-writer.desktop",
 ]
 if window_list_defaults["pinned-apps"]["default"] != expected_pins:
-    raise SystemExit("The taskbar's pinned apps are missing or out of order")
+    raise SystemExit("The command bar's pinned apps are missing or out of order")
 for app_id in expected_pins:
     if f"'{app_id}'" not in shell_defaults:
-        raise SystemExit(f"The Start menu favorite list is missing {app_id}")
+        raise SystemExit(f"The Launcher favorite list is missing {app_id}")
 if "'ominx-settings.desktop'" not in shell_defaults:
-    raise SystemExit("The Start menu favorites are missing OminX Settings")
+    raise SystemExit("The Launcher favorites are missing OminX Settings")
 
 shell_theme = config_root / "usr/share/themes/OminX/cinnamon/cinnamon.css"
 theme_css = shell_theme.read_text(encoding="utf-8")
@@ -150,8 +152,8 @@ gtk_css = gtk_css_path.read_text(encoding="utf-8")
 theme_index = (config_root / "usr/share/themes/OminX/index.theme").read_text(encoding="utf-8")
 if "GtkTheme=OminX" not in theme_index:
     raise SystemExit("OminX GTK theme is not registered")
-if gtk_css.count("{") != gtk_css.count("}") or "Adwaita/gtk-contained.css" not in gtk_css:
-    raise SystemExit("OminX GTK3 theme must extend the installed light base with balanced CSS")
+if gtk_css.count("{") != gtk_css.count("}") or "Adwaita/gtk-contained-dark.css" not in gtk_css:
+    raise SystemExit("OminX GTK3 theme must extend the installed dark base with balanced CSS")
 lightdm_greeter = (config_root / "etc/lightdm/lightdm-gtk-greeter.conf").read_text(encoding="utf-8")
 if "theme-name=OminX" not in lightdm_greeter or "ominx-wallpaper.svg" not in lightdm_greeter:
     raise SystemExit("The login screen must use OminX branding and its original wallpaper")

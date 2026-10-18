@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-"""Windows-familiar settings hub for native OminX and Cinnamon controls."""
+"""OminX settings studio for native Cinnamon and Linux controls."""
 
 from __future__ import annotations
 
@@ -18,8 +18,8 @@ from ui import apply_style, set_default_window_size  # noqa: E402
 
 
 SETTINGS = {
-    "System": {
-        "description": "Display, sound, notifications, power, and system information.",
+    "Workspace": {
+        "description": "Display, sound, notifications, power, and information about this system.",
         "items": [
             ("Display", "Resolution, scale, and connected monitors.", "video-display-symbolic", ["cinnamon-settings", "display"]),
             ("Sound", "Output, input, and audio devices.", "audio-volume-high-symbolic", ["cinnamon-settings", "sound"]),
@@ -28,7 +28,7 @@ SETTINGS = {
             ("About OminX", "View desktop and hardware information.", "computer-symbolic", ["cinnamon-settings", "info"]),
         ],
     },
-    "Bluetooth & devices": {
+    "Devices": {
         "description": "Connect accessories and manage input and print devices.",
         "items": [
             ("Bluetooth", "Pair headphones, keyboards, and other devices.", "bluetooth-symbolic", ["blueman-manager"]),
@@ -37,7 +37,7 @@ SETTINGS = {
             ("Keyboard", "Shortcuts, layouts, and typing options.", "input-keyboard-symbolic", ["cinnamon-settings", "keyboard"]),
         ],
     },
-    "Network & Internet": {
+    "Connectivity": {
         "description": "Manage wired, wireless, VPN, and remote connections.",
         "items": [
             ("Network connections", "Edit Wi-Fi, Ethernet, VPN, and saved connections.", "network-wireless-symbolic", ["nm-connection-editor"]),
@@ -45,16 +45,16 @@ SETTINGS = {
             ("Firewall", "Review incoming network access rules.", "security-high-symbolic", ["gufw"]),
         ],
     },
-    "Personalization": {
-        "description": "Make the desktop, taskbar, and lock screen feel like yours.",
+    "Appearance": {
+        "description": "Shape the visual character of your workspace, panels, and lock screen.",
         "items": [
             ("Background", "Choose a desktop wallpaper and background style.", "preferences-desktop-wallpaper-symbolic", ["cinnamon-settings", "backgrounds"]),
             ("Themes & appearance", "Adjust colors, window borders, and desktop themes.", "preferences-desktop-theme-symbolic", ["cinnamon-settings", "themes"]),
-            ("Taskbar & Start", "Arrange panels, applets, and the Start menu.", "view-grid-symbolic", ["cinnamon-settings", "panel"]),
+            ("Panels & launcher", "Arrange desktop panels, applets, and the OminX launcher.", "view-grid-symbolic", ["cinnamon-settings", "panel"]),
             ("Lock screen", "Set screen locking and idle behavior.", "system-lock-screen-symbolic", ["cinnamon-settings", "screensaver"]),
         ],
     },
-    "Apps": {
+    "Applications": {
         "description": "Install software, manage startup apps, and review your library.",
         "items": [
             ("OminX Store", "Discover included apps and browse the full catalog.", "/usr/share/icons/hicolor/scalable/apps/ominx-store.svg", ["ominx-store"]),
@@ -69,7 +69,7 @@ SETTINGS = {
             ("Users & groups", "Open account and group settings.", "preferences-system-users-symbolic", ["cinnamon-settings", "user"]),
         ],
     },
-    "Time & language": {
+    "Time & input": {
         "description": "Adjust date display, calendar preferences, and keyboard layouts.",
         "items": [
             ("Keyboard layouts", "Add or change input layouts and shortcuts.", "input-keyboard-symbolic", ["cinnamon-settings", "keyboard"]),
@@ -109,13 +109,13 @@ SETTINGS = {
 }
 
 NAVIGATION = [
-    ("System", "computer-symbolic"),
-    ("Bluetooth & devices", "bluetooth-symbolic"),
-    ("Network & Internet", "network-wireless-symbolic"),
-    ("Personalization", "preferences-desktop-theme-symbolic"),
-    ("Apps", "applications-other-symbolic"),
+    ("Workspace", "computer-symbolic"),
+    ("Devices", "bluetooth-symbolic"),
+    ("Connectivity", "network-wireless-symbolic"),
+    ("Appearance", "preferences-desktop-theme-symbolic"),
+    ("Applications", "applications-other-symbolic"),
     ("Accounts", "preferences-system-users-symbolic"),
-    ("Time & language", "x-office-calendar-symbolic"),
+    ("Time & input", "x-office-calendar-symbolic"),
     ("Gaming", "applications-games-symbolic"),
     ("Accessibility", "preferences-desktop-accessibility-symbolic"),
     ("Privacy & security", "security-high-symbolic"),
@@ -129,7 +129,7 @@ class SettingsWindow(Gtk.Window):
         set_default_window_size(self, 1080, 740)
         self.set_position(Gtk.WindowPosition.CENTER)
         self.set_icon_from_file("/usr/share/icons/hicolor/scalable/apps/ominx-settings.svg")
-        self.active_category = "System"
+        self.active_category = "Workspace"
         self.nav_buttons: dict[str, Gtk.ToggleButton] = {}
         self._search_timeout_id = 0
         self._search_records = [
@@ -169,7 +169,7 @@ class SettingsWindow(Gtk.Window):
         title = Gtk.Label(label="OminX Settings")
         title.set_xalign(0)
         title.get_style_context().add_class("ominx-brand")
-        subtitle = Gtk.Label(label="Personalize your PC")
+        subtitle = Gtk.Label(label="Tune your workspace")
         subtitle.set_xalign(0)
         subtitle.get_style_context().add_class("ominx-brand-caption")
         brand_text.pack_start(title, False, False, 0)
@@ -199,7 +199,7 @@ class SettingsWindow(Gtk.Window):
             button.connect("clicked", self._on_navigation, category)
             self.nav_buttons[category] = button
             nav_box.pack_start(button, False, False, 0)
-        self.nav_buttons["System"].set_active(True)
+        self.nav_buttons["Workspace"].set_active(True)
         sidebar.pack_start(nav_box, False, False, 0)
 
         sidebar_footer = Gtk.Label(label="OminX  ·  Desktop settings")
@@ -213,11 +213,11 @@ class SettingsWindow(Gtk.Window):
         shell.pack_start(content, True, True, 0)
 
         header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
-        self.breadcrumb = Gtk.Label(label="System")
+        self.breadcrumb = Gtk.Label(label="Workspace")
         self.breadcrumb.set_xalign(0)
         self.breadcrumb.get_style_context().add_class("ominx-muted")
         header.pack_start(self.breadcrumb, True, True, 0)
-        classic = Gtk.Button(label="All system controls")
+        classic = Gtk.Button(label="Open Cinnamon settings")
         classic.get_style_context().add_class("ominx-secondary")
         classic.connect("clicked", lambda _button: self._launch(["cinnamon-settings"]))
         header.pack_end(classic, False, False, 0)
@@ -316,6 +316,9 @@ class SettingsWindow(Gtk.Window):
         self.page_box.pack_start(page_title, False, False, 0)
         self.page_box.pack_start(page_subtitle, False, False, 0)
 
+        if not query and self.active_category == "Workspace":
+            self.page_box.pack_start(self._build_workspace_hero(), False, False, 4)
+
         if candidates:
             grid = Gtk.FlowBox()
             grid.set_selection_mode(Gtk.SelectionMode.NONE)
@@ -332,7 +335,7 @@ class SettingsWindow(Gtk.Window):
 
         if not query:
             note = Gtk.Label(
-                label="These pages use native Cinnamon and Linux tools. OminX keeps familiar navigation while preserving each component's own settings and behavior."
+                label="Each page opens a native Cinnamon or Linux control. OminX gathers the essentials while preserving each component's own settings and behavior."
             )
             note.set_xalign(0)
             note.set_line_wrap(True)
@@ -340,6 +343,42 @@ class SettingsWindow(Gtk.Window):
             self.page_box.pack_end(note, False, False, 8)
 
         self.page_box.show_all()
+
+    def _build_workspace_hero(self) -> Gtk.Box:
+        hero = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=18)
+        hero.get_style_context().add_class("ominx-hero")
+
+        copy = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=9)
+        copy.set_hexpand(True)
+        title = Gtk.Label(label="A workspace shaped around you")
+        title.set_xalign(0)
+        title.get_style_context().add_class("ominx-hero-title")
+        description = Gtk.Label(
+            label="Fine-tune the light, sound, and rhythm of your OminX desktop."
+        )
+        description.set_xalign(0)
+        description.set_line_wrap(True)
+        description.set_max_width_chars(54)
+        description.get_style_context().add_class("ominx-hero-copy")
+        copy.pack_start(title, False, False, 0)
+        copy.pack_start(description, False, False, 0)
+
+        appearance = Gtk.Button(label="Explore appearance")
+        appearance.get_style_context().add_class("ominx-primary")
+        appearance.set_halign(Gtk.Align.START)
+        appearance.connect(
+            "clicked",
+            lambda _button: self.nav_buttons["Appearance"].clicked(),
+        )
+        copy.pack_start(appearance, False, False, 3)
+        hero.pack_start(copy, True, True, 0)
+
+        emblem = Gtk.Image.new_from_file(
+            "/usr/share/icons/hicolor/scalable/apps/ominx.svg"
+        )
+        emblem.set_pixel_size(72)
+        hero.pack_end(emblem, False, False, 4)
+        return hero
 
     def _build_card(self, category: str, item: tuple) -> Gtk.Button:
         title, description, icon_name, command = item
@@ -375,11 +414,11 @@ class SettingsWindow(Gtk.Window):
         return card
 
     def _show_no_results(self, query: str) -> None:
-        message = Gtk.Label(label=f"No settings matched ‘{query}’. Open all system controls to browse the full settings application.")
+        message = Gtk.Label(label=f"No settings matched ‘{query}’. Open Cinnamon settings to browse the full control center.")
         message.set_xalign(0)
         message.set_line_wrap(True)
         message.get_style_context().add_class("ominx-copy")
-        button = Gtk.Button(label="Open all system controls")
+        button = Gtk.Button(label="Open Cinnamon settings")
         button.set_halign(Gtk.Align.START)
         button.get_style_context().add_class("ominx-primary")
         button.connect("clicked", lambda _button: self._launch(["cinnamon-settings"]))

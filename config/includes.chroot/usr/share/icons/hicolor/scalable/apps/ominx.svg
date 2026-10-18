@@ -9,13 +9,14 @@
       <stop offset=".5" stop-color="#36b7f0"/>
       <stop offset="1" stop-color="#5369ff"/>
     </linearGradient>
-    <filter id="shadow" x="-40%" y="-40%" width="180%" height="180%">
-      <feGaussianBlur stdDeviation="18"/>
-    </filter>
+    <radialGradient id="halo" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#40d7ce" stop-opacity=".26"/>
+      <stop offset="1" stop-color="#40d7ce" stop-opacity="0"/>
+    </radialGradient>
   </defs>
   <rect x="20" y="20" width="472" height="472" rx="116" fill="url(#tile)"/>
   <rect x="21" y="21" width="470" height="470" rx="115" fill="none" stroke="#a8dfff" stroke-opacity=".2" stroke-width="2"/>
-  <circle cx="256" cy="255" r="147" fill="#2389f2" opacity=".22" filter="url(#shadow)"/>
+  <circle cx="256" cy="255" r="152" fill="url(#halo)"/>
   <path d="M107 176 176 107 405 336 336 405Z" fill="url(#x)"/>
   <path d="M336 107 405 176 176 405 107 336Z" fill="url(#x)"/>
   <path d="m256 207 49 49-49 49-49-49z" fill="#10203b"/>

@@ -22,13 +22,13 @@ const PINNED_APPS = [
     { id: "net.lutris.Lutris.desktop", name: "Lutris", icon: "lutris" }
 ];
 
-class OminXStartApplet extends Applet.IconApplet {
+class OminXLauncherApplet extends Applet.IconApplet {
     constructor(orientation, panelHeight, instanceId) {
         super(orientation, panelHeight, instanceId);
 
         this.setAllowedLayout(Applet.AllowedLayout.BOTH);
         this.set_applet_icon_path(START_ICON);
-        this.set_applet_tooltip("OminX Start");
+        this.set_applet_tooltip("OminX Launcher");
 
         this.menuManager = new PopupMenu.PopupMenuManager(this);
         this.menu = new Applet.AppletPopupMenu(this, orientation);
@@ -276,7 +276,7 @@ class OminXStartApplet extends Applet.IconApplet {
                 })
                 .sort((left, right) => left.name.localeCompare(right.name));
         } catch (error) {
-            global.logError("OminX Start could not enumerate installed applications: " + error);
+            global.logError("OminX Launcher could not enumerate installed applications: " + error);
             return [];
         }
     }
@@ -550,7 +550,7 @@ class OminXStartApplet extends Applet.IconApplet {
         try {
             app.appInfo.launch([], global.create_app_launch_context(0, -1));
         } catch (error) {
-            global.logError("OminX Start could not launch " + app.name + ": " + error);
+            global.logError("OminX Launcher could not launch " + app.name + ": " + error);
             Main.notifyError("Could not open " + app.name, error.message || String(error));
         }
     }
@@ -562,7 +562,7 @@ class OminXStartApplet extends Applet.IconApplet {
                 store.launch([], global.create_app_launch_context(0, -1));
                 return;
             } catch (error) {
-                global.logError("OminX Start could not open OminX Store: " + error);
+                global.logError("OminX Launcher could not open OminX Store: " + error);
             }
         }
         Util.spawnCommandLine("gnome-software");
@@ -604,5 +604,5 @@ class OminXStartApplet extends Applet.IconApplet {
 }
 
 function main(metadata, orientation, panelHeight, instanceId) {
-    return new OminXStartApplet(orientation, panelHeight, instanceId);
+    return new OminXLauncherApplet(orientation, panelHeight, instanceId);
 }

@@ -1,29 +1,42 @@
-/* OminX shell theme: bright, clean surfaces and original blue/cyan accents. */
+/* OminX Aurora — a quiet, luminous shell in midnight ink, sea-glass and sky. */
 stage {
-  color: #20334a;
+  color: #e5f0f5;
   font-family: "Noto Sans", sans-serif;
   font-size: 10pt;
 }
 
 #panel {
-  color: #273a51;
+  color: #dbeaf0;
   font-family: "Noto Sans", sans-serif;
   font-size: 10pt;
   font-weight: normal;
-  height: 48px;
+  height: 44px;
   width: 36px;
-  background-color: rgba(246, 249, 253, 0.96);
+  background-color: rgba(8, 15, 23, 0.97);
+  border-bottom: 1px solid #24414a;
 }
 
 .panel-top, .panel-bottom, .panel-left, .panel-right {
-  color: #273a51;
-  background-color: rgba(246, 249, 253, 0.96);
+  color: #dbeaf0;
+  background-color: rgba(8, 15, 23, 0.97);
   border: none;
   padding: 0;
 }
 
+.panel-top {
+  border-bottom: 1px solid #24414a;
+}
+
 .panel-bottom {
-  border-top: 1px solid rgba(164, 183, 204, 0.72);
+  border-top: 1px solid #24414a;
+}
+
+.panel-left {
+  border-right: 1px solid #24414a;
+}
+
+.panel-right {
+  border-left: 1px solid #24414a;
 }
 
 #panelLeft, #panelCenter, #panelRight {
@@ -31,112 +44,112 @@ stage {
 }
 
 #panelLeft:ltr {
-  padding-left: 8px;
-  padding-right: 4px;
+  padding-left: 10px;
+  padding-right: 5px;
 }
 
 #panelRight:ltr {
-  padding-left: 4px;
-  padding-right: 8px;
+  padding-left: 5px;
+  padding-right: 10px;
 }
 
 .panel-button, .panel-status-button {
   -natural-hpadding: 9px;
   -minimum-hpadding: 4px;
-  color: #344a63;
+  color: #b9cbd5;
   font-weight: normal;
-  border-radius: 8px;
-  transition-duration: 100;
+  border-radius: 9px;
+  transition-duration: 110;
 }
 
 .panel-button:hover, .panel-status-button:hover {
-  color: #173b68;
-  background-color: rgba(83, 135, 188, 0.12);
-  border-radius: 8px;
+  color: #f0fbff;
+  background-color: rgba(86, 221, 207, 0.11);
+  border-radius: 9px;
 }
 
 .panel-button:active, .panel-button:checked,
 .panel-status-button:active, .panel-status-button:checked {
-  color: #174e89;
-  background-color: rgba(62, 133, 204, 0.16);
-  border-radius: 8px;
+  color: #72e7d7;
+  background-color: rgba(74, 208, 195, 0.16);
+  border-radius: 9px;
 }
 
 .panel-button:focus, .panel-status-button:focus {
-  color: #174e89;
-  background-color: rgba(62, 133, 204, 0.18);
+  color: #78e6d8;
+  background-color: rgba(74, 208, 195, 0.16);
 }
 
 .window-list-item-box {
-  color: #354a63;
+  color: #aec1cb;
   background-color: transparent;
   border-radius: 9px;
   border-bottom-width: 2px;
   border-color: transparent;
-  padding: 5px 9px;
-  margin: 4px 2px;
+  padding: 5px 10px;
+  margin: 3px 2px;
   transition-duration: 110;
 }
 
 .window-list-item-box:hover, .window-list-item-box:groupFocus {
-  color: #173451;
-  background-color: rgba(75, 126, 178, 0.12);
+  color: #f1fbff;
+  background-color: rgba(108, 175, 202, 0.12);
   border-radius: 9px;
 }
 
 .window-list-item-box:active, .window-list-item-box:checked,
 .window-list-item-box:focus, .window-list-item-box:running {
-  color: #173b68;
-  background-color: rgba(67, 133, 194, 0.15);
-  border-bottom-color: #2582d5;
+  color: #e5fffc;
+  background-color: rgba(66, 204, 190, 0.13);
+  border-bottom-color: #57dfcd;
 }
 
 .window-list-item-box .progress {
-  background-color: #2795c9;
+  background-color: #55ddcc;
 }
 
 .popup-menu {
-  color: #23364d;
-  -arrow-background-color: #ffffff;
+  color: #e2edf2;
+  -arrow-background-color: #111d29;
   -arrow-border-width: 1px;
-  -arrow-border-color: #d6e1ed;
-  -arrow-border-radius: 12px;
+  -arrow-border-color: #2a414f;
+  -arrow-border-radius: 13px;
   -arrow-base: 22px;
   -arrow-rise: 11px;
-  -arrow-box-shadow: 0 8px 20px rgba(34, 56, 82, 0.14);
+  -arrow-box-shadow: 0 14px 36px rgba(0, 0, 0, 0.38);
   -boxpointer-gap: 6px;
 }
 
 .popup-menu-content {
-  color: #23364d;
-  background-color: #ffffff;
-  border: 1px solid #d9e3ed;
-  border-radius: 12px;
+  color: #e2edf2;
+  background-color: #111d29;
+  border: 1px solid #2a414f;
+  border-radius: 13px;
   padding: 8px;
-  box-shadow: 0 8px 20px rgba(34, 56, 82, 0.12);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.35);
 }
 
 .popup-menu-item {
-  color: #314861;
-  border-radius: 7px;
+  color: #c2d2dc;
+  border-radius: 8px;
   padding: 7px 12px;
   spacing: 10px;
 }
 
 .popup-menu-item:hover, .popup-menu-item:active, .popup-menu-item:checked {
-  color: #173d67;
-  background-color: #eaf3fd;
-  border-radius: 7px;
+  color: #effbff;
+  background-color: #1b2d3b;
+  border-radius: 8px;
 }
 
 .popup-menu-item:insensitive {
-  color: rgba(65, 84, 106, 0.5);
+  color: rgba(173, 194, 205, 0.45);
 }
 
 .appmenu-background .popup-menu-content {
-  background-color: #ffffff;
-  border: 1px solid #d7e2ee;
-  border-radius: 15px;
+  background-color: #111d29;
+  border: 1px solid #2a414f;
+  border-radius: 16px;
   padding: 12px;
 }
 
@@ -150,24 +163,24 @@ stage {
 }
 
 .appmenu-search-box StEntry, .menu-search-box StEntry {
-  color: #20334a;
-  caret-color: #167ac0;
-  selection-background-color: #cfe4fb;
-  background-color: #f8faff;
-  border: 1px solid #d3dfeb;
+  color: #e5f2f6;
+  caret-color: #58dfd0;
+  selection-background-color: #24565d;
+  background-color: #0b151f;
+  border: 1px solid #29404e;
   border-radius: 9px;
   padding: 8px 11px;
 }
 
 .appmenu-search-box StEntry:focus, .menu-search-box StEntry:focus {
-  border: 1px solid #5c9de0;
-  background-color: #ffffff;
+  border: 1px solid #50cfc3;
+  background-color: #0d1924;
 }
 
 .appmenu-sidebar {
-  color: #344b64;
-  background-color: #f5f8fc;
-  border-color: #dce5ef;
+  color: #bdd0da;
+  background-color: #0c1721;
+  border-color: #253b48;
   border-right-width: 1px;
   border-radius: 11px;
   padding: 11px 7px;
@@ -178,7 +191,7 @@ stage {
 .appmenu-category-button, .appmenu-application-button,
 .menu-category-button, .menu-application-button,
 .menu-favorites-button, .menu-places-button {
-  color: #344b64;
+  color: #bfd0d9;
   border: 1px solid transparent;
   border-radius: 8px;
   padding: 7px;
@@ -188,17 +201,17 @@ stage {
 .appmenu-category-button:hover, .appmenu-application-button:hover,
 .menu-category-button:hover, .menu-application-button:hover,
 .menu-favorites-button:hover, .menu-places-button:hover {
-  color: #173b61;
-  background-color: #eaf2fb;
+  color: #effaff;
+  background-color: #1a2b39;
   border-radius: 8px;
 }
 
 .appmenu-application-button-selected, .appmenu-category-button-selected,
 .menu-application-button-selected, .menu-category-button-selected,
 .menu-favorites-button:active {
-  color: #15589a;
-  background-color: #e6f1ff;
-  border: 1px solid #c9def5;
+  color: #7be5d9;
+  background-color: #173039;
+  border: 1px solid #28545a;
   border-radius: 8px;
 }
 
@@ -206,7 +219,7 @@ stage {
 .appmenu-category-button:highlighted,
 .menu-application-button:highlighted,
 .menu-category-button:highlighted {
-  color: #173b61;
+  color: #f0fcff;
 }
 
 .appmenu-system-box {
@@ -214,9 +227,9 @@ stage {
 }
 
 StTooltip {
-  color: #20334a;
-  background-color: #ffffff;
-  border: 1px solid #d8e2ed;
-  border-radius: 7px;
+  color: #e3eff4;
+  background-color: #14222e;
+  border: 1px solid #2c4452;
+  border-radius: 8px;
   padding: 5px 8px;
 }
