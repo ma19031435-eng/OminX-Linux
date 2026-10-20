@@ -19,9 +19,16 @@ cp boot/limine.conf "$STAGE/boot/limine/limine.conf"
 cp build/limine/bin/limine-bios.sys build/limine/bin/limine-bios-cd.bin \
     build/limine/bin/limine-uefi-cd.bin "$STAGE/boot/limine/"
 cp build/limine/bin/BOOTX64.EFI "$STAGE/EFI/BOOT/BOOTX64.EFI"
-xorriso -as mkisofs -R -r -J -V OMINX_CORE \
-    -b boot/limine/limine-bios-cd.bin -no-emul-boot -boot-load-size 4 -boot-info-table \
-    --efi-boot boot/limine/limine-uefi-cd.bin -efi-boot-part --efi-boot-image \
-    --protective-msdos-label "$STAGE" -o build/ominx-x86_64.iso
-build/limine/bin/limine bios-install build/ominx-x86_64.iso
-(cd build && sha256sum bzImage initramfs.cpio.gz ominx-x86_64.iso > SHA256SUMS)
+make_iso() {
+    xorriso -as mkisofs -R -r -J -V OMINX_CORE \
+        -b boot/limine/limine-bios-cd.bin -no-emul-boot -boot-load-size 4 -boot-info-table \
+        --efi-boot boot/limine/limine-uefi-cd.bin -efi-boot-part --efi-boot-image \
+        --protective-msdos-label "$STAGE" -o "$1"
+    build/limine/bin/limine bios-install "$1"
+}
+make_iso build/ominx-x86_64.iso
+# Separate, explicitly labelled test/recovery media; never the default download.
+{ printf 'default_entry: 2\n'; cat boot/limine.conf; } > "$STAGE/boot/limine/limine.conf"
+make_iso build/ominx-recovery-x86_64.iso
+cp boot/limine.conf "$STAGE/boot/limine/limine.conf"
+(cd build && sha256sum bzImage initramfs.cpio.gz ominx-x86_64.iso ominx-recovery-x86_64.iso > SHA256SUMS)

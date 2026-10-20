@@ -57,7 +57,7 @@ def check_format(kind):
         if result.returncode or b'OMINX_FIXTURE_READY' not in log or b'Power down' not in log:
             raise RuntimeError('Guest exFAT fixture preparation failed: ' + log[-4000:].decode(errors='replace'))
     before = digest(disk)
-    case = dict(name='windows-' + kind, machine='q35', ram=512, cpu='qemu64', disk='virtio', uefi=True)
+    case = dict(recovery=True, name='windows-' + kind, machine='q35', ram=512, cpu='qemu64', disk='virtio', uefi=True)
     vm = VM(case, data, 'readonly', extras=[disk])
     try:
         vm.expect('OminX console ready.')

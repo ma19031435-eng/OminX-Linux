@@ -8,7 +8,7 @@ import time
 
 command = ['qemu-system-x86_64', '-m', '256', '-kernel', 'build/bzImage',
            '-initrd', 'build/initramfs.cpio.gz', '-append',
-           'console=ttyS0 rdinit=/init panic=-1', '-nographic', '-no-reboot', '-nic', 'none']
+           'console=ttyS0 rdinit=/init panic=-1 ominx.recovery=1', '-nographic', '-no-reboot', '-nic', 'none']
 process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                            stderr=subprocess.STDOUT)
 log = bytearray()

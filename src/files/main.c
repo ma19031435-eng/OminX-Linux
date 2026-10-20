@@ -37,6 +37,7 @@ static void json_string(const char *text) {
 static void metadata(const struct stat *st) {
     const char *type = S_ISREG(st->st_mode) ? "file" : S_ISDIR(st->st_mode) ? "directory" : S_ISLNK(st->st_mode) ? "symlink" : "other";
     printf("\"type\":\"%s\",\"size\":%jd,\"mode\":%u", type, (intmax_t)st->st_size, st->st_mode & 07777);
+    printf(",\"uid\":%u,\"gid\":%u", (unsigned)st->st_uid, (unsigned)st->st_gid);
 }
 static int compare_names(const void *a, const void *b) {
     return strcmp(*(const char *const *)a, *(const char *const *)b);

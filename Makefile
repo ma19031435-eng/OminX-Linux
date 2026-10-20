@@ -8,7 +8,7 @@ toolchain:
 	./scripts/build-toolchain.sh
 build:
 	./build.sh
-build/ominx: src/core/ominx.c src/lib/parse.c src/lib/files.c src/lib/parse.h src/lib/files.h
+build/ominx: src/core/ominx.c src/lib/parse.c src/lib/files.c src/lib/parse.h src/lib/files.h src/lib/session.c src/lib/session.h
 	mkdir -p build
 	$(CC) $(CFLAGS) -static -o $@ $(filter %.c,$^)
 build/ominx-files: src/files/main.c src/lib/files.c src/lib/files.h
@@ -16,7 +16,7 @@ build/ominx-files: src/files/main.c src/lib/files.c src/lib/files.h
 	$(CC) $(CFLAGS) -static -o $@ $(filter %.c,$^)
 initramfs: build/ominx build/ominx-files scripts/make-initramfs.py
 	python3 scripts/make-initramfs.py build/ominx build/initramfs.cpio.gz build/ominx-files
-build/host/ominx: src/core/ominx.c src/lib/parse.c src/lib/files.c src/lib/parse.h src/lib/files.h
+build/host/ominx: src/core/ominx.c src/lib/parse.c src/lib/files.c src/lib/parse.h src/lib/files.h src/lib/session.c src/lib/session.h
 	mkdir -p build/host
 	$(HOSTCC) $(CFLAGS) -static -o $@ $(filter %.c,$^)
 build/host/ominx-files: src/files/main.c src/lib/files.c src/lib/files.h

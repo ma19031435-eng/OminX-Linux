@@ -9,17 +9,26 @@ import sys
 
 def archive(binary, files=None):
     output = bytearray()
-    def entry(name, mode, data=b'', major=0, minor=0):
+    def entry(name, mode, data=b'', major=0, minor=0, uid=0, gid=0):
         encoded = name.encode() + b'\0'
-        values = [1, mode, 0, 0, 1, 0, len(data), 0, 0, major, minor, len(encoded), 0]
+        values = [1, mode, uid, gid, 1, 0, len(data), 0, 0, major, minor, len(encoded), 0]
         output.extend(b'070701' + b''.join(f'{v:08x}'.encode() for v in values))
         output.extend(encoded)
         output.extend(b'\0' * (-len(output) % 4))
         output.extend(data)
         output.extend(b'\0' * (-len(output) % 4))
-    for name in ('dev', 'proc', 'sys', 'run', 'tmp', 'root', 'etc', 'bin', 'mnt', 'mnt/data'):
+    for name in ('dev', 'proc', 'sys', 'run', 'tmp', 'etc', 'bin', 'mnt', 'mnt/data'):
         entry(name, stat.S_IFDIR | (0o1777 if name == 'tmp' else 0o755))
-    entry('dev/console', stat.S_IFCHR | 0o600, major=5, minor=1)
+    entry('root', stat.S_IFDIR | 0o700)
+    entry('home', stat.S_IFDIR | 0o755)
+    entry('home/ominx', stat.S_IFDIR | 0o700, uid=1000, gid=1000)
+    entry('etc/passwd', stat.S_IFREG | 0o644,
+          b'root:x:0:0:Recovery:/root:/init\nominx:x:1000:1000:OminX live user:/home/ominx:/init\n')
+    entry('etc/group', stat.S_IFREG | 0o644,
+          b'root:x:0:\nvideo:x:44:ominx\ninput:x:104:ominx\nrender:x:107:ominx\nominx:x:1000:\n')
+    entry('etc/shadow', stat.S_IFREG | 0o600,
+          b'root:!:0:0:99999:7:::\nominx:!:0:0:99999:7:::\n')
+    entry('dev/console' , stat.S_IFCHR | 0o600, major=5, minor=1)
     entry('init', stat.S_IFREG | 0o755, binary)
     if files is not None:
         entry('bin/ominx-files', stat.S_IFREG | 0o755, files)

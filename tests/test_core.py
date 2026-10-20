@@ -95,6 +95,11 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(entries['init'][0][1], 0o100755)
         self.assertEqual(entries['dev/console'][0][9:11], [5, 1])
         self.assertEqual(entries['tmp'][0][1], 0o41777)
+        self.assertEqual(entries['root'][0][1], 0o40700)
+        self.assertEqual(entries['home/ominx'][0][2:4], [1000, 1000])
+        self.assertEqual(entries['home/ominx'][0][1], 0o40700)
+        self.assertEqual(entries['etc/shadow'][0][1], 0o100600)
+        self.assertIn(b'root:!', entries['etc/shadow'][1])
         self.assertIn(b'ID=ominx', entries['etc/os-release'][1])
 
     def test_reject_malformed_elf(self):

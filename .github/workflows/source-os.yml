@@ -44,7 +44,9 @@ jobs:
         run: JOBS=4 ./build.sh 2>&1 | tee build/kernel-build.log
       - name: Test musl-linked original userspace
         run: make target-check CC="$PWD/build/toolchain/bin/x86_64-linux-musl-gcc" 2>&1 | tee build/userspace.log
-      - name: Boot real media and verify x86 platform matrix
+      - name: Verify default unprivileged sessions on real media
+        run: python3 scripts/test-sessions.py 2>&1 | tee build/sessions.log
+      - name: Boot recovery media and verify x86 storage matrix
         run: python3 scripts/test-platforms.py 2>&1 | tee build/platforms.log
       - name: Verify read-only Windows filesystems and file import
         run: python3 scripts/test-windows-filesystems.py 2>&1 | tee build/windows-filesystems.log
@@ -54,10 +56,10 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           # GitHub caps notices per step; publish summaries first, then a few diagnostics.
-          paths = [Path('build') / name for name in ('platforms.log', 'windows-filesystems.log', 'userspace.log')]
+          paths = [Path('build') / name for name in ('sessions.log', 'platforms.log', 'windows-filesystems.log', 'userspace.log')]
           paths += sorted(Path('build/acceptance').glob('*.json'))
           paths += [Path('build/kernel-build.log')]
-          paths += sorted(Path('build/acceptance').glob('windows-*.txt'))[-3:]
+          paths += sorted(Path('build/acceptance').glob('session-*.txt'))[-1:]
           paths = paths[:10]
           for path in paths:
               if path.exists():
@@ -71,6 +73,7 @@ jobs:
           name: OminX-x86-${{ github.sha }}
           path: |
             build/ominx-x86_64.iso
+            build/ominx-recovery-x86_64.iso
             build/bzImage
             build/initramfs.cpio.gz
             build/SHA256SUMS

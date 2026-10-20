@@ -2,6 +2,8 @@
 #define _GNU_SOURCE
 #include "../lib/parse.h"
 #include "../lib/files.h"
+#include "../lib/session.h"
+#include <sys/prctl.h>
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -19,6 +21,7 @@
 #include <unistd.h>
 
 static int is_init;
+static int recovery_mode;
 static void error(const char *s) { fprintf(stderr, "%s: %s\n", s, strerror(errno)); }
 static void filesystem(const char *type, const char *path) {
     if (mkdir(path, 0755) && errno != EEXIST) error(path);
@@ -30,7 +33,7 @@ static void shell(void) {
     puts("OminX console ready. Type help. No disk is mounted automatically.");
     for (;;) {
         char cwd[4096];
-        printf("ominx:%s# ", getcwd(cwd, sizeof cwd) ? cwd : "?");
+        printf("ominx:%s%c ", getcwd(cwd, sizeof cwd) ? cwd : "?", geteuid() ? '$' : '#');
         fflush(stdout);
         if (getline(&line, &cap, stdin) < 0) break;
         char *args[64];
@@ -40,7 +43,7 @@ static void shell(void) {
         if (!n) continue;
         const char *cmd = args[0];
         if (!strcmp(cmd, "help")) {
-            puts("help | uname | pwd | cd PATH | ls [PATH] | cat FILE\n"
+            puts("help | id | uname | pwd | cd PATH | ls [PATH] | cat FILE\n"
                  "mkdir PATH | write FILE WORDS... | echo WORDS... | sync\n"
                  "cp SOURCE DEST | mv SOURCE DEST | rm FILE\n"
                  "attach DEVICE [ro [ext4|vfat|exfat|ntfs3]] | detach\n"
@@ -48,7 +51,20 @@ static void shell(void) {
                  "Single/double quotes and backslash escapes supported; no pipes or expansion.\n"
                  "write replaces a file. Only files on an attached data disk survive reboot.");
         } else if (!strcmp(cmd, "exit")) break;
-        else if (!strcmp(cmd, "uname")) {
+        else if (!strcmp(cmd, "id")) {
+            uid_t r, e, saved;
+            gid_t gr, ge, gs, groups[32];
+            if (getresuid(&r, &e, &saved) || getresgid(&gr, &ge, &gs)) { error("identity"); continue; }
+            printf("uid=%u euid=%u suid=%u gid=%u egid=%u sgid=%u no_new_privs=%d\n",
+                   (unsigned)r, (unsigned)e, (unsigned)saved, (unsigned)gr, (unsigned)ge, (unsigned)gs,
+                   prctl(PR_GET_NO_NEW_PRIVS, 0, 0, 0, 0));
+            int count = getgroups(32, groups);
+            printf("groups=");
+            for (int i = 0; i < count; i++) printf("%s%u", i ? "," : "", (unsigned)groups[i]);
+            putchar('\n');
+            printf("HOME=%s XDG_RUNTIME_DIR=%s\n", getenv("HOME") ? getenv("HOME") : "",
+                   getenv("XDG_RUNTIME_DIR") ? getenv("XDG_RUNTIME_DIR") : "");
+        } else if (!strcmp(cmd, "uname")) {
             struct utsname u;
             if (uname(&u)) error(cmd);
             else printf("%s %s %s\n", u.sysname, u.release, u.machine);
@@ -94,6 +110,7 @@ static void shell(void) {
             if (unlink(args[1])) error(args[1]);
         } else if (!strcmp(cmd, "attach") && (n == 2 || ((n == 3 || n == 4) && !strcmp(args[2], "ro")))) {
             if (!is_init) { puts("Disk attachment only runs in the OminX boot environment."); continue; }
+            if (geteuid()) { puts("Recovery mode required for disk attachment."); continue; }
             const char *type = n == 4 ? args[3] : "ext4";
             if (strcmp(type, "ext4") && strcmp(type, "vfat") && strcmp(type, "exfat") && strcmp(type, "ntfs3")) {
                 puts("Unsupported filesystem type."); continue;
@@ -113,11 +130,13 @@ static void shell(void) {
             else puts("Data attached at /mnt/data.");
         } else if (!strcmp(cmd, "detach") && n == 1) {
             if (!is_init) { puts("Disk attachment only runs in the OminX boot environment."); continue; }
+            if (geteuid()) { puts("Recovery mode required for disk attachment."); continue; }
             sync();
             if (umount("/mnt/data")) error("detach"); else puts("Data detached.");
         } else if (!strcmp(cmd, "sync")) sync();
         else if (!strcmp(cmd, "reboot") || !strcmp(cmd, "poweroff")) {
             if (!is_init) { puts("Power controls only run in the OminX boot environment."); continue; }
+            if (geteuid()) { puts("Recovery mode required for power controls."); continue; }
             if (chdir("/root")) error("/root");
             sync();
             if (umount("/mnt/data") && errno != EINVAL && errno != ENOENT) {
@@ -143,6 +162,8 @@ static pid_t start_console(const char *device) {
     int fd = open(device, O_RDWR);
     if (fd < 0) { error(device); _exit(1); }
     if (ioctl(fd, TIOCSCTTY, 0)) { error("controlling terminal"); _exit(1); }
+    if (fchown(fd, recovery_mode ? 0 : OMINX_UID, recovery_mode ? 0 : OMINX_GID) ||
+        fchmod(fd, 0600)) { error("console ownership"); _exit(1); }
     for (int i = 0; i < 3; i++) if (dup2(fd, i) < 0) _exit(1);
     if (fd > 2) close(fd);
     struct termios t;
@@ -153,7 +174,10 @@ static pid_t start_console(const char *device) {
         cfsetispeed(&t, B115200); cfsetospeed(&t, B115200);
         if (tcsetattr(0, TCSANOW, &t)) error("terminal setup");
     }
+    if (ominx_enter_session(recovery_mode)) { error("session setup denied"); _exit(1); }
     setvbuf(stdout, NULL, _IOLBF, 0);
+    puts(recovery_mode ? "WARNING: explicit unauthenticated root recovery session." :
+                         "OminX live session: unprivileged user ominx (automatic login).");
     shell();
     exit(0);
 }
@@ -174,7 +198,18 @@ int main(int argc, char **argv) {
     filesystem("proc", "/proc"); filesystem("sysfs", "/sys");
     filesystem("tmpfs", "/run"); filesystem("tmpfs", "/tmp");
     if (chmod("/tmp", 01777)) error("/tmp permissions");
-    setenv("PATH", "/bin", 1); setenv("HOME", "/root", 1);
+    FILE *command_line = fopen("/proc/cmdline", "r");
+    char parameters[4096] = {0};
+    if (command_line) {
+        if (fgets(parameters, sizeof parameters, command_line))
+            recovery_mode = ominx_recovery_requested(parameters);
+        fclose(command_line);
+    }
+    if (ominx_prepare_session()) {
+        error("session directories");
+        for (;;) pause(); /* Fail closed: never open a root fallback console. */
+    }
+    ominx_device_policy();
     if (chdir("/root")) error("/root");
     signal(SIGINT, SIG_IGN);
     /* Independent local-keyboard and serial sessions; PID 1 reaps all children. */
@@ -183,7 +218,7 @@ int main(int argc, char **argv) {
     for (int i = 0; i < 2; i++) consoles[i] = start_console(devices[i]);
     for (;;) {
         int status;
-        pid_t ended = wait(&status);
+        pid_t ended = waitpid(-1, &status, WNOHANG);
         if (ended < 0 && errno == EINTR) continue;
         for (int i = 0; i < 2; i++) {
             if (consoles[i] < 0 || consoles[i] == ended) {
@@ -191,6 +226,7 @@ int main(int argc, char **argv) {
                 consoles[i] = start_console(devices[i]);
             }
         }
-        if (ended < 0) sleep(1);
+        ominx_device_policy();
+        usleep(250000);
     }
 }
