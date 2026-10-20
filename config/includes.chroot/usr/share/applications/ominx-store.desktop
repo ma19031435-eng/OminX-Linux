@@ -8,6 +8,6 @@ TryExec=/usr/local/bin/ominx-store
 Exec=/usr/local/bin/ominx-store
 Icon=/usr/share/icons/hicolor/scalable/apps/ominx-store.svg
 Terminal=false
-Categories=System;PackageManager;
+Categories=Settings;PackageManager;
 Keywords=apps;software;games;catalog;flatpak;debian;
 StartupNotify=true

@@ -6,4 +6,4 @@ TryExec=/usr/local/bin/ominx-setup
 Exec=/usr/local/bin/ominx-setup
 Icon=ominx
 Terminal=false
-Categories=System;Settings;
+Categories=Settings;
