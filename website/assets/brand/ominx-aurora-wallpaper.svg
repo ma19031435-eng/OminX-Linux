@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2560" height="1440" viewBox="0 0 2560 1440" role="img" aria-label="Original OminX Aurora wallpaper, with a luminous OminX mark in a deep teal and indigo sky">
+  <defs>
+    <linearGradient id="space" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#07111a"/>
+      <stop offset=".52" stop-color="#0b1725"/>
+      <stop offset="1" stop-color="#17182e"/>
+    </linearGradient>
+    <radialGradient id="aurora" cx="76%" cy="45%" r="66%">
+      <stop offset="0" stop-color="#41dbc6" stop-opacity=".24"/>
+      <stop offset=".28" stop-color="#348fd5" stop-opacity=".20"/>
+      <stop offset=".62" stop-color="#6461bf" stop-opacity=".12"/>
+      <stop offset="1" stop-color="#0b1725" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="mintBloom" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#3de0ca" stop-opacity=".25"/>
+      <stop offset=".55" stop-color="#3de0ca" stop-opacity=".09"/>
+      <stop offset="1" stop-color="#3de0ca" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="violetBloom" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#9276ef" stop-opacity=".19"/>
+      <stop offset=".6" stop-color="#9276ef" stop-opacity=".06"/>
+      <stop offset="1" stop-color="#9276ef" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="markAura" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#47dbc9" stop-opacity=".22"/>
+      <stop offset=".52" stop-color="#418fdf" stop-opacity=".12"/>
+      <stop offset="1" stop-color="#418fdf" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="mark" x1=".08" y1=".06" x2=".92" y2=".94">
+      <stop offset="0" stop-color="#9bf1e4"/>
+      <stop offset=".43" stop-color="#44d5ce"/>
+      <stop offset=".72" stop-color="#4ca8f2"/>
+      <stop offset="1" stop-color="#9a83ef"/>
+    </linearGradient>
+    <linearGradient id="markSoft" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#70e6d8" stop-opacity=".58"/>
+      <stop offset="1" stop-color="#8f86f2" stop-opacity=".30"/>
+    </linearGradient>
+    <linearGradient id="wordmark" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#effbfd"/>
+      <stop offset="1" stop-color="#b9dbe4"/>
+    </linearGradient>
+    <pattern id="grid" width="84" height="84" patternUnits="userSpaceOnUse">
+      <path d="M84 0H0V84" fill="none" stroke="#9bc9d6" stroke-opacity=".035" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <rect width="2560" height="1440" fill="url(#space)"/>
+  <rect width="2560" height="1440" fill="url(#aurora)"/>
+  <rect width="2560" height="1440" fill="url(#grid)"/>
+  <ellipse cx="2000" cy="510" rx="720" ry="480" fill="url(#mintBloom)"/>
+  <ellipse cx="1900" cy="1130" rx="740" ry="400" fill="url(#violetBloom)"/>
+
+  <path d="M1010 0C1330 170 1470 382 1706 500c242 122 475 106 854 28" fill="none" stroke="#98e7e2" stroke-opacity=".13" stroke-width="2"/>
+  <path d="M1090 0C1408 216 1510 430 1755 557c260 136 496 133 805 80" fill="none" stroke="#a9c9ff" stroke-opacity=".09" stroke-width="1.5"/>
+  <path d="M1250 1440c238-236 338-493 665-652 199-96 387-112 645-124" fill="none" stroke="#a598f3" stroke-opacity=".14" stroke-width="2"/>
+  <path d="M1450 1440c222-208 350-435 638-577 178-88 323-112 472-127" fill="none" stroke="#76d9d2" stroke-opacity=".09" stroke-width="1.5"/>
+
+  <ellipse cx="1970" cy="694" rx="566" ry="347" transform="rotate(-27 1970 694)" fill="none" stroke="#75e0d3" stroke-opacity=".19" stroke-width="2"/>
+  <ellipse cx="1970" cy="694" rx="645" ry="404" transform="rotate(-27 1970 694)" fill="none" stroke="#a89cf4" stroke-opacity=".10" stroke-width="1.5"/>
+  <circle cx="1508" cy="444" r="5" fill="#a5f4e8" opacity=".8"/>
+  <circle cx="2393" cy="813" r="4" fill="#9b9bf4" opacity=".8"/>
+  <circle cx="2130" cy="280" r="3" fill="#c1dcff" opacity=".72"/>
+  <circle cx="1745" cy="1080" r="3" fill="#83eadb" opacity=".65"/>
+  <circle cx="2250" cy="1110" r="2" fill="#d6d6ff" opacity=".72"/>
+  <circle cx="1420" cy="830" r="2.5" fill="#a2dffc" opacity=".72"/>
+
+  <circle cx="1980" cy="650" r="410" fill="url(#markAura)"/>
+  <g transform="translate(1740 410)" opacity=".94">
+    <path d="M74 0 438 364 364 438 0 74Z" fill="url(#markSoft)"/>
+    <path d="M364 0 438 74 74 438 0 364Z" fill="url(#mark)"/>
+    <path d="M219 145 292 219 219 292 145 219Z" fill="#e9fffb" opacity=".92"/>
+    <path d="M219 171 267 219 219 267 171 219Z" fill="#51dbd2"/>
+  </g>
+
+  <g font-family="Noto Sans, DejaVu Sans, sans-serif">
+    <text x="360" y="1034" fill="url(#wordmark)" font-size="78" font-weight="700" letter-spacing="17">OMINX</text>
+    <rect x="366" y="1078" width="122" height="4" rx="2" fill="url(#mark)"/>
+    <text x="366" y="1140" fill="#a9bdc8" font-size="20" font-weight="500" letter-spacing="4">A CALMER KIND OF COMPUTING</text>
+    <rect x="366" y="1200" width="156" height="34" rx="17" fill="#152733" stroke="#35525d" stroke-width="1"/>
+    <circle cx="385" cy="1217" r="4" fill="#64decf"/>
+    <text x="399" y="1222" fill="#bfd5dc" font-size="11" font-weight="600" letter-spacing="2">AURORA  ·  BETA</text>
+  </g>
+</svg>
