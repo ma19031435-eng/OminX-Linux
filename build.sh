@@ -27,7 +27,7 @@ make -C "$LINUX_SOURCE" O="$ROOT/build/kernel" ARCH=x86_64 CROSS_COMPILE="$PREFI
     -e FRAMEBUFFER_CONSOLE -e VT -e VT_CONSOLE -e INPUT_EVDEV \
     -e USB_HID -e HID_GENERIC -e USB_XHCI_HCD -e USB_XHCI_PCI \
     -e VIRTIO_PCI -e VIRTIO_BLK -e EXT4_FS -e SATA_AHCI -e BLK_DEV_NVME \
-    -e USB_STORAGE -e FAT_FS -e VFAT_FS
+    -e USB_STORAGE -e FAT_FS -e VFAT_FS -e EXFAT_FS -e NTFS3_FS -e NLS_UTF8 -e NLS_CODEPAGE_437 -e NLS_ISO8859_1
 make -C "$LINUX_SOURCE" O="$ROOT/build/kernel" ARCH=x86_64 CROSS_COMPILE="$PREFIX" olddefconfig
 make -C "$LINUX_SOURCE" O="$ROOT/build/kernel" ARCH=x86_64 CROSS_COMPILE="$PREFIX" -j"${JOBS:-2}" bzImage
 cp build/kernel/arch/x86/boot/bzImage build/bzImage

@@ -19,7 +19,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential flex bison libelf-dev libssl-dev bc qemu-system-x86 \
-            python3 autoconf automake libtool texinfo nasm mtools xorriso ovmf e2fsprogs curl wget
+            python3 autoconf automake libtool texinfo nasm mtools xorriso ovmf e2fsprogs curl wget dosfstools exfatprogs ntfs-3g
       - uses: actions/cache/restore@v4
         id: compiler
         with:
@@ -46,14 +46,19 @@ jobs:
         run: make target-check CC="$PWD/build/toolchain/bin/x86_64-linux-musl-gcc" 2>&1 | tee build/userspace.log
       - name: Boot real media and verify x86 platform matrix
         run: python3 scripts/test-platforms.py 2>&1 | tee build/platforms.log
+      - name: Verify read-only Windows filesystems and file import
+        run: python3 scripts/test-windows-filesystems.py 2>&1 | tee build/windows-filesystems.log
       - name: Publish evidence and failure diagnostics
         if: always()
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          paths = [Path('build') / name for name in ('toolchain.log', 'kernel-build.log', 'userspace.log', 'platforms.log')]
-          paths += sorted(Path('build/acceptance').glob('*.txt'))
+          # GitHub caps notices per step; publish summaries first, then a few diagnostics.
+          paths = [Path('build') / name for name in ('platforms.log', 'windows-filesystems.log', 'userspace.log')]
           paths += sorted(Path('build/acceptance').glob('*.json'))
+          paths += [Path('build/kernel-build.log')]
+          paths += sorted(Path('build/acceptance').glob('windows-*.txt'))[-3:]
+          paths = paths[:10]
           for path in paths:
               if path.exists():
                   text = '\n'.join(path.read_text(errors='replace').splitlines()[-65:])

@@ -31,8 +31,7 @@ class CoreTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             result = self.shell('write original keepme\ncp original copy\ncp original original\n'
                                 'mv copy moved\ncat moved\nrm moved\nexit\n', directory)
-            self.assertEqual(result.stderr, '')
-            self.assertIn('same file', result.stdout)
+            self.assertIn('File exists', result.stderr)
             self.assertEqual((Path(directory) / 'original').read_text(), 'keepme\n')
             self.assertFalse((Path(directory) / 'copy').exists())
             self.assertFalse((Path(directory) / 'moved').exists())
@@ -42,12 +41,25 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(result.stdout.count('Disk attachment only'), 2)
         self.assertEqual(result.stderr, '')
 
+    def test_quoted_names(self):
+        with tempfile.TemporaryDirectory() as directory:
+            result = self.shell('write "résumé notes.txt" "hello world"\n'
+                                "cat 'résumé notes.txt'\n"
+                                'echo a\\ b "" c\n'
+                                'echo "unterminated\n'
+                                'echo recovered\nexit\n', directory)
+            self.assertIn('hello world', result.stdout)
+            self.assertIn('a b  c', result.stdout)
+            self.assertIn('Malformed quoting', result.stdout)
+            self.assertIn('recovered', result.stdout)
+            self.assertEqual(result.stderr, '')
+
     def test_errors_and_safety(self):
         result = self.shell('cat /nonexistent-ominx-file\ncd\nreboot\npoweroff\nhelp\nexit\n')
         self.assertIn('No such file', result.stderr)
         self.assertIn('wrong argument count', result.stdout)
         self.assertEqual(result.stdout.count('Power controls only'), 2)
-        self.assertIn('no quoting', result.stdout)
+        self.assertIn('quotes', result.stdout)
 
     def test_limits_and_eof(self):
         result = self.shell('echo ' + 'word ' * 80 + '\nuname\n')
@@ -61,8 +73,9 @@ class CoreTests(unittest.TestCase):
 
     def test_archive(self):
         binary = BINARY.read_bytes()
-        packed = module.archive(binary)
-        self.assertEqual(packed, module.archive(binary))
+        files = Path(os.environ['OMINX_FILES_BINARY']).read_bytes()
+        packed = module.archive(binary, files)
+        self.assertEqual(packed, module.archive(binary, files))
         raw = gzip.decompress(packed)
         entries = {}
         pos = 0
@@ -78,15 +91,24 @@ class CoreTests(unittest.TestCase):
             if name == 'TRAILER!!!':
                 break
         self.assertEqual(entries['init'][1], binary)
+        self.assertEqual(entries['bin/ominx-files'][1], files)
         self.assertEqual(entries['init'][0][1], 0o100755)
         self.assertEqual(entries['dev/console'][0][9:11], [5, 1])
         self.assertEqual(entries['tmp'][0][1], 0o41777)
         self.assertIn(b'ID=ominx', entries['etc/os-release'][1])
 
+    def test_reject_malformed_elf(self):
+        with tempfile.TemporaryDirectory() as root:
+            path = Path(root) / 'broken'
+            for data in (b'', b'\x7fELF', b'\x7fELF\x02\x01' + b'\x00' * 58):
+                path.write_bytes(data)
+                with self.assertRaises(ValueError):
+                    module.static_elf(path)
+
     def test_reject_dynamic_binary(self):
         with tempfile.TemporaryDirectory() as directory:
             result = subprocess.run(['python3', str(ROOT / 'scripts/make-initramfs.py'),
-                                     '/bin/ls', directory + '/bad.gz'], capture_output=True, text=True)
+                                     '/bin/ls', directory + '/bad.gz', str(BINARY)], capture_output=True, text=True)
             self.assertNotEqual(result.returncode, 0)
             self.assertFalse(Path(directory, 'bad.gz').exists())
 

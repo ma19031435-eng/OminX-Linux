@@ -1,5 +1,7 @@
 /* OminX original early userspace. Repository license applies; see LICENSE. */
 #define _GNU_SOURCE
+#include "../lib/parse.h"
+#include "../lib/files.h"
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -22,24 +24,6 @@ static void filesystem(const char *type, const char *path) {
     if (mkdir(path, 0755) && errno != EEXIST) error(path);
     if (mount(type, path, type, MS_NOSUID | MS_NODEV, NULL)) error(path);
 }
-static void copy_file(const char *from, const char *to) {
-    struct stat a, b;
-    if (stat(from, &a)) { error(from); return; }
-    if (!stat(to, &b) && a.st_dev == b.st_dev && a.st_ino == b.st_ino) {
-        puts("Source and destination are the same file."); return;
-    }
-    FILE *in = fopen(from, "rb");
-    if (!in) { error(from); return; }
-    FILE *out = fopen(to, "wb");
-    if (!out) { error(to); fclose(in); return; }
-    char buffer[4096]; size_t count;
-    while ((count = fread(buffer, 1, sizeof buffer, in))) {
-        if (fwrite(buffer, 1, count, out) != count) { error(to); break; }
-    }
-    if (ferror(in)) error(from);
-    if (fclose(out)) error(to);
-    fclose(in);
-}
 static void shell(void) {
     char *line = NULL;
     size_t cap = 0;
@@ -49,24 +33,19 @@ static void shell(void) {
         printf("ominx:%s# ", getcwd(cwd, sizeof cwd) ? cwd : "?");
         fflush(stdout);
         if (getline(&line, &cap, stdin) < 0) break;
-        char *args[64], *save = NULL;
-        int n = 0;
-        char *word = strtok_r(line, " \t\r\n", &save);
-        while (word && n < 63) {
-            args[n++] = word;
-            word = strtok_r(NULL, " \t\r\n", &save);
-        }
-        if (word) { puts("Too many arguments."); continue; }
-        args[n] = NULL;
+        char *args[64];
+        int n = ominx_parse(line, args, 64);
+        if (n == -2) { puts("Too many arguments."); continue; }
+        if (n < 0) { puts("Malformed quoting or trailing escape."); continue; }
         if (!n) continue;
         const char *cmd = args[0];
         if (!strcmp(cmd, "help")) {
             puts("help | uname | pwd | cd PATH | ls [PATH] | cat FILE\n"
                  "mkdir PATH | write FILE WORDS... | echo WORDS... | sync\n"
                  "cp SOURCE DEST | mv SOURCE DEST | rm FILE\n"
-                 "attach DEVICE [ro] | detach (ext4 data at /mnt/data)\n"
-                 "exit | reboot | poweroff | /absolute/program [args]\n"
-                 "Whitespace separates arguments; no quoting, pipes or expansion.\n"
+                 "attach DEVICE [ro [ext4|vfat|exfat|ntfs3]] | detach\n"
+                 "files COMMAND [args] | exit | reboot | poweroff | /absolute/program [args]\n"
+                 "Single/double quotes and backslash escapes supported; no pipes or expansion.\n"
                  "write replaces a file. Only files on an attached data disk survive reboot.");
         } else if (!strcmp(cmd, "exit")) break;
         else if (!strcmp(cmd, "uname")) {
@@ -106,13 +85,19 @@ static void shell(void) {
                 fprintf(f, "%s%s", i == (writing ? 2 : 1) ? "" : " ", args[i]);
             fputc('\n', f);
             if (writing && fclose(f)) error(args[1]);
-        } else if (!strcmp(cmd, "cp") && n == 3) copy_file(args[1], args[2]);
+        } else if (!strcmp(cmd, "cp") && n == 3) {
+            if (ominx_copy(args[1], args[2])) error(cmd);
+        }
         else if (!strcmp(cmd, "mv") && n == 3) {
-            if (rename(args[1], args[2])) error(cmd);
+            if (ominx_move(args[1], args[2])) error(cmd);
         } else if (!strcmp(cmd, "rm") && n == 2) {
             if (unlink(args[1])) error(args[1]);
-        } else if (!strcmp(cmd, "attach") && (n == 2 || (n == 3 && !strcmp(args[2], "ro")))) {
+        } else if (!strcmp(cmd, "attach") && (n == 2 || ((n == 3 || n == 4) && !strcmp(args[2], "ro")))) {
             if (!is_init) { puts("Disk attachment only runs in the OminX boot environment."); continue; }
+            const char *type = n == 4 ? args[3] : "ext4";
+            if (strcmp(type, "ext4") && strcmp(type, "vfat") && strcmp(type, "exfat") && strcmp(type, "ntfs3")) {
+                puts("Unsupported filesystem type."); continue;
+            }
             struct stat st;
             if (stat(args[1], &st)) { error(args[1]); continue; }
             if (!S_ISBLK(st.st_mode)) { puts("Refusing: device is not a block device."); continue; }
@@ -121,8 +106,10 @@ static void shell(void) {
             if (stat("/mnt", &parent) || stat("/mnt/data", &current)) { error("/mnt/data"); continue; }
             if (parent.st_dev != current.st_dev) { puts("Data already attached; detach first."); continue; }
             unsigned long flags = MS_NOSUID | MS_NODEV | MS_NOEXEC;
-            if (n == 3) flags |= MS_RDONLY;
-            if (mount(args[1], "/mnt/data", "ext4", flags, n == 3 ? "noload" : NULL)) error("attach");
+            if (n >= 3) flags |= MS_RDONLY;
+            const char *options = !strcmp(type, "ext4") ? (n >= 3 ? "noload" : NULL) :
+                                  !strcmp(type, "vfat") ? "utf8=1" : "iocharset=utf8";
+            if (mount(args[1], "/mnt/data", type, flags, options)) error("attach");
             else puts("Data attached at /mnt/data.");
         } else if (!strcmp(cmd, "detach") && n == 1) {
             if (!is_init) { puts("Disk attachment only runs in the OminX boot environment."); continue; }
@@ -137,11 +124,11 @@ static void shell(void) {
                 error("Detach data disk before shutdown"); continue;
             }
             if (reboot(!strcmp(cmd, "reboot") ? RB_AUTOBOOT : RB_POWER_OFF)) error(cmd);
-        } else if (cmd[0] == '/') {
+        } else if (cmd[0] == '/' || !strcmp(cmd, "files")) {
             pid_t pid = fork();
             if (pid == 0) {
                 signal(SIGINT, SIG_DFL);
-                execv(cmd, args); error(cmd); _exit(127);
+                execv(!strcmp(cmd, "files") ? "/bin/ominx-files" : cmd, args); error(cmd); _exit(127);
             }
             if (pid < 0) error("fork");
             else while (waitpid(pid, NULL, 0) < 0 && errno == EINTR) {}

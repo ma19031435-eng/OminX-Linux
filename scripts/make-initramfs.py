@@ -7,7 +7,7 @@ import struct
 import sys
 
 
-def archive(binary):
+def archive(binary, files=None):
     output = bytearray()
     def entry(name, mode, data=b'', major=0, minor=0):
         encoded = name.encode() + b'\0'
@@ -21,21 +21,34 @@ def archive(binary):
         entry(name, stat.S_IFDIR | (0o1777 if name == 'tmp' else 0o755))
     entry('dev/console', stat.S_IFCHR | 0o600, major=5, minor=1)
     entry('init', stat.S_IFREG | 0o755, binary)
+    if files is not None:
+        entry('bin/ominx-files', stat.S_IFREG | 0o755, files)
     entry('etc/os-release', stat.S_IFREG | 0o644,
           b'NAME=OminX\nID=ominx\nPRETTY_NAME="OminX source-built console"\n')
     entry('TRAILER!!!', 0)
     return gzip.compress(bytes(output), mtime=0)
 
 
-if __name__ == '__main__':
-    binary = Path(sys.argv[1]).read_bytes()
-    if binary[:4] != b'\x7fELF' or binary[4:6] != b'\x02\x01':
-        raise SystemExit('Expected a 64-bit little-endian ELF executable')
-    if struct.unpack_from('<H', binary, 18)[0] != 62:
-        raise SystemExit('Expected x86-64 executable')
-    # Reject dynamic executables: early userspace has no dynamic loader.
+def static_elf(path):
+    binary = Path(path).read_bytes()
+    if len(binary) < 64 or binary[:6] != b'\x7fELF\x02\x01':
+        raise ValueError('Expected a complete 64-bit little-endian ELF header')
+    if struct.unpack_from('<HH', binary, 16) != (2, 62):
+        raise ValueError('Expected x86-64 ET_EXEC executable')
     offset = struct.unpack_from('<Q', binary, 32)[0]
     size, count = struct.unpack_from('<HH', binary, 54)
+    if not count or size != 56 or offset < 64 or offset + size * count > len(binary):
+        raise ValueError('Invalid ELF program header table')
     if any(struct.unpack_from('<I', binary, offset + i * size)[0] == 3 for i in range(count)):
-        raise SystemExit('Executable must be statically linked (PT_INTERP found)')
-    Path(sys.argv[2]).write_bytes(archive(binary))
+        raise ValueError('Executable must be statically linked (PT_INTERP found)')
+    return binary
+
+
+if __name__ == '__main__':
+    if len(sys.argv) != 4:
+        raise SystemExit('Usage: make-initramfs.py INIT OUTPUT FILES_EXECUTABLE')
+    try:
+        packed = archive(static_elf(sys.argv[1]), static_elf(sys.argv[3]))
+    except ValueError as error:
+        raise SystemExit(str(error))
+    Path(sys.argv[2]).write_bytes(packed)

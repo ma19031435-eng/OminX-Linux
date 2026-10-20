@@ -23,7 +23,7 @@ CASES = [
 
 
 class VM:
-    def __init__(self, case, data, attempt):
+    def __init__(self, case, data, attempt, extras=()):
         self.name = case['name'] + '-' + attempt
         self.log = bytearray()
         self.cursor = 0
@@ -58,6 +58,8 @@ class VM:
             args += ['-drive', f'if=none,id=data,format=raw,file={data}',
                      '-device', 'nvme,drive=data,serial=OMINXTEST']
             self.device = '/dev/nvme0n1'
+        for extra in extras:
+            args += ['-drive', f'if=virtio,format=raw,readonly=on,file={extra}']
         self.process = subprocess.Popen(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                         stderr=subprocess.STDOUT)
         self.selector = selectors.DefaultSelector()
@@ -162,6 +164,13 @@ def run_case(case):
         vm.command('mv /root/copy /root/moved')
         vm.command('cat /root/moved', '\r\nramdata\r\n')
         vm.command('rm /root/moved')
+        vm.command('write "file with spaces.txt" "quoted contents"')
+        vm.command('files copy "file with spaces.txt" "copied file.txt"', '{"ok":true}')
+        vm.command('cat "copied file.txt"', '\r\nquoted contents\r\n')
+        vm.command('files copy "file with spaces.txt" "copied file.txt"', 'File exists')
+        vm.command('files list /root', '"complete":true')
+        vm.command('files move "copied file.txt" "moved file.txt"', '{"ok":true}')
+        vm.command('files remove --confirm "moved file.txt"', '{"ok":true}')
         vm.send('exit')
         vm.expect('OminX console ready.')
         vm.prompt()
@@ -196,17 +205,18 @@ def run_case(case):
     data.unlink()  # disposable test image; never part of release artifacts
 
 
-results = []
-try:
-    for case in CASES:
-        start = time.monotonic()
-        try:
-            run_case(case)
-        except Exception as error:
-            results.append(dict(**case, result='FAIL', error=str(error)))
-            raise
-        results.append(dict(**case, result='PASS', seconds=round(time.monotonic() - start, 1)))
-        print(f"PASS {case['name']}: firmware/media boot, terminal, keyboard/display, file operations, "
-              'console restart, persistent storage, read-only refusal, reboot, clean poweroff', flush=True)
-finally:
-    (OUT / 'results.json').write_text(json.dumps(results, indent=2) + '\n')
+if __name__ == '__main__':
+    results = []
+    try:
+        for case in CASES:
+            start = time.monotonic()
+            try:
+                run_case(case)
+            except Exception as error:
+                results.append(dict(**case, result='FAIL', error=str(error)))
+                raise
+            results.append(dict(**case, result='PASS', seconds=round(time.monotonic() - start, 1)))
+            print(f"PASS {case['name']}: firmware/media boot, terminal, keyboard/display, file operations, "
+                  'console restart, persistent storage, read-only refusal, reboot, clean poweroff', flush=True)
+    finally:
+        (OUT / 'results.json').write_text(json.dumps(results, indent=2) + '\n')
