@@ -68,7 +68,7 @@ jobs:
           paths += sorted(Path('build/acceptance').glob('qt-*.txt'))
           for p in paths:
               if p.exists():
-                  text = '\n'.join(p.read_text(errors='replace').splitlines()[-80:])
+                  text = '\n'.join(line[:150] for line in p.read_text(errors='replace').splitlines()[-25:])
                   text = text.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
                   print(f'::notice title={p.name}::{text}')
           PY
