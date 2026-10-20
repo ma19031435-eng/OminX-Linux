@@ -21,8 +21,8 @@ scripts/fetch-source.sh https://github.com/qt/qtbase.git "$QT_TAG" "$QTBASE_COMM
 # Host code generators are separate and are never packaged in the target image.
 cmake -S "$SRC" -B "$HOST" -G Ninja \
     -DCMAKE_BUILD_TYPE=Release -DQT_BUILD_EXAMPLES=OFF -DQT_BUILD_TESTS=OFF \
-    -DQT_FEATURE_developer_build=ON -DQT_FEATURE_gui=OFF \
-    -DQT_FEATURE_widgets=OFF -DQT_FEATURE_dbus=OFF -DQT_FEATURE_icu=OFF
+    -DFEATURE_developer_build=ON -DFEATURE_gui=OFF \
+    -DFEATURE_widgets=OFF -DFEATURE_dbus=OFF -DFEATURE_icu=OFF
 cmake --build "$HOST" --target host_tools --parallel "${JOBS:-2}"
 cat > build/qt-musl.cmake <<CONFIG
 set(CMAKE_SYSTEM_NAME Linux)
@@ -44,15 +44,15 @@ cmake -S "$SRC" -B "$TARGET_BUILD" -G Ninja \
     -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$STAGE" \
     -DQT_HOST_PATH="$HOST" -DBUILD_SHARED_LIBS=OFF \
     -DQT_BUILD_EXAMPLES=OFF -DQT_BUILD_TESTS=OFF \
-    -DQT_FEATURE_opengl=OFF -DQT_FEATURE_vulkan=OFF -DQT_FEATURE_xcb=OFF \
-    -DQT_FEATURE_eglfs=OFF -DQT_FEATURE_linuxfb=ON -DQT_FEATURE_evdev=ON \
-    -DQT_FEATURE_libinput=OFF -DQT_FEATURE_libudev=OFF \
-    -DQT_FEATURE_dbus=OFF -DQT_FEATURE_glib=OFF -DQT_FEATURE_icu=OFF \
-    -DQT_FEATURE_openssl=OFF -DQT_FEATURE_cups=OFF -DQT_FEATURE_fontconfig=OFF \
-    -DQT_FEATURE_system_freetype=OFF -DQT_FEATURE_system_harfbuzz=OFF \
-    -DQT_FEATURE_system_png=OFF -DQT_FEATURE_system_jpeg=OFF \
-    -DQT_FEATURE_system_zlib=OFF -DQT_FEATURE_system_pcre2=OFF \
-    -DQT_FEATURE_zstd=OFF -DQT_FEATURE_brotli=OFF
+    -DFEATURE_opengl=OFF -DFEATURE_vulkan=OFF -DFEATURE_xcb=OFF \
+    -DFEATURE_eglfs=OFF -DFEATURE_linuxfb=ON -DFEATURE_evdev=ON \
+    -DFEATURE_libinput=OFF -DFEATURE_libudev=OFF \
+    -DFEATURE_dbus=OFF -DFEATURE_glib=OFF -DFEATURE_icu=OFF \
+    -DFEATURE_openssl=OFF -DFEATURE_cups=OFF -DFEATURE_fontconfig=OFF \
+    -DFEATURE_system_freetype=OFF -DFEATURE_system_harfbuzz=OFF \
+    -DFEATURE_system_png=OFF -DFEATURE_system_jpeg=OFF \
+    -DFEATURE_system_zlib=OFF -DFEATURE_system_pcre2=OFF \
+    -DFEATURE_zstd=OFF -DFEATURE_brotli=OFF
 cmake --build "$TARGET_BUILD" --parallel "${JOBS:-2}"
 cmake --install "$TARGET_BUILD"
 cmake -S desktop/probe -B build/graphics-probe -G Ninja \
