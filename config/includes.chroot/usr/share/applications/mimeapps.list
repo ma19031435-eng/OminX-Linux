@@ -1,4 +1,6 @@
 [Default Applications]
+inode/directory=org.kde.dolphin.desktop;
+x-scheme-handler/trash=org.kde.dolphin.desktop;
 application/x-msdos-program=ominx-windows-app.desktop;
 application/x-ms-dos-executable=ominx-windows-app.desktop;
 application/x-msdos-executable=ominx-windows-app.desktop;

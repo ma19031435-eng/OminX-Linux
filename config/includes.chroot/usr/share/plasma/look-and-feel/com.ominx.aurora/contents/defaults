@@ -1,0 +1,35 @@
+[kdeglobals][KDE]
+widgetStyle=Breeze
+LookAndFeelPackage=com.ominx.aurora
+
+[kdeglobals][General]
+ColorScheme=OminX-Aurora
+Name=OminX Aurora
+font=Noto Sans,10,-1,5,50,0,0,0,0,0
+
+[kdeglobals][Icons]
+Theme=breeze-dark
+
+[plasmarc][Theme]
+name=ominx-aurora
+
+[kcminputrc][Mouse]
+cursorTheme=breeze_cursors
+
+[kwinrc][org.kde.kdecoration2]
+library=org.kde.breeze
+theme=Breeze
+
+[kwinrc][Desktops]
+Number=4
+Rows=1
+
+[kwinrc][Windows]
+FocusPolicy=ClickToFocus
+Placement=Centered
+
+[ksmserverrc][General]
+confirmLogout=true
+
+[Wallpaper]
+Image=file:///usr/share/backgrounds/ominx/ominx-wallpaper.svg

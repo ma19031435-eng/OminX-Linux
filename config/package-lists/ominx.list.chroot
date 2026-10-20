@@ -1,24 +1,44 @@
 # OminX desktop and daily-use software for Debian 13 (Trixie), amd64.
 # Debian's contrib and non-free components are enabled for Steam and firmware.
 
-# Familiar desktop shell, X11 session, login manager, and networking
-cinnamon-desktop-environment
+# KDE Plasma 6 desktop shell, X11 session, OminX-styled Breeze, and login manager
+plasma-desktop
+plasma-workspace
+kwin-x11
 xserver-xorg
 lightdm
 lightdm-gtk-greeter
 network-manager
-network-manager-gnome
-nemo-fileroller
+plasma-nm
+plasma-pa
+plasma-systemmonitor
+systemsettings
+kinfocenter
+breeze
+breeze-gtk-theme
+breeze-icon-theme
+breeze-cursor-theme
+kde-config-gtk-style
+kde-cli-tools
+
+# Native Plasma apps and file integration
+dolphin
+kio-extras
+ark
+konsole
+kcalc
+partitionmanager
+print-manager
+bluedevil
 desktop-file-utils
 shared-mime-info
 xdg-user-dirs
 xdg-utils
 
-# Store / package management
+# OminX Store catalog backend: Debian packages and Flatpak
 flatpak
-gnome-software
-gnome-software-plugin-deb
-gnome-software-plugin-flatpak
+plasma-discover
+plasma-discover-backend-flatpak
 packagekit
 synaptic
 
@@ -29,10 +49,8 @@ pipewire-pulse
 wireplumber
 pavucontrol
 bluez
-blueman
 libspa-0.2-bluetooth
 cups
-system-config-printer
 ipp-usb
 simple-scan
 sane-airscan
@@ -68,7 +86,6 @@ gimp
 inkscape
 deja-dup
 geany
-file-roller
 7zip
 unzip
 zip
@@ -82,10 +99,7 @@ fonts-crosextra-caladea
 # File sharing, remote access, system tools, and basic security controls
 smbclient
 remmina
-gnome-disk-utility
 gparted
-gnome-system-monitor
-gnome-calculator
 gufw
 ufw
 orca

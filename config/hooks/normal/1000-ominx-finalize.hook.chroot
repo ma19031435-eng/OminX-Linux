@@ -1,6 +1,6 @@
 #!/bin/sh
 # Add the 32-bit userspace and compatibility stack after the base desktop has
-# been installed. Keeping this after the normal package selection ensures the
+# been installed. Keeping this after normal package selection ensures the
 # i386 architecture is enabled before Steam and Wine are resolved.
 set -eu
 
@@ -24,25 +24,89 @@ apt-get install --yes --no-install-recommends \
     libpulse0:i386 \
     libasound2-plugins:i386
 
-# Validate the native OminX app hubs and the Windows-app handler before the
-# image is finalized. Keep GNOME Software callable as the catalog/install
-# backend, but present OminX Store as the user's software-center entry point.
+# Discover is the real Debian/Flatpak package manager behind the OminX Store.
+# Keep its native launcher available to OminX Store, but avoid a second Store
+# icon in the Plasma application launcher.
+mkdir -p /usr/local/share/applications
+cp /usr/share/applications/org.kde.discover.desktop \
+    /usr/local/share/applications/org.kde.discover.desktop
 desktop-file-edit --set-key=NoDisplay --set-value=true \
-    /usr/share/applications/org.gnome.Software.desktop
-for executable in /usr/local/bin/ominx-store /usr/local/bin/ominx-settings /usr/local/bin/ominx-setup; do
+    /usr/local/share/applications/org.kde.discover.desktop
+
+for executable in \
+    /usr/local/bin/ominx-store \
+    /usr/local/bin/ominx-settings \
+    /usr/local/bin/ominx-setup \
+    /usr/bin/plasma-discover \
+    /usr/bin/plasmashell \
+    /usr/bin/systemsettings; do
     test -x "$executable"
+done
+
+test -r /usr/share/xsessions/plasmax11.desktop
+test -r /usr/share/applications/org.kde.dolphin.desktop
+for file in \
+    /usr/share/applications/ominx-store.desktop \
+    /usr/share/applications/ominx-settings.desktop \
+    /usr/share/applications/ominx-setup.desktop \
+    /usr/share/applications/ominx-windows-app.desktop \
+    /usr/local/share/applications/org.kde.discover.desktop; do
+    test -r "$file"
 done
 desktop-file-validate \
     /usr/share/applications/ominx-store.desktop \
     /usr/share/applications/ominx-settings.desktop \
     /usr/share/applications/ominx-setup.desktop \
     /usr/share/applications/ominx-windows-app.desktop \
-    /usr/local/share/applications/org.gnome.Software.desktop
+    /usr/local/share/applications/org.kde.discover.desktop
 update-desktop-database --quiet /usr/share/applications
 update-desktop-database --quiet /usr/local/share/applications
 
-# Parse the shared GTK stylesheet during the image build so a typo cannot
-# silently fall back to stock styling on first launch.
+grep -q '^NoDisplay=true$' /usr/local/share/applications/org.kde.discover.desktop
+
+# Validate the OminX Plasma Look-and-Feel package and native desktop defaults
+# before the image is finalized, so an incomplete theme cannot ship silently.
+python3 - <<'PY'
+import configparser
+import json
+from pathlib import Path
+
+look_and_feel = Path("/usr/share/plasma/look-and-feel/com.ominx.aurora")
+metadata = json.loads((look_and_feel / "metadata.json").read_text(encoding="utf-8"))
+if metadata.get("KPackageStructure") != "Plasma/LookAndFeel":
+    raise SystemExit("OminX Aurora is not a Plasma Look-and-Feel package")
+if metadata.get("KPlugin", {}).get("Id") != "com.ominx.aurora":
+    raise SystemExit("OminX Aurora has the wrong Plasma theme ID")
+layout = look_and_feel / "contents/layouts/org.kde.plasma.desktop-layout.js"
+layout_text = layout.read_text(encoding="utf-8")
+for widget in (
+    "org.kde.plasma.kickoff",
+    "org.kde.plasma.icontasks",
+    "org.kde.plasma.systemtray",
+    "org.kde.plasma.digitalclock",
+    "org.kde.plasma.showdesktop",
+):
+    if widget not in layout_text:
+        raise SystemExit(f"OminX Plasma layout is missing {widget}")
+if "ominx-wallpaper.svg" not in layout_text:
+    raise SystemExit("OminX Plasma layout is missing the Aurora wallpaper")
+
+colors = configparser.ConfigParser(interpolation=None, strict=True)
+colors.read("/usr/share/color-schemes/OminX-Aurora.colors", encoding="utf-8")
+for section in ("General", "Colors:Window", "Colors:View", "Colors:Button", "Colors:Selection", "WM"):
+    if not colors.has_section(section):
+        raise SystemExit(f"OminX Aurora color scheme is missing [{section}]")
+
+plasma_defaults = Path("/etc/xdg/kdeglobals").read_text(encoding="utf-8")
+if "LookAndFeelPackage=com.ominx.aurora" not in plasma_defaults:
+    raise SystemExit("New Plasma sessions must load the OminX Aurora Look-and-Feel package")
+if "ColorScheme=OminX-Aurora" not in plasma_defaults:
+    raise SystemExit("The OminX Plasma color scheme is not selected by default")
+PY
+
+grep -q '^user-session=plasmax11$' /etc/lightdm/lightdm.conf.d/50-ominx.conf
+grep -q '^name=ominx-aurora$' /etc/xdg/plasmarc
+
 grep -q '^GtkTheme=OminX$' /usr/share/themes/OminX/index.theme
 python3 - <<'PY'
 import gi
@@ -59,127 +123,18 @@ for stylesheet in (
         raise SystemExit(f"Could not load OminX GTK stylesheet: {stylesheet}")
 PY
 
-st_typelib=$(find /usr/lib -name 'St-1.0.typelib' -print -quit)
-meta_typelib=$(find /usr/lib -name 'Meta-0.typelib' -print -quit)
-if [ -z "$st_typelib" ] || [ -z "$meta_typelib" ]; then
-    echo "Cinnamon St or Muffin Meta introspection typelibs were not found under /usr/lib" >&2
-    exit 1
-fi
-cinnamon_libdir=$(dirname "$st_typelib")
-muffin_libdir=$(dirname "$meta_typelib")
-GI_TYPELIB_PATH="$cinnamon_libdir:$muffin_libdir${GI_TYPELIB_PATH:+:$GI_TYPELIB_PATH}" \
-LD_LIBRARY_PATH="$cinnamon_libdir:$muffin_libdir${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" \
-    gjs -c 'const Gio = imports.gi.Gio; if (!Gio.AppInfoMonitor.get()) throw new Error("Could not initialize the installed-app monitor"); const St = imports.gi.St; const theme = new St.Theme({}); for (const stylesheet of ["/usr/share/themes/OminX/cinnamon/cinnamon.css", "/usr/share/cinnamon/applets/ominx-start@ominx/stylesheet.css"]) { if (!theme.load_stylesheet(stylesheet)) throw new Error("Could not load Cinnamon stylesheet: " + stylesheet); }'
-
-# Validate Cinnamon applet defaults against the version actually installed in
-# this image so a package update cannot silently discard the OminX taskbar.
-python3 - <<'PY'
-import json
-from pathlib import Path
-
-import gi
-
-gi.require_version("Gio", "2.0")
-from gi.repository import Gio
-
-# Fail the image build rather than shipping defaults that a package update
-# silently drops. Inspecting schemas needs no running desktop session.
-required_schema_keys = {
-    "org.nemo.preferences": {
-        "always-use-browser",
-        "click-policy",
-        "default-folder-viewer",
-        "default-sort-order",
-        "sort-directories-first",
-        "show-location-entry",
-        "show-directory-item-counts",
-        "show-image-thumbnails",
-        "show-home-icon-toolbar",
-        "show-computer-icon-toolbar",
-        "show-new-folder-icon-toolbar",
-    },
-    "org.nemo.window-state": {
-        "sidebar-width",
-        "start-with-toolbar",
-        "start-with-location-bar",
-        "start-with-status-bar",
-        "start-with-sidebar",
-        "start-with-menu-bar",
-        "side-pane-view",
-        "my-computer-expanded",
-        "bookmarks-expanded",
-        "devices-expanded",
-        "network-expanded",
-    },
-    "org.nemo.desktop": {"use-desktop-grid"},
-    "org.cinnamon.desktop.keybindings": {"custom-list"},
-    "org.cinnamon.desktop.keybindings.custom-keybinding": {
-        "name",
-        "command",
-        "binding",
-    },
-    "org.cinnamon.desktop.keybindings.wm": {
-        "panel-run-dialog",
-        "show-desktop",
-        "switch-to-workspace-down",
-        "switch-to-workspace-up",
-        "maximize",
-        "unmaximize",
-        "push-tile-left",
-        "push-tile-right",
-    },
-    "org.cinnamon.desktop.keybindings.media-keys": {
-        "screensaver",
-        "area-screenshot",
-    },
-    "org.cinnamon.muffin": {"edge-tiling", "tile-maximize"},
-}
-schema_source = Gio.SettingsSchemaSource.get_default()
-for schema_id, expected_keys in required_schema_keys.items():
-    schema = schema_source.lookup(schema_id, True)
-    if schema is None:
-        raise SystemExit(f"Missing GSettings schema {schema_id}")
-    missing = sorted(expected_keys - set(schema.list_keys()))
-    if missing:
-        raise SystemExit(f"Missing keys in GSettings schema {schema_id}: {', '.join(missing)}")
-
-applets = Path("/usr/share/cinnamon/applets")
-for uuid in ("menu@cinnamon.org", "grouped-window-list@cinnamon.org"):
-    applet_dir = applets / uuid
-    schema = json.loads((applet_dir / "settings-schema.json").read_text(encoding="utf-8"))
-    override = json.loads((applet_dir / "settings-override.json").read_text(encoding="utf-8"))
-    unknown = sorted(set(override) - set(schema))
-    if unknown:
-        raise SystemExit(f"Unknown settings for {uuid}: {', '.join(unknown)}")
-    for key, values in override.items():
-        if "default" not in schema[key] or "default" not in values:
-            raise SystemExit(f"Invalid default override for {uuid}:{key}")
-        if "default" not in values.get("override-props", []):
-            raise SystemExit(f"Missing default override flag for {uuid}:{key}")
-PY
-
-for desktop_id in nemo.desktop firefox-esr.desktop ominx-store.desktop libreoffice-writer.desktop; do
+for desktop_id in org.kde.dolphin.desktop firefox-esr.desktop ominx-store.desktop libreoffice-writer.desktop; do
     test -r "/usr/share/applications/$desktop_id"
 done
 test -r /usr/share/applications/ominx-settings.desktop
 test -r /usr/share/applications/ominx-setup.desktop
-test -r /usr/share/applications/org.gnome.Software.desktop
-test -x /usr/bin/gnome-software
-grep -q '^NoDisplay=true$' /usr/local/share/applications/org.gnome.Software.desktop
-for applet in menu@cinnamon.org ominx-start@ominx expo@cinnamon.org grouped-window-list@cinnamon.org; do
-    test -r "/usr/share/cinnamon/applets/$applet/applet.js"
-done
-test -r /usr/share/cinnamon/applets/ominx-start@ominx/metadata.json
-test -r /usr/share/cinnamon/applets/ominx-start@ominx/stylesheet.css
+test -x /usr/bin/steam
+test -x /usr/bin/plasma-discover
 
-# Make the official Flathub catalog available in the desktop software center.
-# Apps are not preinstalled from this third-party remote.
+# Make the official Flathub catalog available in Discover. Apps are not
+# preinstalled from this third-party remote.
 flatpak remote-add --system --if-not-exists flathub \
     https://dl.flathub.org/repo/flathub.flatpakrepo
-
-# Compile the system-wide Cinnamon wallpaper and panel defaults shipped in the
-# chroot overlay.
-dconf update
 
 apt-get clean
 rm -rf /var/lib/apt/lists/*

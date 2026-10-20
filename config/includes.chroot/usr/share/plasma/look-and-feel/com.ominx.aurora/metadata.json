@@ -1,0 +1,17 @@
+{
+  "KPackageStructure": "Plasma/LookAndFeel",
+  "KPlugin": {
+    "Id": "com.ominx.aurora",
+    "Name": "OminX Aurora",
+    "Description": "An original midnight-and-sea-glass workspace for KDE Plasma",
+    "Version": "1.0.0",
+    "License": "AGPL-3.0-or-later",
+    "Category": "Desktop",
+    "Authors": [
+      {
+        "Name": "OminX Project"
+      }
+    ]
+  },
+  "X-Plasma-APIVersion": "2"
+}

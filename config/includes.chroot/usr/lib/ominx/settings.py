@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-"""OminX settings studio for native Cinnamon and Linux controls."""
+"""OminX settings studio for KDE Plasma and native Linux controls."""
 
 from __future__ import annotations
 
@@ -21,26 +21,26 @@ SETTINGS = {
     "Workspace": {
         "description": "Display, sound, notifications, power, and information about this system.",
         "items": [
-            ("Display", "Resolution, scale, and connected monitors.", "video-display-symbolic", ["cinnamon-settings", "display"]),
-            ("Sound", "Output, input, and audio devices.", "audio-volume-high-symbolic", ["cinnamon-settings", "sound"]),
-            ("Notifications", "Choose which apps can send notifications.", "preferences-system-notifications-symbolic", ["cinnamon-settings", "notifications"]),
-            ("Power", "Screen timeout and power behavior.", "system-shutdown-symbolic", ["cinnamon-settings", "power"]),
-            ("About OminX", "View desktop and hardware information.", "computer-symbolic", ["cinnamon-settings", "info"]),
+            ("Display", "Resolution, scale, and connected monitors.", "video-display-symbolic", ["systemsettings"]),
+            ("Sound", "Output, input, and audio devices.", "audio-volume-high-symbolic", ["systemsettings"]),
+            ("Notifications", "Choose which apps can send notifications.", "preferences-system-notifications-symbolic", ["systemsettings"]),
+            ("Power", "Screen timeout and power behavior.", "system-shutdown-symbolic", ["systemsettings"]),
+            ("About OminX", "View desktop and hardware information.", "computer-symbolic", ["systemsettings"]),
         ],
     },
     "Devices": {
         "description": "Connect accessories and manage input and print devices.",
         "items": [
-            ("Bluetooth", "Pair headphones, keyboards, and other devices.", "bluetooth-symbolic", ["blueman-manager"]),
-            ("Printers & scanners", "Add printers and configure scanning.", "printer-symbolic", ["system-config-printer"]),
-            ("Mouse & touchpad", "Pointer speed, buttons, and touchpad behavior.", "input-mouse-symbolic", ["cinnamon-settings", "mouse"]),
-            ("Keyboard", "Shortcuts, layouts, and typing options.", "input-keyboard-symbolic", ["cinnamon-settings", "keyboard"]),
+            ("Bluetooth", "Pair headphones, keyboards, and other devices.", "bluetooth-symbolic", ["systemsettings"]),
+            ("Printers & scanners", "Add printers and configure scanning.", "printer-symbolic", ["systemsettings"]),
+            ("Mouse & touchpad", "Pointer speed, buttons, and touchpad behavior.", "input-mouse-symbolic", ["systemsettings"]),
+            ("Keyboard", "Shortcuts, layouts, and typing options.", "input-keyboard-symbolic", ["systemsettings"]),
         ],
     },
     "Connectivity": {
         "description": "Manage wired, wireless, VPN, and remote connections.",
         "items": [
-            ("Network connections", "Edit Wi-Fi, Ethernet, VPN, and saved connections.", "network-wireless-symbolic", ["nm-connection-editor"]),
+            ("Network connections", "Edit Wi-Fi, Ethernet, VPN, and saved connections.", "network-wireless-symbolic", ["systemsettings"]),
             ("Remote desktop", "Connect to another computer with Remmina.", "network-server-symbolic", ["remmina"]),
             ("Firewall", "Review incoming network access rules.", "security-high-symbolic", ["gufw"]),
         ],
@@ -48,32 +48,32 @@ SETTINGS = {
     "Appearance": {
         "description": "Shape the visual character of your workspace, panels, and lock screen.",
         "items": [
-            ("Background", "Choose a desktop wallpaper and background style.", "preferences-desktop-wallpaper-symbolic", ["cinnamon-settings", "backgrounds"]),
-            ("Themes & appearance", "Adjust colors, window borders, and desktop themes.", "preferences-desktop-theme-symbolic", ["cinnamon-settings", "themes"]),
-            ("Panels & launcher", "Arrange desktop panels, applets, and the OminX launcher.", "view-grid-symbolic", ["cinnamon-settings", "panel"]),
-            ("Lock screen", "Set screen locking and idle behavior.", "system-lock-screen-symbolic", ["cinnamon-settings", "screensaver"]),
+            ("Background", "Choose a desktop wallpaper and background style.", "preferences-desktop-wallpaper-symbolic", ["systemsettings"]),
+            ("Themes & appearance", "Adjust colors, window borders, and desktop themes.", "preferences-desktop-theme-symbolic", ["systemsettings"]),
+            ("Panels & launcher", "Customize the Plasma panel, widgets, and OminX launcher.", "view-grid-symbolic", ["systemsettings"]),
+            ("Lock screen", "Set screen locking and idle behavior.", "system-lock-screen-symbolic", ["systemsettings"]),
         ],
     },
     "Applications": {
         "description": "Install software, manage startup apps, and review your library.",
         "items": [
             ("OminX Store", "Discover included apps and browse the full catalog.", "/usr/share/icons/hicolor/scalable/apps/ominx-store.svg", ["ominx-store"]),
-            ("Installed apps", "Review installed Debian and Flatpak applications.", "applications-other-symbolic", ["gnome-software", "--mode=installed"]),
-            ("Startup apps", "Choose which applications start with your session.", "system-run-symbolic", ["cinnamon-settings", "startup"]),
-            ("Software updates", "Check for app and system package updates.", "software-update-available-symbolic", ["gnome-software", "--mode=updates"]),
+            ("Installed apps", "Review installed Debian and Flatpak applications.", "applications-other-symbolic", ["plasma-discover", "--mode", "Installed"]),
+            ("Startup apps", "Choose which applications start with your session.", "system-run-symbolic", ["systemsettings"]),
+            ("Software updates", "Check for app and system package updates.", "software-update-available-symbolic", ["plasma-discover", "--mode", "Update"]),
         ],
     },
     "Accounts": {
         "description": "Manage local user accounts and session preferences.",
         "items": [
-            ("Users & groups", "Open account and group settings.", "preferences-system-users-symbolic", ["cinnamon-settings", "user"]),
+            ("Users & groups", "Open account and group settings.", "preferences-system-users-symbolic", ["systemsettings"]),
         ],
     },
     "Time & input": {
         "description": "Adjust date display, calendar preferences, and keyboard layouts.",
         "items": [
-            ("Keyboard layouts", "Add or change input layouts and shortcuts.", "input-keyboard-symbolic", ["cinnamon-settings", "keyboard"]),
-            ("Calendar & time display", "Set calendar and panel clock preferences.", "x-office-calendar-symbolic", ["cinnamon-settings", "calendar"]),
+            ("Keyboard layouts", "Add or change input layouts and shortcuts.", "input-keyboard-symbolic", ["systemsettings"]),
+            ("Calendar & time display", "Set calendar and panel clock preferences.", "x-office-calendar-symbolic", ["systemsettings"]),
         ],
     },
     "Gaming": {
@@ -87,14 +87,14 @@ SETTINGS = {
     "Accessibility": {
         "description": "Configure assistive features for vision, input, and navigation.",
         "items": [
-            ("Accessibility", "Open keyboard, visual, and pointer assistance settings.", "preferences-desktop-accessibility-symbolic", ["cinnamon-settings", "accessibility"]),
+            ("Accessibility", "Open keyboard, visual, and pointer assistance settings.", "preferences-desktop-accessibility-symbolic", ["systemsettings"]),
             ("Screen reader", "Start Orca screen reading support.", "orca", ["orca"]),
         ],
     },
     "Privacy & security": {
         "description": "Review privacy controls and firewall protections.",
         "items": [
-            ("Privacy", "Review desktop privacy and recent-file behavior.", "changes-prevent-symbolic", ["cinnamon-settings", "privacy"]),
+            ("Privacy", "Review desktop privacy and recent-file behavior.", "changes-prevent-symbolic", ["systemsettings"]),
             ("Firewall", "Configure the included uncomplicated firewall interface.", "security-high-symbolic", ["gufw"]),
             ("Security guidance", "Read the OminX compatibility and safety notes.", "dialog-information-symbolic", ["xdg-open", "/usr/share/doc/ominx/compatibility.md"]),
         ],
@@ -102,8 +102,8 @@ SETTINGS = {
     "Updates": {
         "description": "Keep applications and system packages current from their sources.",
         "items": [
-            ("Check for updates", "Review available Debian and Flatpak updates.", "software-update-available-symbolic", ["gnome-software", "--mode=updates"]),
-            ("Software sources", "Review application catalogs and repositories.", "network-server-symbolic", ["gnome-software", "--prefs"]),
+            ("Check for updates", "Review available Debian and Flatpak updates.", "software-update-available-symbolic", ["plasma-discover", "--mode", "Update"]),
+            ("Software sources", "Review application catalogs and repositories.", "network-server-symbolic", ["plasma-discover", "--mode", "Sources"]),
         ],
     },
 }
@@ -217,9 +217,9 @@ class SettingsWindow(Gtk.Window):
         self.breadcrumb.set_xalign(0)
         self.breadcrumb.get_style_context().add_class("ominx-muted")
         header.pack_start(self.breadcrumb, True, True, 0)
-        classic = Gtk.Button(label="Open Cinnamon settings")
+        classic = Gtk.Button(label="Open Plasma System Settings")
         classic.get_style_context().add_class("ominx-secondary")
-        classic.connect("clicked", lambda _button: self._launch(["cinnamon-settings"]))
+        classic.connect("clicked", lambda _button: self._launch(["systemsettings"]))
         header.pack_end(classic, False, False, 0)
         content.pack_start(header, False, False, 0)
 
@@ -335,7 +335,7 @@ class SettingsWindow(Gtk.Window):
 
         if not query:
             note = Gtk.Label(
-                label="Each page opens a native Cinnamon or Linux control. OminX gathers the essentials while preserving each component's own settings and behavior."
+                label="Each card opens KDE Plasma System Settings or a native Linux tool. OminX gathers the essentials while preserving each component's own settings and behavior."
             )
             note.set_xalign(0)
             note.set_line_wrap(True)
@@ -414,14 +414,14 @@ class SettingsWindow(Gtk.Window):
         return card
 
     def _show_no_results(self, query: str) -> None:
-        message = Gtk.Label(label=f"No settings matched ‘{query}’. Open Cinnamon settings to browse the full control center.")
+        message = Gtk.Label(label=f"No settings matched ‘{query}’. Open Plasma System Settings to browse the full control center.")
         message.set_xalign(0)
         message.set_line_wrap(True)
         message.get_style_context().add_class("ominx-copy")
-        button = Gtk.Button(label="Open Cinnamon settings")
+        button = Gtk.Button(label="Open Plasma System Settings")
         button.set_halign(Gtk.Align.START)
         button.get_style_context().add_class("ominx-primary")
-        button.connect("clicked", lambda _button: self._launch(["cinnamon-settings"]))
+        button.connect("clicked", lambda _button: self._launch(["systemsettings"]))
         self.page_box.pack_start(message, False, False, 8)
         self.page_box.pack_start(button, False, False, 0)
 

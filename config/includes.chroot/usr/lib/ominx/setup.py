@@ -192,7 +192,7 @@ class SetupWindow(Gtk.Window):
         name.set_xalign(0)
         name.get_style_context().add_class("ominx-hero-title")
         description = Gtk.Label(
-            label="Midnight surfaces, sea-glass light, and a quiet command bar. Your files, apps, and settings are only a step away."
+            label="Midnight surfaces, sea-glass light, and a floating Plasma command panel. Your files, apps, and settings are only a step away."
         )
         description.set_xalign(0)
         description.set_line_wrap(True)
@@ -212,7 +212,7 @@ class SetupWindow(Gtk.Window):
         cards.pack_start(
             self._info_card(
                 "Find your apps",
-                "Open the OminX Launcher from the top bar, or discover more in OminX Store.",
+                "Open the OminX Launcher from the Plasma panel, or discover more in OminX Store.",
                 "view-grid-symbolic",
             ),
             True,
@@ -264,7 +264,7 @@ class SetupWindow(Gtk.Window):
         self.network_button.get_style_context().add_class("ominx-secondary")
         self.network_button.set_halign(Gtk.Align.START)
         self.network_button.connect(
-            "clicked", self._launch_command, ["nm-connection-editor"]
+            "clicked", self._launch_command, ["systemsettings"]
         )
         page.pack_start(self.network_button, False, False, 0)
         page.pack_start(Gtk.Box(), True, True, 0)
@@ -310,7 +310,7 @@ class SetupWindow(Gtk.Window):
         updates_button.connect(
             "clicked",
             self._launch_command,
-            ["gnome-software", "--mode=updates"],
+            ["plasma-discover", "--mode", "Update"],
         )
         actions.pack_start(store_button, False, False, 0)
         actions.pack_start(updates_button, False, False, 0)
@@ -420,7 +420,7 @@ class SetupWindow(Gtk.Window):
             0,
         )
         shortcuts.pack_start(
-            self._info_card("Settings", "Super+I", "preferences-system-symbolic"),
+            self._info_card("Settings", "From the launcher", "preferences-system-symbolic"),
             True,
             True,
             0,

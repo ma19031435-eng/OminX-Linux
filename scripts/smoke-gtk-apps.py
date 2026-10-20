@@ -9,6 +9,7 @@ import sys
 import tempfile
 import time
 from pathlib import Path
+from unittest import mock
 
 import gi
 
@@ -18,6 +19,7 @@ from gi.repository import GLib, Gtk  # noqa: E402
 sys.path.insert(0, "/usr/lib/ominx")
 from settings import SettingsWindow  # noqa: E402
 from setup import SetupWindow  # noqa: E402
+import store as store_module  # noqa: E402
 from store import StoreWindow  # noqa: E402
 from welcome import WelcomeWindow  # noqa: E402
 
@@ -90,6 +92,26 @@ def check_store_window() -> None:
     drain_events()
 
 
+def check_discover_delegation() -> None:
+    window = StoreWindow()
+    cases = (
+        ({"search": "speed & light"}, ["/usr/bin/plasma-discover", "--search", "speed & light"]),
+        ({"mode": "installed"}, ["/usr/bin/plasma-discover", "--mode", "Installed"]),
+        ({"mode": "updates"}, ["/usr/bin/plasma-discover", "--mode", "Update"]),
+        ({"prefs": True}, ["/usr/bin/plasma-discover", "--mode", "Sources"]),
+    )
+    for arguments, expected in cases:
+        with mock.patch.object(
+            store_module.shutil, "which", return_value="/usr/bin/plasma-discover"
+        ), mock.patch.object(store_module.subprocess, "Popen") as popen:
+            window._launch_software(**arguments)
+        actual = popen.call_args.args[0]
+        if actual != expected:
+            raise AssertionError(f"OminX Store sent an invalid Discover command: {actual!r}")
+    window.destroy()
+    drain_events()
+
+
 def check_settings_window() -> None:
     window = SettingsWindow()
     drain_events()
@@ -124,8 +146,8 @@ def check_welcome_window() -> None:
     if not window.get_visible() or not window.get_title().startswith("Welcome to OminX"):
         raise AssertionError("OminX Welcome window did not become visible")
     welcome_text = visible_label_text(window).casefold()
-    if "top bar" not in welcome_text or "ominx settings" not in welcome_text:
-        raise AssertionError("OminX Welcome did not render its Aurora desktop guidance")
+    if "floating panel" not in welcome_text or "ominx settings" not in welcome_text:
+        raise AssertionError("OminX Welcome did not render its Plasma desktop guidance")
     window.destroy()
     drain_events()
 
@@ -198,6 +220,7 @@ def main() -> int:
     Gtk.init([])
     check_css()
     check_store_window()
+    check_discover_delegation()
     check_settings_window()
     check_welcome_window()
     check_setup_window()

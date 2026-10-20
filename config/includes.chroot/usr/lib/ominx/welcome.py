@@ -42,7 +42,7 @@ class WelcomeWindow(Gtk.Window):
         title = Gtk.Label(label="Welcome to OminX")
         title.set_xalign(0)
         title.get_style_context().add_class("ominx-title")
-        subtitle = Gtk.Label(label="A luminous workspace for work, creativity, and play. Open OminX from the top bar to find apps and controls.")
+        subtitle = Gtk.Label(label="A luminous KDE Plasma workspace for work, creativity, and play. Open the OminX Launcher from the floating panel to find apps and controls.")
         subtitle.set_xalign(0)
         subtitle.get_style_context().add_class("ominx-subtitle")
         brand_text.pack_start(title, False, False, 0)
@@ -122,7 +122,7 @@ class WelcomeWindow(Gtk.Window):
 
         bottom = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
         note = Gtk.Label(
-            label="Quick keys: Super+E opens Files, Super+R opens Run, Ctrl+Shift+Esc opens System Monitor, and Super+L locks your session. Zstd zram compresses less-active pages; apps stay running. Game Mode works per game, with results that vary by hardware."
+            label="Quick keys: Meta opens the Plasma launcher, and Alt+Space searches apps and commands with KRunner. Review or change the rest in KDE System Settings. Zstd zram compresses less-active pages; apps stay running. Game Mode works per game, with results that vary by hardware."
         )
         note.set_xalign(0)
         note.set_line_wrap(True)

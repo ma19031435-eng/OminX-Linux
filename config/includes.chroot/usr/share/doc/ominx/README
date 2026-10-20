@@ -1,32 +1,28 @@
 OminX
 =====
 
-OminX is a Debian 13 (Trixie) amd64 live desktop with Cinnamon, an installer,
-core desktop apps, a Debian/Flatpak software center, Steam/Proton support,
-Wine/Lutris, compressed zram memory, and per-game Feral GameMode.
+OminX is a Debian 13 (Trixie) amd64 live desktop centered on KDE Plasma 6, with
+an installer, core desktop apps, a Debian/Flatpak software center, Steam/Proton
+support, Wine/Lutris, compressed zram memory, and per-game Feral GameMode.
 
 OminX Aurora is an original dark visual system built from midnight surfaces,
-sea-glass highlights, sky-blue light, and restrained violet accents. The slim
-top command bar places the OminX Launcher and workspace overview at the left,
-running apps in the center, and system indicators and clock at the right. The
-launcher provides pinned apps, recommendations, responsive search, an all-apps
-view, and session power options. Its installed-app index is deferred until
-needed, and larger search results are added in batches.
+sea-glass highlights, sky-blue light, and restrained violet accents. Its
+floating, translucent Plasma panel brings together the OminX Launcher, virtual
+desktops, running applications, system tray, clock, and Show Desktop control.
+The launcher offers pinned apps, responsive app search, and session controls.
+Dolphin opens in a folder-first details view with Places, breadcrumbs, tabs,
+search, and mounted storage and network locations.
 
 OminX Store presents app and game discovery, categories, Library, and Updates.
-Real catalog searches, installs, and package operations are delegated to GNOME
-Software's Debian and Flatpak backends. OminX Settings organizes native Linux
-controls into Workspace, Devices, Connectivity, Appearance, Applications,
-Accounts, Time & input, Gaming, Accessibility, Privacy & security, and Updates.
+Real package and Flatpak actions are delegated to KDE Discover and its Debian
+and Flatpak backends. OminX Settings organizes Plasma and native Linux controls
+into Workspace, Devices, Connectivity, Appearance, Applications, Accounts,
+Time & input, Gaming, Accessibility, Privacy & security, and Updates. OminX
+Setup guides new users through connection status, app choices, and gaming tools;
+optional software is not installed without an explicit user action.
 
-Nemo (Files) uses a details/list view with folders first, double-click
-navigation, a Places sidebar, breadcrumb path, toolbar search/new-folder actions,
-and a status bar. Home, Computer, Trash, mounted volumes, and Network icons are
-available on the desktop. Shortcuts include Super+E for Files, Super+R for Run,
-Super+I for OminX Settings, Ctrl+Shift+Esc for System Monitor, Super+D for Show
-Desktop, Super+L to lock, Super+Tab for the workspace overview, Super+Left/Right
-to tile, Super+Up/Down to maximize/restore, and Super+Shift+S for an area
-screenshot. Super is usually the Windows-logo key on PC keyboards.
+Open the OminX Launcher with Meta (usually the Windows-logo key on a PC
+keyboard). KDE shortcuts can be reviewed or changed in System Settings.
 
 Start with the OminX Welcome application. Compatibility and performance notes
 are in compatibility.md and performance.md. Full build instructions are in the

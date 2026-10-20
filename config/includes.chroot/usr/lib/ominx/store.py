@@ -23,7 +23,7 @@ PRODUCTS = [
         "description": "Browse folders, devices, and network locations.",
         "category": "Productivity",
         "icon": "system-file-manager",
-        "desktop_id": "nemo.desktop",
+        "desktop_id": "org.kde.dolphin.desktop",
     },
     {
         "name": "Firefox ESR",
@@ -652,20 +652,23 @@ class StoreWindow(Gtk.Window):
             self._show_message("Could not open app", str(error))
 
     def _launch_software(self, search: str | None = None, mode: str | None = None, prefs: bool = False) -> None:
-        executable = shutil.which("gnome-software")
+        executable = shutil.which("plasma-discover")
         if executable is None:
             self._show_message(
                 "Software manager not found",
-                "GNOME Software is the package and Flatpak installation backend for OminX Store.",
+                "KDE Discover provides package and Flatpak installation for OminX Store.",
             )
             return
         command = [executable]
         if search:
-            command.append(f"--search={search}")
+            command.extend(("--search", search))
         elif mode:
-            command.append(f"--mode={mode}")
+            discover_mode = {"installed": "Installed", "updates": "Update"}.get(
+                mode.casefold(), "Browsing"
+            )
+            command.extend(("--mode", discover_mode))
         elif prefs:
-            command.append("--prefs")
+            command.extend(("--mode", "Sources"))
         try:
             subprocess.Popen(
                 command,

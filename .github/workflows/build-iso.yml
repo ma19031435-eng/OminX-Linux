@@ -40,7 +40,35 @@ jobs:
       - name: Validate OminX configuration
         run: |
           make check
-          node --check config/includes.chroot/usr/share/cinnamon/applets/ominx-start@ominx/applet.js
+          node --check config/includes.chroot/usr/share/plasma/look-and-feel/com.ominx.aurora/contents/layouts/org.kde.plasma.desktop-layout.js
+
+      - name: Resolve the Debian 13 package selection
+        run: |
+          docker run --rm \
+            --volume "${GITHUB_WORKSPACE}/config/package-lists/ominx.list.chroot:/ominx.list.chroot:ro" \
+            debian:trixie \
+            sh -ec '
+              export DEBIAN_FRONTEND=noninteractive
+              if [ -f /etc/apt/sources.list.d/debian.sources ]; then
+                sed -i "s/Components: main/Components: main contrib non-free non-free-firmware/" \
+                  /etc/apt/sources.list.d/debian.sources
+              elif [ -f /etc/apt/sources.list ]; then
+                sed -i -E \
+                  "s/^(deb .* )main$/\\1main contrib non-free non-free-firmware/" \
+                  /etc/apt/sources.list
+              else
+                echo "Could not find Debian APT sources to enable contrib and non-free" >&2
+                exit 1
+              fi
+              dpkg --add-architecture i386
+              apt-get update
+              set -- $(awk "NF && \$1 !~ /^#/ { print \$1 }" /ominx.list.chroot)
+              apt-get install --simulate --no-install-recommends \
+                "$@" \
+                steam-installer steam-devices wine wine64 wine32:i386 wine-binfmt \
+                winetricks lutris libgl1-mesa-dri:i386 libvulkan1:i386 \
+                mesa-vulkan-drivers:i386 libpulse0:i386 libasound2-plugins:i386
+            '
 
       - name: Smoke-test OminX GTK apps in Debian 13
         id: gtk_smoke
