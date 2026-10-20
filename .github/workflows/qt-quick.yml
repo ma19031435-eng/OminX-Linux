@@ -64,11 +64,13 @@ jobs:
             build/qtshadertools-target
             build/qtdeclarative-host
             build/qtdeclarative-target
-          key: target-quick-${{ runner.os }}-${{ hashFiles('desktop/qt/**', 'scripts/build-qt-target.sh', 'scripts/build-qt-quick-target.sh', 'toolchain/**') }}
+          key: target-quick-${{ runner.os }}-${{ hashFiles('desktop/qt/**', 'toolchain/**') }}-${{ hashFiles('scripts/build-qt-target.sh', 'scripts/build-qt-quick-target.sh') }}
+          restore-keys: |
+            target-quick-${{ runner.os }}-${{ hashFiles('desktop/qt/**', 'toolchain/**') }}-
       - name: Source-build target Qt Quick dependencies
         run: JOBS=4 scripts/build-qt-quick-target.sh --dependencies-only 2>&1 | tee build/qt-quick-build.log
       - uses: actions/cache/save@v4
-        if: steps.quick-cache.outputs.cache-hit != 'true'
+        if: always() && steps.quick-cache.outputs.cache-hit != 'true'
         with:
           path: |
             build/qt-quick-host

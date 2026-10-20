@@ -41,7 +41,8 @@ for module in qtshadertools qtdeclarative; do
         -DCMAKE_INSTALL_PREFIX="$HOST" -DQT_BUILD_EXAMPLES=OFF -DQT_BUILD_TESTS=OFF \
         -DFEATURE_qml_animation=OFF
     cmake --build "build/$module-host" --parallel "${JOBS:-2}"
-    cmake --install "build/$module-host"
+    # Developer-build modules place generators and CMake metadata directly in
+    # the Qt host build tree; a non-prefix developer build must not be installed.
 done
 export PKG_CONFIG_LIBDIR="$ROOT/build/empty-pkgconfig"
 export PKG_CONFIG_PATH=
