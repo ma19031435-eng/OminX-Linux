@@ -12,7 +12,7 @@ VM, OUT = platforms.VM, platforms.OUT
 # Linux 6.12 uses drm_driver.name + "drmfb" (Bochs name is "bochs-drm").
 cases = [
     dict(name='graphics-bochs', machine='q35', ram=512, cpu='qemu64', disk='virtio', vga='std', framebuffer='bochs-drmdrmfb'),
-    dict(name='graphics-virtio', machine='q35', ram=512, cpu='qemu64', disk='virtio', vga='virtio', uefi=True, framebuffer='virtiodrmfb'),
+    dict(name='graphics-virtio', machine='q35', ram=512, cpu='qemu64', disk='virtio', vga='virtio', uefi=True, framebuffer='virtio_gpudrmfb'),
     dict(name='graphics-qxl', machine='pc', ram=512, cpu='qemu64', disk='virtio', vga='qxl', framebuffer='qxldrmfb'),
 ]
 results = []
