@@ -17,7 +17,7 @@ def archive(binary):
         output.extend(b'\0' * (-len(output) % 4))
         output.extend(data)
         output.extend(b'\0' * (-len(output) % 4))
-    for name in ('dev', 'proc', 'sys', 'run', 'tmp', 'root', 'etc', 'bin'):
+    for name in ('dev', 'proc', 'sys', 'run', 'tmp', 'root', 'etc', 'bin', 'mnt', 'mnt/data'):
         entry(name, stat.S_IFDIR | (0o1777 if name == 'tmp' else 0o755))
     entry('dev/console', stat.S_IFCHR | 0o600, major=5, minor=1)
     entry('init', stat.S_IFREG | 0o755, binary)

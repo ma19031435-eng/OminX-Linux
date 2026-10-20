@@ -7,7 +7,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/ioctl.h>
 #include <sys/mount.h>
+#include <termios.h>
 #include <sys/reboot.h>
 #include <sys/stat.h>
 #include <sys/utsname.h>
@@ -16,15 +18,27 @@
 
 static int is_init;
 static void error(const char *s) { fprintf(stderr, "%s: %s\n", s, strerror(errno)); }
-static void reap(int sig) {
-    (void)sig;
-    int saved = errno;
-    while (waitpid(-1, NULL, WNOHANG) > 0) {}
-    errno = saved;
-}
 static void filesystem(const char *type, const char *path) {
     if (mkdir(path, 0755) && errno != EEXIST) error(path);
     if (mount(type, path, type, MS_NOSUID | MS_NODEV, NULL)) error(path);
+}
+static void copy_file(const char *from, const char *to) {
+    struct stat a, b;
+    if (stat(from, &a)) { error(from); return; }
+    if (!stat(to, &b) && a.st_dev == b.st_dev && a.st_ino == b.st_ino) {
+        puts("Source and destination are the same file."); return;
+    }
+    FILE *in = fopen(from, "rb");
+    if (!in) { error(from); return; }
+    FILE *out = fopen(to, "wb");
+    if (!out) { error(to); fclose(in); return; }
+    char buffer[4096]; size_t count;
+    while ((count = fread(buffer, 1, sizeof buffer, in))) {
+        if (fwrite(buffer, 1, count, out) != count) { error(to); break; }
+    }
+    if (ferror(in)) error(from);
+    if (fclose(out)) error(to);
+    fclose(in);
 }
 static void shell(void) {
     char *line = NULL;
@@ -49,9 +63,11 @@ static void shell(void) {
         if (!strcmp(cmd, "help")) {
             puts("help | uname | pwd | cd PATH | ls [PATH] | cat FILE\n"
                  "mkdir PATH | write FILE WORDS... | echo WORDS... | sync\n"
+                 "cp SOURCE DEST | mv SOURCE DEST | rm FILE\n"
+                 "attach DEVICE [ro] | detach (ext4 data at /mnt/data)\n"
                  "exit | reboot | poweroff | /absolute/program [args]\n"
                  "Whitespace separates arguments; no quoting, pipes or expansion.\n"
-                 "write replaces a file. Files in this RAM system are NOT persistent.");
+                 "write replaces a file. Only files on an attached data disk survive reboot.");
         } else if (!strcmp(cmd, "exit")) break;
         else if (!strcmp(cmd, "uname")) {
             struct utsname u;
@@ -90,10 +106,36 @@ static void shell(void) {
                 fprintf(f, "%s%s", i == (writing ? 2 : 1) ? "" : " ", args[i]);
             fputc('\n', f);
             if (writing && fclose(f)) error(args[1]);
+        } else if (!strcmp(cmd, "cp") && n == 3) copy_file(args[1], args[2]);
+        else if (!strcmp(cmd, "mv") && n == 3) {
+            if (rename(args[1], args[2])) error(cmd);
+        } else if (!strcmp(cmd, "rm") && n == 2) {
+            if (unlink(args[1])) error(args[1]);
+        } else if (!strcmp(cmd, "attach") && (n == 2 || (n == 3 && !strcmp(args[2], "ro")))) {
+            if (!is_init) { puts("Disk attachment only runs in the OminX boot environment."); continue; }
+            struct stat st;
+            if (stat(args[1], &st)) { error(args[1]); continue; }
+            if (!S_ISBLK(st.st_mode)) { puts("Refusing: device is not a block device."); continue; }
+            /* Never format or mount user disks automatically. Refuse mount stacking. */
+            struct stat parent, current;
+            if (stat("/mnt", &parent) || stat("/mnt/data", &current)) { error("/mnt/data"); continue; }
+            if (parent.st_dev != current.st_dev) { puts("Data already attached; detach first."); continue; }
+            unsigned long flags = MS_NOSUID | MS_NODEV | MS_NOEXEC;
+            if (n == 3) flags |= MS_RDONLY;
+            if (mount(args[1], "/mnt/data", "ext4", flags, n == 3 ? "noload" : NULL)) error("attach");
+            else puts("Data attached at /mnt/data.");
+        } else if (!strcmp(cmd, "detach") && n == 1) {
+            if (!is_init) { puts("Disk attachment only runs in the OminX boot environment."); continue; }
+            sync();
+            if (umount("/mnt/data")) error("detach"); else puts("Data detached.");
         } else if (!strcmp(cmd, "sync")) sync();
         else if (!strcmp(cmd, "reboot") || !strcmp(cmd, "poweroff")) {
             if (!is_init) { puts("Power controls only run in the OminX boot environment."); continue; }
+            if (chdir("/root")) error("/root");
             sync();
+            if (umount("/mnt/data") && errno != EINVAL && errno != ENOENT) {
+                error("Detach data disk before shutdown"); continue;
+            }
             if (reboot(!strcmp(cmd, "reboot") ? RB_AUTOBOOT : RB_POWER_OFF)) error(cmd);
         } else if (cmd[0] == '/') {
             pid_t pid = fork();
@@ -106,6 +148,27 @@ static void shell(void) {
         } else puts("Unknown command or wrong argument count. Type help.");
     }
     free(line);
+}
+static pid_t start_console(const char *device) {
+    pid_t child = fork();
+    if (child != 0) return child;
+    if (setsid() < 0) { error("setsid"); _exit(1); }
+    int fd = open(device, O_RDWR);
+    if (fd < 0) { error(device); _exit(1); }
+    if (ioctl(fd, TIOCSCTTY, 0)) { error("controlling terminal"); _exit(1); }
+    for (int i = 0; i < 3; i++) if (dup2(fd, i) < 0) _exit(1);
+    if (fd > 2) close(fd);
+    struct termios t;
+    if (!tcgetattr(0, &t)) {
+        t.c_lflag |= ICANON | ECHO | ISIG;
+        t.c_oflag |= OPOST | ONLCR;
+        t.c_iflag |= ICRNL;
+        cfsetispeed(&t, B115200); cfsetospeed(&t, B115200);
+        if (tcsetattr(0, TCSANOW, &t)) error("terminal setup");
+    }
+    setvbuf(stdout, NULL, _IOLBF, 0);
+    shell();
+    exit(0);
 }
 int main(int argc, char **argv) {
     is_init = getpid() == 1;
@@ -127,18 +190,20 @@ int main(int argc, char **argv) {
     setenv("PATH", "/bin", 1); setenv("HOME", "/root", 1);
     if (chdir("/root")) error("/root");
     signal(SIGINT, SIG_IGN);
-    /* PID 1 never exits. A child owns the console; PID 1 reaps orphans. */
+    /* Independent local-keyboard and serial sessions; PID 1 reaps all children. */
+    const char *devices[] = {"/dev/tty1", "/dev/ttyS0"};
+    pid_t consoles[2];
+    for (int i = 0; i < 2; i++) consoles[i] = start_console(devices[i]);
     for (;;) {
-        pid_t child = fork();
-        if (child == 0) { shell(); _exit(0); }
-        if (child < 0) { error("console fork"); sleep(1); continue; }
         int status;
-        for (;;) {
-            pid_t ended = wait(&status);
-            if (ended == child) break;
-            if (ended < 0 && errno != EINTR) break;
+        pid_t ended = wait(&status);
+        if (ended < 0 && errno == EINTR) continue;
+        for (int i = 0; i < 2; i++) {
+            if (consoles[i] < 0 || consoles[i] == ended) {
+                sleep(1); /* Rate-limit failed console devices. */
+                consoles[i] = start_console(devices[i]);
+            }
         }
-        reap(0);
-        sleep(1);
+        if (ended < 0) sleep(1);
     }
 }

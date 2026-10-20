@@ -1,55 +1,66 @@
-name: Source-built OminX core
+name: Source-built OminX x86 acceptance
 on:
   push:
     branches: [arena/11b46bb0-ominx-linux]
-    paths: ['src/**', 'tests/**', 'scripts/make-initramfs.py', 'scripts/smoke-boot.py', 'build.sh', 'Makefile', '.github/workflows/source-os.yml']
+    paths: ['src/**', 'tests/**', 'scripts/**', 'toolchain/**', 'boot/**', 'build.sh', 'Makefile', '.github/workflows/source-os.yml']
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
   boot:
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
-      - name: Install host build and test tools
+      - name: Install build-host tools (not target packages)
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential flex bison libelf-dev libssl-dev bc qemu-system-x86 python3
-      - name: Test original userspace
+          sudo apt-get install -y build-essential flex bison libelf-dev libssl-dev bc qemu-system-x86 \
+            python3 autoconf automake libtool texinfo nasm mtools xorriso ovmf e2fsprogs curl wget
+      - uses: actions/cache@v4
+        id: compiler
+        with:
+          path: |
+            build/toolchain
+            build/provenance
+          key: source-toolchain-${{ runner.os }}-${{ hashFiles('toolchain/**', 'scripts/build-toolchain.sh') }}
+      - name: Build upstream cross toolchain and libc
+        if: steps.compiler.outputs.cache-hit != 'true'
         run: |
           mkdir -p build
-          make check 2>&1 | tee build/userspace.log
-      - name: Obtain upstream kernel
-        run: |
-          git clone --depth 1 --branch v6.12 https://github.com/torvalds/linux.git "$RUNNER_TEMP/linux"
-          git -C "$RUNNER_TEMP/linux" rev-parse HEAD > build/kernel-source-commit.txt
-      - name: Build Linux and OminX
-        run: LINUX_SOURCE="$RUNNER_TEMP/linux" JOBS=4 ./build.sh 2>&1 | tee build/kernel-build.log
-      - name: Boot acceptance
-        run: python3 scripts/smoke-boot.py
-      - name: Publish boot evidence and failure diagnostics
+          JOBS=4 make toolchain 2>&1 | tee build/toolchain.log
+      - name: Build source-based kernel, userspace and BIOS/UEFI ISO
+        run: JOBS=4 ./build.sh 2>&1 | tee build/kernel-build.log
+      - name: Test musl-linked original userspace
+        run: make check CC="$PWD/build/toolchain/bin/x86_64-linux-musl-gcc" 2>&1 | tee build/userspace.log
+      - name: Boot real media and verify x86 platform matrix
+        run: python3 scripts/test-platforms.py 2>&1 | tee build/platforms.log
+      - name: Publish evidence and failure diagnostics
         if: always()
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          for name in ("userspace.log", "kernel-build.log", "boot.log"):
-              path = Path("build") / name
+          paths = [Path('build') / name for name in ('toolchain.log', 'kernel-build.log', 'userspace.log', 'platforms.log')]
+          paths += sorted(Path('build/acceptance').glob('*.txt'))
+          paths += sorted(Path('build/acceptance').glob('*.json'))
+          for path in paths:
               if path.exists():
-                  text = "\n".join(path.read_text(errors="replace").splitlines()[-45:])
-                  text = text.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
-                  print(f"::notice title={name}::{text}")
+                  text = '\n'.join(path.read_text(errors='replace').splitlines()[-65:])
+                  text = text.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
+                  print(f'::notice title={path.name}::{text}')
           PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: OminX-core-${{ github.sha }}
+          name: OminX-x86-${{ github.sha }}
           path: |
+            build/ominx-x86_64.iso
             build/bzImage
             build/initramfs.cpio.gz
             build/SHA256SUMS
-            build/kernel-source-commit.txt
-            build/boot.log
-            build/userspace.log
-            build/kernel-build.log
-          retention-days: 7
+            build/provenance
+            build/acceptance/*.txt
+            build/acceptance/*.json
+            build/acceptance/*.ppm
+            build/*.log
+          retention-days: 14
