@@ -35,12 +35,13 @@ cmake -S build/sources/qtbase -B "$HOST" -G Ninja \
     -DFEATURE_system_pcre2=OFF
 cmake --build "$HOST" --parallel "${JOBS:-2}"
 for module in qtshadertools qtdeclarative; do
-    # No native Quick renderer is needed for code generation. Disabling animation
-    # suppresses that optional subtree without disabling the target's Quick build.
+    # Match host module features: Qt cross-builds also resolve GUI-facing tools
+    # such as qmltestrunner and qmleasing from this native tool installation.
     cmake -S "build/sources/$module" -B "build/$module-host" -G Ninja \
-        -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$HOST" \
+        -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$HOST;$HOST_MODULES" \
+        -DQT_ADDITIONAL_PACKAGES_PREFIX_PATH="$HOST_MODULES" \
         -DCMAKE_INSTALL_PREFIX="$HOST" -DQT_BUILD_EXAMPLES=OFF -DQT_BUILD_TESTS=OFF \
-        -DFEATURE_qml_animation=OFF
+        -DFEATURE_qml_animation=ON
     cmake --build "build/$module-host" --parallel "${JOBS:-2}"
     # Developer-build modules place generators and CMake metadata directly in
     # the Qt host build tree; a non-prefix developer build must not be installed.
