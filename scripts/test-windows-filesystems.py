@@ -8,11 +8,13 @@ import importlib.util
 spec = importlib.util.spec_from_file_location('platforms', Path(__file__).with_name('test-platforms.py'))
 platforms = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(platforms)
-VM, OUT = platforms.VM, platforms.OUT
+VM, OUT, ROOT = platforms.VM, platforms.OUT, platforms.ROOT
 
 
 def run(*args):
-    subprocess.run(list(map(str, args)), check=True, capture_output=True)
+    result = subprocess.run(list(map(str, args)), capture_output=True)
+    if result.returncode:
+        raise RuntimeError(f'{args}: {result.stdout.decode(errors="replace")} {result.stderr.decode(errors="replace")}')
 
 
 def digest(path):
@@ -36,15 +38,24 @@ def check_format(kind):
         run('ntfscp', '-f', disk, seed, '/Windows Notes.txt')
     else:
         run('mkfs.exfat', disk)
-        # Host-only fixture creation, never a host block device or target package.
-        mountpoint = OUT / 'exfat-fixture-mount'
-        mountpoint.mkdir(exist_ok=False)
-        run('sudo', 'mount', '-t', 'exfat', '-o', 'loop', disk, mountpoint)
-        try:
-            run('sudo', 'cp', seed, mountpoint / 'Windows Notes.txt')
-        finally:
-            run('sudo', 'umount', mountpoint)
-            mountpoint.rmdir()
+        # Seed using our source-built guest kernel, not privileged host mounts.
+        fixture = OUT / 'seed-exfat'
+        run(ROOT / 'build/toolchain/bin/x86_64-linux-musl-gcc', '-static', '-O2',
+            '-Wall', '-Wextra', '-Werror', ROOT / 'tests/fixtures/seed-exfat.c', '-o', fixture)
+        pack_spec = importlib.util.spec_from_file_location('packer', Path(__file__).with_name('make-initramfs.py'))
+        packer = importlib.util.module_from_spec(pack_spec)
+        pack_spec.loader.exec_module(packer)
+        ramdisk = OUT / 'seed-exfat.cpio.gz'
+        ramdisk.write_bytes(packer.archive(packer.static_elf(fixture)))
+        result = subprocess.run(['qemu-system-x86_64', '-m', '256', '-kernel', str(ROOT / 'build/bzImage'),
+                                 '-initrd', str(ramdisk), '-append', 'console=ttyS0 rdinit=/init panic=-1',
+                                 '-nographic', '-no-reboot', '-nic', 'none',
+                                 '-drive', f'if=virtio,format=raw,file={disk}'],
+                                capture_output=True, timeout=90)
+        log = result.stdout + result.stderr
+        (OUT / 'exfat-fixture.txt').write_bytes(log)
+        if result.returncode or b'OMINX_FIXTURE_READY' not in log or b'Power down' not in log:
+            raise RuntimeError('Guest exFAT fixture preparation failed: ' + log[-4000:].decode(errors='replace'))
     before = digest(disk)
     case = dict(name='windows-' + kind, machine='q35', ram=512, cpu='qemu64', disk='virtio', uefi=True)
     vm = VM(case, data, 'readonly', extras=[disk])
