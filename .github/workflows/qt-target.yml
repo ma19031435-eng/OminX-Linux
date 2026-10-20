@@ -30,23 +30,44 @@ jobs:
       - name: Build source toolchain when absent
         if: steps.compiler.outputs.cache-hit != 'true'
         run: JOBS=4 make toolchain
+      - uses: actions/cache/restore@v4
+        id: qt-cache
+        with:
+          path: |
+            build/sources/qtbase
+            build/qt-host
+            build/qt-target
+            build/qt-prefix
+            build/graphics-probe
+          key: target-qt-${{ runner.os }}-${{ hashFiles('desktop/qt/**', 'desktop/probe/**', 'scripts/build-qt-target.sh', 'toolchain/**') }}
       - name: Cross-build target Qt and original probe
         run: JOBS=4 scripts/build-qt-target.sh 2>&1 | tee build/qt-target.log
+      - uses: actions/cache/save@v4
+        if: steps.qt-cache.outputs.cache-hit != 'true'
+        with:
+          path: |
+            build/sources/qtbase
+            build/qt-host
+            build/qt-target
+            build/qt-prefix
+            build/graphics-probe
+          key: ${{ steps.qt-cache.outputs.cache-primary-key }}
       - name: Require accepted source-built kernel provenance
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh api repos/${{ github.repository }}/actions/runs/39478002962 > build/source-run.json
+          gh run watch 39482457386 --interval 60 --exit-status
+          gh api repos/${{ github.repository }}/actions/runs/39482457386 > build/source-run.json
           python3 - <<'PY'
           import json
           r = json.load(open('build/source-run.json'))
           assert r['conclusion'] == 'success', 'Source kernel acceptance must pass before Qt guest tests'
-          assert r['head_sha'] == 'c8cbc84361c949858e952bd92e0147dec9a94341'
+          assert r['head_sha'] == '35514119f11e775ab696d6c3c67be5c221366848'
           PY
       - uses: actions/download-artifact@v4
         with:
-          run-id: 39478002962
-          name: OminX-x86-c8cbc84361c949858e952bd92e0147dec9a94341
+          run-id: 39482457386
+          name: OminX-x86-35514119f11e775ab696d6c3c67be5c221366848
           path: build/source-core
           github-token: ${{ github.token }}
       - name: Package independent target graphics test media
