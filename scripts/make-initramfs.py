@@ -7,7 +7,7 @@ import struct
 import sys
 
 
-def archive(binary, files=None, control=None):
+def archive(binary, files=None, control=None, graphics_probe=None):
     output = bytearray()
     def entry(name, mode, data=b'', major=0, minor=0, uid=0, gid=0):
         encoded = name.encode() + b'\0'
@@ -34,6 +34,8 @@ def archive(binary, files=None, control=None):
         entry('bin/ominx-files', stat.S_IFREG | 0o755, files)
     if control is not None:
         entry('sbin/ominx-control', stat.S_IFREG | 0o755, control)
+    if graphics_probe is not None:
+        entry('bin/ominx-graphics-probe', stat.S_IFREG | 0o755, graphics_probe)
     entry('etc/os-release', stat.S_IFREG | 0o644,
           b'NAME=OminX\nID=ominx\nPRETTY_NAME="OminX source-built console"\n')
     entry('TRAILER!!!', 0)
@@ -56,10 +58,11 @@ def static_elf(path):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 5:
-        raise SystemExit('Usage: make-initramfs.py INIT OUTPUT FILES_EXECUTABLE CONTROL_EXECUTABLE')
+    if len(sys.argv) not in (5, 6):
+        raise SystemExit('Usage: make-initramfs.py INIT OUTPUT FILES_EXECUTABLE CONTROL_EXECUTABLE [GRAPHICS_PROBE]')
     try:
-        packed = archive(static_elf(sys.argv[1]), static_elf(sys.argv[3]), static_elf(sys.argv[4]))
+        probe = static_elf(sys.argv[5]) if len(sys.argv) == 6 else None
+        packed = archive(static_elf(sys.argv[1]), static_elf(sys.argv[3]), static_elf(sys.argv[4]), probe)
     except ValueError as error:
         raise SystemExit(str(error))
     Path(sys.argv[2]).write_bytes(packed)

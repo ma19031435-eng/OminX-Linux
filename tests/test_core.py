@@ -105,6 +105,23 @@ class CoreTests(unittest.TestCase):
         self.assertIn(b'root:!', entries['etc/shadow'][1])
         self.assertIn(b'ID=ominx', entries['etc/os-release'][1])
 
+    def test_optional_graphics_probe_archive(self):
+        binary = BINARY.read_bytes()
+        basic = module.archive(binary)
+        graphics = module.archive(binary, graphics_probe=binary)
+        self.assertNotIn(b'bin/ominx-graphics-probe', gzip.decompress(basic))
+        self.assertIn(b'bin/ominx-graphics-probe', gzip.decompress(graphics))
+        self.assertEqual(graphics, module.archive(binary, graphics_probe=binary))
+
+    def test_reject_dynamic_graphics_probe(self):
+        with tempfile.TemporaryDirectory() as directory:
+            result = subprocess.run(['python3', str(ROOT / 'scripts/make-initramfs.py'),
+                                     str(BINARY), directory + '/bad.gz',
+                                     os.environ['OMINX_FILES_BINARY'], os.environ['OMINX_CONTROL_BINARY'],
+                                     '/bin/ls'], capture_output=True, text=True)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertFalse(Path(directory, 'bad.gz').exists())
+
     def test_reject_malformed_elf(self):
         with tempfile.TemporaryDirectory() as root:
             path = Path(root) / 'broken'
