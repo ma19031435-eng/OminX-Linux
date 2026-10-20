@@ -22,22 +22,27 @@ class ForceUpdateWindow(Gtk.Window):
         self.set_position(Gtk.WindowPosition.CENTER_ALWAYS)
         self.set_border_width(28)
         self.set_resizable(False)
+        self.set_decorated(False)
+        self.fullscreen()
+        self.set_modal(True)
         self.set_icon_name("software-update-available")
         self.set_keep_above(True)
         self.connect("delete-event", self._block_close)
+        self.connect("key-press-event", self._block_keys)
 
         root = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=16)
         self.add(root)
 
-        title = Gtk.Label(label="This OminX image is now a legacy build")
+        title = Gtk.Label(label="UPDATE REQUIRED")
         title.set_xalign(0)
         title.get_style_context().add_class("title")
         root.pack_start(title, False, False, 0)
 
         message = Gtk.Label(
             label=(
-                "To continue, download the latest ISO from the OminX repository. "
-                "This session signs out after opening the repository page."
+                "This image is blocked from normal use. You must update to the latest "
+                "OminX ISO from this repository. Press the button below to open the "
+                "repository page, then this session will sign out."
             )
         )
         message.set_xalign(0)
@@ -55,6 +60,10 @@ class ForceUpdateWindow(Gtk.Window):
 
     @staticmethod
     def _block_close(*_args) -> bool:
+        return True
+
+    @staticmethod
+    def _block_keys(*_args) -> bool:
         return True
 
     def _open_and_logout(self, _button) -> None:
