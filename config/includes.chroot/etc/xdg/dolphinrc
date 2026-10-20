@@ -1,0 +1,11 @@
+[General]
+EditableUrl=false
+ShowFullPath=false
+ShowFullPathInTitlebar=false
+ShowStatusBar=1
+ShowToolTips=true
+GlobalViewProps=true
+ConfirmClosingMultipleTabs=true
+
+[PlacesPanel]
+IconSize=16

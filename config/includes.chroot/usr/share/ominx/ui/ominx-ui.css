@@ -1,0 +1,173 @@
+/* OminX Aurora design tokens shared by the Store, Settings and Welcome apps. */
+* { font-family: "Noto Sans", "DejaVu Sans", sans-serif; }
+window { background-color: #0b131c; color: #e4eff3; }
+label { color: #e0ecf1; }
+.ominx-shell { background-color: #0b131c; }
+
+.ominx-sidebar {
+  background-color: #0e1822;
+  border-right: 1px solid #263a47;
+  padding: 22px 15px;
+}
+.ominx-brand { color: #effbfe; font-size: 18px; font-weight: 700; }
+.ominx-brand-caption { color: #91a8b3; font-size: 10px; }
+
+.ominx-navigation button {
+  background-image: none;
+  background-color: transparent;
+  color: #aebfc8;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  padding: 9px 11px;
+  box-shadow: none;
+}
+.ominx-navigation button:hover {
+  background-color: #182833;
+  color: #effcff;
+}
+.ominx-navigation button:checked {
+  background-color: #17333a;
+  color: #7ce4d7;
+  border-color: #28525a;
+  border-left: 3px solid #56d9c8;
+}
+.ominx-navigation button:focus {
+  border-color: #4caaa5;
+}
+
+.ominx-content { background-color: #0b131c; padding: 26px 30px; }
+.ominx-page-title { color: #edf7fa; font-size: 28px; font-weight: 700; }
+.ominx-section-title { color: #e5f0f4; font-size: 18px; font-weight: 700; }
+.ominx-copy { color: #a4b7c0; font-size: 12px; }
+.ominx-muted { color: #8fa5b0; font-size: 11px; }
+
+.ominx-search {
+  background-image: none;
+  background-color: #09131c;
+  color: #e7f2f6;
+  border: 1px solid #2b414e;
+  border-radius: 10px;
+  padding: 9px 12px;
+  caret-color: #62dfcf;
+  box-shadow: none;
+}
+.ominx-search:focus {
+  border-color: #53cbbf;
+  background-color: #0b1720;
+}
+
+.ominx-hero {
+  background-image: linear-gradient(118deg, #142b35, #172338 67%, #24233d);
+  color: #effafd;
+  border: 1px solid #304654;
+  border-left: 4px solid #56d9c8;
+  border-radius: 16px;
+  padding: 23px;
+}
+.ominx-hero-title { color: #f1fbfd; font-size: 24px; font-weight: 700; }
+.ominx-hero-copy { color: #b0c4cc; font-size: 13px; }
+
+.ominx-card {
+  background-image: none;
+  background-color: #111d28;
+  color: #e4eef2;
+  border: 1px solid #293d49;
+  border-radius: 13px;
+  padding: 15px;
+  box-shadow: 0 7px 22px rgba(0, 0, 0, 0.16);
+}
+.ominx-card:hover {
+  background-image: none;
+  background-color: #172633;
+  border-color: #3c6972;
+}
+.ominx-card:focus {
+  border-color: #55beb7;
+}
+.ominx-card-title { color: #e8f3f6; font-size: 14px; font-weight: 700; }
+.ominx-card-copy { color: #9db1bb; font-size: 11px; }
+
+.ominx-pill {
+  background-color: #153038;
+  color: #8de5db;
+  border: 1px solid #2b535a;
+  border-radius: 999px;
+  padding: 4px 9px;
+  font-size: 10px;
+}
+
+.ominx-primary {
+  background-image: linear-gradient(to right, #5bddca, #67b9f1);
+  background-color: #52cbbd;
+  color: #07171b;
+  border: 1px solid #62d8ca;
+  border-radius: 9px;
+  padding: 8px 14px;
+  font-weight: 700;
+  box-shadow: none;
+}
+.ominx-primary:hover {
+  background-image: linear-gradient(to right, #81eadb, #88caf4);
+  color: #061419;
+}
+.ominx-primary:focus { border-color: #a2f2e7; box-shadow: 0 0 0 1px rgba(94, 222, 207, 0.24); }
+.ominx-primary:disabled { background-image: none; background-color: #1c2b34; border-color: #30414a; color: #768991; }
+
+.ominx-secondary {
+  background-image: none;
+  background-color: #16232d;
+  color: #c9d9df;
+  border: 1px solid #30444f;
+  border-radius: 9px;
+  padding: 8px 13px;
+  box-shadow: none;
+}
+.ominx-secondary:hover { background-color: #203440; color: #f0fbfe; border-color: #4b707a; }
+.ominx-secondary:focus { border-color: #57b9b1; }
+
+.ominx-chip {
+  background-image: none;
+  background-color: #111d27;
+  color: #a9bbc4;
+  border: 1px solid #2b3f4b;
+  border-radius: 999px;
+  padding: 6px 13px;
+  box-shadow: none;
+}
+.ominx-chip:hover, .ominx-chip:checked {
+  background-color: #17343b;
+  color: #8ce8dc;
+  border-color: #397579;
+}
+.ominx-chip:focus { border-color: #57b9b1; }
+
+.ominx-flat-button {
+  background-image: none;
+  background-color: transparent;
+  color: #9db2bc;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 7px 10px;
+  box-shadow: none;
+}
+.ominx-flat-button:hover { background-color: #182a35; color: #effbfe; }
+.ominx-flat-button:focus { border-color: #4a8589; }
+
+.ominx-divider { background-color: #263a46; min-height: 1px; }
+.ominx-setup-page { padding-bottom: 8px; }
+.ominx-setup-footer { padding-top: 12px; border-top: 1px solid #263a46; }
+selection { background-color: #20595d; color: #f0fffe; }
+
+.ominx-title { color: #edf8fb; font-size: 27px; font-weight: 700; }
+.ominx-subtitle { color: #a3b8c1; font-size: 13px; }
+.ominx-section { color: #e4f0f4; font-size: 17px; font-weight: 700; }
+.ominx-note { color: #91a7b1; font-size: 11px; }
+.ominx-version {
+  color: #84e6d9;
+  background-color: #153038;
+  border: 1px solid #2b535a;
+  border-radius: 999px;
+  padding: 5px 9px;
+  font-size: 10px;
+  font-weight: 700;
+}

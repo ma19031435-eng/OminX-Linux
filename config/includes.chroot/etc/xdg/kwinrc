@@ -1,0 +1,15 @@
+[Desktops]
+Number=4
+Rows=1
+
+[Windows]
+FocusPolicy=ClickToFocus
+Placement=Centered
+
+[Plugins]
+blurEnabled=true
+contrastEnabled=true
+
+[org.kde.kdecoration2]
+library=org.kde.breeze
+theme=Breeze

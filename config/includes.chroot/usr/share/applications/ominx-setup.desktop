@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=OminX Setup
+Comment=Review network, software, and desktop preferences
+TryExec=/usr/local/bin/ominx-setup
+Exec=/usr/local/bin/ominx-setup
+Icon=ominx
+Terminal=false
+Categories=Settings;

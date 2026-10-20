@@ -1,0 +1,121 @@
+# OminX desktop and daily-use software for Debian 13 (Trixie), amd64.
+# Debian's contrib and non-free components are enabled for Steam and firmware.
+
+# KDE Plasma 6 desktop shell, X11 session, OminX-styled Breeze, and login manager
+plasma-desktop
+plasma-workspace
+kwin-x11
+xserver-xorg
+lightdm
+lightdm-gtk-greeter
+network-manager
+plasma-nm
+plasma-pa
+plasma-systemmonitor
+systemsettings
+kinfocenter
+breeze
+breeze-gtk-theme
+breeze-icon-theme
+breeze-cursor-theme
+kde-config-gtk-style
+kde-cli-tools
+
+# Native Plasma apps and file integration
+dolphin
+kio-extras
+ark
+konsole
+kcalc
+partitionmanager
+print-manager
+bluedevil
+desktop-file-utils
+shared-mime-info
+xdg-user-dirs
+xdg-utils
+
+# OminX Store catalog backend: Debian packages and Flatpak
+flatpak
+plasma-discover
+plasma-discover-backend-flatpak
+packagekit
+synaptic
+
+# Audio, Bluetooth, displays and common peripherals
+pipewire
+pipewire-audio
+pipewire-pulse
+wireplumber
+pavucontrol
+bluez
+libspa-0.2-bluetooth
+cups
+ipp-usb
+simple-scan
+sane-airscan
+fwupd
+
+# Hardware enablement: open drivers, firmware, Wi-Fi and CPU microcode
+firmware-linux-nonfree
+firmware-iwlwifi
+firmware-realtek
+firmware-brcm80211
+firmware-intel-graphics
+firmware-sof-signed
+firmware-nvidia-gsp
+nvidia-detect
+intel-microcode
+amd64-microcode
+xserver-xorg-video-all
+mesa-utils
+mesa-vulkan-drivers
+mesa-va-drivers
+mesa-vdpau-drivers
+libvulkan1
+vulkan-tools
+intel-media-va-driver
+
+# Browser, office, mail, media, creative tools, and common formats
+firefox-esr
+thunderbird
+libreoffice
+libreoffice-gtk3
+vlc
+gimp
+inkscape
+deja-dup
+geany
+7zip
+unzip
+zip
+unrar-free
+fonts-noto-core
+fonts-noto-color-emoji
+fonts-liberation
+fonts-crosextra-carlito
+fonts-crosextra-caladea
+
+# File sharing, remote access, system tools, and basic security controls
+smbclient
+remmina
+gparted
+gufw
+ufw
+orca
+
+# Performance: compressed RAM and per-game performance tuning
+systemd-zram-generator
+gamemode
+
+# OminX first-run application runtime and optional Protontricks installer
+python3
+python3-gi
+gir1.2-gtk-3.0
+pipx
+python3-venv
+zenity
+curl
+wget
+git
+build-essential
