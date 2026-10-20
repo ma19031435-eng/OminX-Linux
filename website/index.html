@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OminXOS — Linux for the Common Person</title>
+  <meta name="description" content="OminXOS is a next-generation desktop operating system built on Linux foundations for everyday users, creators, gamers, students, teachers, and professionals. Your applications. Your games. Your workflow. Your control.">
+  <meta name="theme-color" content="#070f16">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="OminXOS — Linux for the Common Person">
+  <meta property="og:description" content="A next-generation desktop operating system that removes the barriers of Linux without giving up its performance, security, or flexibility.">
+  <meta property="og:image" content="og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="OminXOS — Linux for the Common Person">
+  <meta name="twitter:description" content="Your applications. Your games. Your workflow. Your control.">
+  <meta name="twitter:image" content="og-image.png">
+  <link rel="icon" href="assets/brand/favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="assets/fonts/inter-latin-var.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/jetbrains-mono-latin-var.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <script>document.documentElement.classList.replace('no-js', 'js');</script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <svg class="sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+    <symbol id="i-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"/></symbol>
+    <symbol id="i-external" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M8 7h9v9"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 5 6v5.5c0 4.2 2.9 7.6 7 9.5 4.1-1.9 7-5.3 7-9.5V6l-7-3Z"/><path d="m9 12 2.2 2.2L15.5 10"/></symbol>
+    <symbol id="i-gamepad" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 8h9a4.5 4.5 0 0 1 4.4 5.5l-.7 3.2a2.4 2.4 0 0 1-4.1 1.1L14 15.5h-4l-2.1 2.3a2.4 2.4 0 0 1-4.1-1.1l-.7-3.2A4.5 4.5 0 0 1 7.5 8Z"/><path d="M8 11v3M6.5 12.5h3M15.5 11.5h.01M17.5 13.5h.01"/></symbol>
+    <symbol id="i-monitor" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="12.5" rx="2"/><path d="M9 21h6M12 17v4"/></symbol>
+    <symbol id="i-package" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4.5 7v10L12 21l7.5-4V7L12 3Z"/><path d="M4.5 7 12 11l7.5-4M12 11v10M8 5l7.5 4"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 0 0-13.7-5.7L4 8.5M4 4v4.5h4.5M4 12a8 8 0 0 0 13.7 5.7L20 15.5M20 20v-4.5h-4.5"/></symbol>
+    <symbol id="i-graduation" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m2.5 9 9.5-5 9.5 5-9.5 5-9.5-5Z"/><path d="M6 11v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5M21.5 9v5"/></symbol>
+    <symbol id="i-sparkle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c.6 5 4 8.4 9 9-5 .6-8.4 4-9 9-.6-5-4-8.4-9-9 5-.6 8.4-4 9-9Z"/><path d="M19 3.5v3M17.5 5h3"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2.5"/><path d="M8 10V7.5a4 4 0 0 1 8 0V10M12 14.5v2.5"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.3 3.1-5.5 7-5.5s7 2.2 7 5.5"/></symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5M3 16l9 5 9-5"/></symbol>
+    <symbol id="i-cpu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6.5" y="6.5" width="11" height="11" rx="2"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/><path d="M9 3v3.5M15 3v3.5M9 17.5V21M15 17.5V21M3 9h3.5M3 15h3.5M17.5 9H21M17.5 15H21"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></symbol>
+    <symbol id="i-sliders" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h9M17 7h3M4 17h4M12 17h8"/><circle cx="15" cy="7" r="2.2"/><circle cx="9.5" cy="17" r="2.2"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.5h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2v-10Z"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.2 2.3 3.4 5.3 3.4 8.5s-1.2 6.2-3.4 8.5c-2.2-2.3-3.4-5.3-3.4-8.5s1.2-6.2 3.4-8.5Z"/></symbol>
+    <symbol id="i-bag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 8h13l1 12h-15l1-12Z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></symbol>
+    <symbol id="i-doc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5h7l5 5v12H6v-17Z"/><path d="M13 3.5v5h5M9 13h6M9 16.5h6"/></symbol>
+    <symbol id="i-sheet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 10h16M4 15h16M10 4v16M15.5 4v16"/></symbol>
+    <symbol id="i-slides" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="12" rx="2"/><path d="M8 12.5 10.5 10l2.5 2 3.5-3.5M12 16.5V21M8 21h8"/></symbol>
+    <symbol id="i-draw" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m4 20 1-4.5L16.5 4a2.1 2.1 0 0 1 3 3L8 18.5 4 20Z"/><path d="m14.5 6 3.5 3.5"/></symbol>
+    <symbol id="i-math" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 5H7l6 7-6 7h11"/></symbol>
+    <symbol id="i-db" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6.5" rx="7" ry="3"/><path d="M5 6.5v11c0 1.7 3.1 3 7 3s7-1.3 7-3v-11M5 12c0 1.7 3.1 3 7 3s7-1.3 7-3"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-power" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v8"/><path d="M6.4 6.4a8 8 0 1 0 11.2 0"/></symbol>
+    <symbol id="i-keyboard" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="19" height="12" rx="2"/><path d="M6.5 10h2M11 10h2M15.5 10h2M8 14h8"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5.5M12 7.8h.01"/></symbol>
+    <symbol id="i-wifi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 9.5a13 13 0 0 1 17 0M6.5 13a8.5 8.5 0 0 1 11 0M9.5 16.5a4 4 0 0 1 5 0"/><circle cx="12" cy="20" r="1" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-volume" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3L12 5v14l-5-4.5H4v-5Z"/><path d="M16 9a4.5 4.5 0 0 1 0 6"/></symbol>
+    <symbol id="i-battery" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="8" width="17" height="8" rx="2"/><path d="M22 11.5v1M5.5 11v2"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></symbol>
+    <symbol id="i-exe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5h7l5 5v12H6v-17Z"/><path d="M13 3.5v5h5M9.5 13l5 5M14.5 13l-5 5"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5.5v13l11-6.5-11-6.5Z"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></symbol>
+  </svg>
+
+  <header class="site-header" id="site-header">
+    <div class="container header__inner">
+      <a class="brand" href="#overview" aria-label="OminXOS — back to top">
+        <img class="brand__icon" src="assets/brand/ominx-icon.svg" alt="" width="32" height="32">
+        <span class="brand__name">OminX<span>OS</span></span>
+        <span class="brand__tag">Aurora</span>
+      </a>
+
+      <nav class="site-nav" id="site-nav" aria-label="Primary">
+        <a href="#overview">Overview</a>
+        <a href="#compatibility">Compatibility</a>
+        <a href="#gaming">Gaming</a>
+        <a href="#desktop">Desktop</a>
+        <a href="#software">Software</a>
+        <a href="#education">Education</a>
+        <a href="#release">Release</a>
+      </nav>
+
+      <div class="header__actions">
+        <a class="btn btn--small btn--primary header__cta" href="#release">
+          Release 1.0
+          <svg class="icon" aria-hidden="true"><use href="#i-arrow"></use></svg>
+        </a>
+        <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Open navigation">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero" id="overview">
+      <div class="hero__backdrop" aria-hidden="true"></div>
+      <div class="container hero__inner">
+        <div class="hero__copy">
+          <p class="eyebrow hero__eyebrow" data-reveal>
+            <span class="eyebrow__dot"></span>
+            Desktop Linux, designed around people
+          </p>
+          <h1 class="hero__title" data-reveal style="--d:60ms">
+            Linux for the<br><span class="text-grad">Common Person.</span>
+          </h1>
+          <p class="hero__lead" data-reveal style="--d:120ms">
+            OminXOS is a next-generation desktop operating system built for everyday users, creators, gamers, students, teachers, and professionals. It removes the barriers that have kept people away from Linux, without giving up its performance, security, or flexibility.
+          </p>
+          <div class="hero__actions" data-reveal style="--d:180ms">
+            <a class="btn btn--primary" href="#why">
+              Explore OminXOS 1.0
+              <svg class="icon" aria-hidden="true"><use href="#i-arrow"></use></svg>
+            </a>
+            <a class="btn btn--ghost" href="#why">Read the vision</a>
+          </div>
+          <ul class="hero__proof" data-reveal style="--d:240ms">
+            <li><svg class="icon" aria-hidden="true"><use href="#i-check"></use></svg>No terminal required</li>
+            <li><svg class="icon" aria-hidden="true"><use href="#i-check"></use></svg>Updates on your schedule</li>
+            <li><svg class="icon" aria-hidden="true"><use href="#i-check"></use></svg>Windows app support built in</li>
+          </ul>
+        </div>
+
+        <div class="hero__visual" data-reveal style="--d:160ms">
+          <div class="os-preview" data-tilt>
+            <div class="os-preview__frame" role="img" aria-label="Illustration of the OminXOS Aurora desktop with an application store, a translucent panel, a dock, and a Windows installer notification">
+              <div class="os-preview__screen">
+                <div class="mock-panel">
+                  <span class="mock-panel__brand"><span class="mock-mark"></span>OminXOS</span>
+                  <span class="mock-panel__menu"><span>Launcher</span><span>Store</span><span>Files</span></span>
+                  <span class="mock-panel__right">
+                    <svg class="icon" aria-hidden="true"><use href="#i-wifi"></use></svg>
+                    <svg class="icon" aria-hidden="true"><use href="#i-volume"></use></svg>
+                    <svg class="icon" aria-hidden="true"><use href="#i-battery"></use></svg>
+                    <span class="mock-clock">20:26</span>
+                  </span>
+                </div>
+
+                <div class="mock-window">
+                  <div class="mock-window__bar">
+                    <span class="mock-dots"><i></i><i></i><i></i></span>
+                    <span class="mock-window__title">OminX Store</span>
+                    <span class="mock-window__tag">Library</span>
+                  </div>
+                  <div class="mock-window__body">
+                    <div class="mock-search">
+                      <svg class="icon" aria-hidden="true"><use href="#i-search"></use></svg>
+                      <span>Search applications, games, and sources</span>
+                      <span class="mock-key">Ctrl K</span>
+                    </div>
+                    <div class="mock-chips">
+                      <span class="is-active">Featured</span>
+                      <span>Applications</span>
+                      <span>Games</span>
+                      <span>Updates</span>
+                      <span>Library</span>
+                    </div>
+                    <div class="mock-grid">
+                      <div class="mock-app">
+                        <span class="mock-app__icon mock-app__icon--a"><svg class="icon" aria-hidden="true"><use href="#i-doc"></use></svg></span>
+                        <span class="mock-app__name">LibreOffice Writer</span>
+                        <span class="mock-app__meta">Productivity</span>
+                        <span class="mock-app__badge">Open</span>
+                      </div>
+                      <div class="mock-app">
+                        <span class="mock-app__icon mock-app__icon--b"><svg class="icon" aria-hidden="true"><use href="#i-gamepad"></use></svg></span>
+                        <span class="mock-app__name">Steam</span>
+                        <span class="mock-app__meta">Games</span>
+                        <span class="mock-app__badge">Open</span>
+                      </div>
+                      <div class="mock-app">
+                        <span class="mock-app__icon mock-app__icon--c"><svg class="icon" aria-hidden="true"><use href="#i-globe"></use></svg></span>
+                        <span class="mock-app__name">Firefox</span>
+                        <span class="mock-app__meta">Web</span>
+                        <span class="mock-app__badge">Open</span>
+                      </div>
+                      <div class="mock-app">
+                        <span class="mock-app__icon mock-app__icon--d"><svg class="icon" aria-hidden="true"><use href="#i-draw"></use></svg></span>
+                        <span class="mock-app__name">GIMP</span>
+                        <span class="mock-app__meta">Creativity</span>
+                        <span class="mock-app__badge">Install</span>
+                      </div>
+                      <div class="mock-app">
+                        <span class="mock-app__icon mock-app__icon--e"><svg class="icon" aria-hidden="true"><use href="#i-sheet"></use></svg></span>
+                        <span class="mock-app__name">LibreOffice Calc</span>
+                        <span class="mock-app__meta">Productivity</span>
+                        <span class="mock-app__badge">Open</span>
+                      </div>
+                      <div class="mock-app">
+                        <span class="mock-app__icon mock-app__icon--f"><svg class="icon" aria-hidden="true"><use href="#i-play"></use></svg></span>
+                        <span class="mock-app__name">VLC</span>
+                        <span class="mock-app__meta">Media</span>
+                        <span class="mock-app__badge">Open</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mock-toast">
+                  <span class="mock-toast__icon"><svg class="icon" aria-hidden="true"><use href="#i-exe"></use></svg></span>
+                  <span class="mock-toast__text"><strong>setup.exe</strong><span>Opening with Windows App Support</span></span>
+                  <svg class="icon mock-toast__check" aria-hidden="true"><use href="#i-check"></use></svg>
+                </div>
+
+                <div class="mock-dock">
+                  <span class="mock-dock__item mock-dock__item--launcher"><svg class="icon" aria-hidden="true"><use href="#i-grid"></use></svg></span>
+                  <span class="mock-dock__item mock-dock__item--store"><svg class="icon" aria-hidden="true"><use href="#i-bag"></use></svg></span>
+                  <span class="mock-dock__item mock-dock__item--files"><svg class="icon" aria-hidden="true"><use href="#i-folder"></use></svg></span>
+                  <span class="mock-dock__item mock-dock__item--web"><svg class="icon" aria-hidden="true"><use href="#i-globe"></use></svg></span>
+                  <span class="mock-dock__item mock-dock__item--games is-running"><svg class="icon" aria-hidden="true"><use href="#i-gamepad"></use></svg></span>
+                  <span class="mock-dock__item mock-dock__item--settings"><svg class="icon" aria-hidden="true"><use href="#i-sliders"></use></svg></span>
+                </div>
+              </div>
+            </div>
+            <p class="os-preview__caption"><span>Illustration of the Aurora desktop</span><span>Original OminX artwork</span></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="stat-band" aria-label="OminXOS at a glance">
+      <div class="container stat-band__inner">
+        <div class="stat">
+          <span class="stat__value"><span data-count="89">89</span><i>%</i></span>
+          <span class="stat__label">Windows compatibility testing target</span>
+        </div>
+        <div class="stat">
+          <span class="stat__value">Native <i>Vulkan</i></span>
+          <span class="stat__label">Graphics stack built for gaming</span>
+        </div>
+        <div class="stat">
+          <span class="stat__value">GUI<i>-first</i></span>
+          <span class="stat__label">Normal desktop use needs no terminal</span>
+        </div>
+        <div class="stat">
+          <span class="stat__value"><i>1.0</i></span>
+          <span class="stat__label">First release, closed source</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="why">
+      <div class="container">
+        <div class="vision__grid">
+          <div class="vision__intro" data-reveal>
+            <p class="eyebrow"><span class="eyebrow__num">01</span><span class="eyebrow__dot"></span>The OminXOS vision</p>
+            <h2 class="h2">Most systems ask you to adapt. <span class="text-grad">OminXOS adapts to you.</span></h2>
+            <p class="lead">Every decision is evaluated from the perspective of real users, not system administrators. The desktop stays quiet, keeps your workflow familiar, and lets you focus on what you came to do.</p>
+            <a class="link-arrow" href="#foundation">See the architecture <svg class="icon" aria-hidden="true"><use href="#i-arrow"></use></svg></a>
+          </div>
+
+          <div class="principles">
+            <article class="principle" data-reveal style="--d:0ms">
+              <span class="principle__icon"><svg class="icon" aria-hidden="true"><use href="#i-user"></use></svg></span>
+              <h3>User first</h3>
+              <p>Every design decision is evaluated from the perspective of real users, not system administrators.</p>
+            </article>
+            <article class="principle" data-reveal style="--d:80ms">
+              <span class="principle__icon"><svg class="icon" aria-hidden="true"><use href="#i-monitor"></use></svg></span>
+              <h3>GUI first</h3>
+              <p>Normal desktop usage never requires a terminal. The power is there when you want it, not when you need it.</p>
+            </article>
+            <article class="principle" data-reveal style="--d:160ms">
+              <span class="principle__icon"><svg class="icon" aria-hidden="true"><use href="#i-layers"></use></svg></span>
+              <h3>Familiar, not imitative</h3>
+              <p>A familiar workflow for people moving from Windows, without becoming a Windows clone.</p>
+            </article>
+            <article class="principle" data-reveal style="--d:240ms">
+              <span class="principle__icon"><svg class="icon" aria-hidden="true"><use href="#i-sparkle"></use></svg></span>
+              <h3>Productivity over complexity</h3>
+              <p>Technology should disappear into the background and let people focus on their work.</p>
+            </article>
+          </div>
+        </div>
+
+        <div class="foundation" id="foundation" data-reveal>
+          <div class="foundation__head">
+            <p class="eyebrow">Independent foundation</p>
+            <h3>An architecture of its own.</h3>
+            <p>Unlike desktop distributions that are heavily derived from Ubuntu or Debian, OminXOS is built around its own architecture.</p>
+          </div>
+          <ul class="foundation__list">
+            <li>
+              <span class="foundation__icon"><svg class="icon" aria-hidden="true"><use href="#i-layers"></use></svg></span>
+              <strong>Linux-based foundation</strong>
+              <span>The stability, hardware support, and security of Linux.</span>
+            </li>
+            <li>
+              <span class="foundation__icon"><svg class="icon" aria-hidden="true"><use href="#i-cpu"></use></svg></span>
+              <strong>Custom system architecture</strong>
+              <span>A platform designed as a coherent whole, not a collection of defaults.</span>
+            </li>
+            <li>
+              <span class="foundation__icon"><svg class="icon" aria-hidden="true"><use href="#i-db"></use></svg></span>
+              <strong>Custom filesystem technology</strong>
+              <span>Storage behavior tuned for everyday desktop use.</span>
+            </li>
+            <li>
+              <span class="foundation__icon"><svg class="icon" aria-hidden="true"><use href="#i-monitor"></use></svg></span>
+              <strong>Custom desktop integration</strong>
+              <span>Applications, settings, and the shell share one experience.</span>
+            </li>
+            <li>
+              <span class="foundation__icon"><svg class="icon" aria-hidden="true"><use href="#i-package"></use></svg></span>
+              <strong>Purpose-built compatibility</strong>
+              <span>Windows support designed into the system, not added on.</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section--alt" id="compatibility">
+      <div class="container">
+        <div class="split">
+          <div class="split__copy" data-reveal>
+            <p class="eyebrow"><span class="eyebrow__num">02</span><span class="eyebrow__dot"></span>Windows application compatibility</p>
+            <h2 class="h2">Your Windows software, <span class="text-grad">without the research.</span></h2>
+            <p class="lead">Launch <strong>.exe</strong> applications and <strong>.msi</strong> installers the way you always have. The compatibility layer is part of the operating system, so you spend your time using software instead of configuring tools.</p>
+
+            <ol class="steps">
+              <li>
+                <span class="steps__num">01</span>
+                <div>
+                  <strong>Open the installer</strong>
+                  <p>Double-click an .exe or .msi file, or launch it from the file manager.</p>
+                </div>
+              </li>
+              <li>
+                <span class="steps__num">02</span>
+                <div>
+                  <strong>Let OminXOS configure it</strong>
+                  <p>The integrated compatibility environment is prepared automatically for your user account.</p>
+                </div>
+              </li>
+              <li>
+                <span class="steps__num">03</span>
+                <div>
+                  <strong>Use your application</strong>
+                  <p>Applications open from the desktop, launcher, or file manager like any native app.</p>
+                </div>
+              </li>
+            </ol>
+
+            <div class="callout">
+              <strong><span data-count="89">89</span>%</strong>
+              <span>Windows application compatibility<br><small>Current testing target, not a guarantee</small></span>
+            </div>
+          </div>
+
+          <div class="split__visual" data-reveal style="--d:100ms">
+            <div class="panel compat-panel" aria-hidden="true">
+              <div class="panel__bar">
+                <span class="panel__title"><span class="panel__icon"><svg class="icon"><use href="#i-shield"></use></svg></span>Windows App Support</span>
+                <span class="status-pill status-pill--teal"><i></i>Ready</span>
+              </div>
+              <div class="compat-file">
+                <span class="compat-file__icon"><svg class="icon"><use href="#i-exe"></use></svg></span>
+                <span class="compat-file__name"><strong>setup.exe</strong><span>Windows installer · 64-bit</span></span>
+                <span class="compat-file__action">Open</span>
+              </div>
+              <div class="compat-rows">
+                <div><span>Support layer</span><span class="is-ok">Integrated</span></div>
+                <div><span>User setup required</span><span class="is-ok">None</span></div>
+                <div><span>Application type</span><span>EXE / MSI</span></div>
+              </div>
+              <div class="compat-meter">
+                <div class="compat-meter__head"><span>Application compatibility</span><strong>89%</strong></div>
+                <div class="meter"><span></span></div>
+                <div class="compat-meter__foot">Testing target, reviewed continuously</div>
+              </div>
+            </div>
+            <p class="figure-caption">Illustration of Windows App Support</p>
+          </div>
+        </div>
+
+        <div class="boundaries">
+          <article class="boundary" data-reveal>
+            <div class="boundary__head">
+              <span class="boundary__icon boundary__icon--ok"><svg class="icon" aria-hidden="true"><use href="#i-check"></use></svg></span>
+              <h3>A strong fit for the layer</h3>
+            </div>
+            <ul class="check-list">
+              <li>Everyday productivity software</li>
+              <li>Office and creative applications</li>
+              <li>Many games and game launchers</li>
+              <li>Older business and utility software</li>
+            </ul>
+          </article>
+          <article class="boundary" data-reveal style="--d:80ms">
+            <div class="boundary__head">
+              <span class="boundary__icon boundary__icon--stop"><svg class="icon" aria-hidden="true"><use href="#i-info"></use></svg></span>
+              <h3>Where compatibility stops</h3>
+            </div>
+            <ul class="stop-list">
+              <li>Windows kernel drivers</li>
+              <li>Windows Store and UWP applications</li>
+              <li>Some DRM-protected software</li>
+              <li>Games whose anti-cheat blocks Linux</li>
+            </ul>
+          </article>
+        </div>
+
+        <p class="note" data-reveal>No compatibility layer can run every Windows application. Check a specific title before you rely on it at <a href="https://www.protondb.com/" rel="noopener">ProtonDB</a> or the <a href="https://appdb.winehq.org/" rel="noopener">Wine AppDB</a>.</p>
+      </div>
+    </section>
+
+    <section class="section" id="gaming">
+      <div class="container">
+        <div class="section-head section-head--wide" data-reveal>
+          <p class="eyebrow"><span class="eyebrow__num">03</span><span class="eyebrow__dot"></span>Gaming platform</p>
+          <h2 class="h2">Gaming is a first-class workload. <span class="text-grad">Not an afterthought.</span></h2>
+          <p class="lead">OminXOS is designed with gaming as a first-class workload: native Vulkan integration, a DirectX compatibility focus, optimized rendering pathways, and modern GPU acceleration.</p>
+        </div>
+
+        <div class="gaming__grid">
+          <div class="feature-list" data-reveal>
+            <article class="feature-row">
+              <span class="feature-row__icon"><svg class="icon" aria-hidden="true"><use href="#i-gamepad"></use></svg></span>
+              <div><h3>Native Vulkan integration</h3><p>Modern graphics APIs are part of the platform, with drivers and libraries included from the start.</p></div>
+            </article>
+            <article class="feature-row">
+              <span class="feature-row__icon"><svg class="icon" aria-hidden="true"><use href="#i-layers"></use></svg></span>
+              <div><h3>DirectX compatibility focus</h3><p>A compatibility pathway for DirectX titles, built around Proton and Wine.</p></div>
+            </article>
+            <article class="feature-row">
+              <span class="feature-row__icon"><svg class="icon" aria-hidden="true"><use href="#i-sparkle"></use></svg></span>
+              <div><h3>Optimized rendering pathways</h3><p>A graphics stack tuned for consistent frame delivery and responsive input.</p></div>
+            </article>
+            <article class="feature-row">
+              <span class="feature-row__icon"><svg class="icon" aria-hidden="true"><use href="#i-cpu"></use></svg></span>
+              <div><h3>Modern GPU acceleration</h3><p>Support for current-generation graphics hardware, with 32-bit libraries included.</p></div>
+            </article>
+          </div>
+
+          <div class="split__visual" data-reveal style="--d:100ms">
+            <div class="panel readiness-panel" aria-hidden="true">
+              <div class="panel__bar">
+                <span class="panel__title"><span class="panel__icon"><svg class="icon"><use href="#i-monitor"></use></svg></span>Gaming readiness</span>
+                <span class="status-pill status-pill--teal"><i></i>Out of the box</span>
+              </div>
+              <ul class="ready-rows">
+                <li><span><svg class="icon"><use href="#i-check"></use></svg>Steam and Proton support</span><span>Included</span></li>
+                <li><span><svg class="icon"><use href="#i-check"></use></svg>32-bit graphics and audio libraries</span><span>Included</span></li>
+                <li><span><svg class="icon"><use href="#i-check"></use></svg>Vulkan and Mesa drivers</span><span>Included</span></li>
+                <li><span><svg class="icon"><use href="#i-check"></use></svg>Feral GameMode</span><span>Included</span></li>
+                <li><span><svg class="icon"><use href="#i-check"></use></svg>Controller support</span><span>Ready</span></li>
+              </ul>
+              <div class="readiness-panel__foot">
+                <span>Graphics profile</span>
+                <strong>Automatic</strong>
+              </div>
+            </div>
+            <p class="figure-caption">What ships with the image</p>
+          </div>
+        </div>
+
+        <div class="gaming-steps">
+          <article class="gaming-step" data-reveal>
+            <span class="gaming-step__num">01</span>
+            <h3>Install</h3>
+            <p>Install games in one click through Steam or Lutris, without leaving the desktop.</p>
+          </article>
+          <article class="gaming-step" data-reveal style="--d:80ms">
+            <span class="gaming-step__num">02</span>
+            <h3>Configure</h3>
+            <p>Sensible graphics profiles are applied for your hardware, with tuning available when you want it.</p>
+          </article>
+          <article class="gaming-step" data-reveal style="--d:160ms">
+            <span class="gaming-step__num">03</span>
+            <h3>Play</h3>
+            <p>Drivers, libraries, and compatibility tools are in place before you start.</p>
+          </article>
+        </div>
+
+        <p class="note" data-reveal>Results depend on the title, hardware, drivers, thermals, and anti-cheat support. The Proton runtime is downloaded by Steam after sign-in; it is not bundled in the image.</p>
+      </div>
+    </section>
+
+    <section class="section section--alt" id="desktop">
+      <div class="container">
+        <div class="desktop-grid">
+          <div class="desktop-copy">
+            <div class="section-head" data-reveal>
+              <p class="eyebrow"><span class="eyebrow__num">04</span><span class="eyebrow__dot"></span>Desktop environment</p>
+              <h2 class="h2">A desktop that feels <span class="text-grad">familiar on day one.</span></h2>
+              <p class="lead">A clean launcher, a modern dock, and settings that make sense. OminXOS keeps the workflow people already know while giving it a visual language of its own.</p>
+            </div>
+
+            <div class="mini-grid">
+              <article class="mini-card" data-reveal>
+                <span class="mini-card__icon"><svg class="icon" aria-hidden="true"><use href="#i-grid"></use></svg></span>
+                <h3>Clean launcher</h3>
+                <p>Find applications, files, and settings from one place, with search built in.</p>
+              </article>
+              <article class="mini-card" data-reveal style="--d:60ms">
+                <span class="mini-card__icon"><svg class="icon" aria-hidden="true"><use href="#i-monitor"></use></svg></span>
+                <h3>Modern dock</h3>
+                <p>Keep the applications you use close at hand without a crowded screen.</p>
+              </article>
+              <article class="mini-card" data-reveal style="--d:120ms">
+                <span class="mini-card__icon"><svg class="icon" aria-hidden="true"><use href="#i-sliders"></use></svg></span>
+                <h3>Intuitive settings</h3>
+                <p>Workspace, devices, connectivity, appearance, gaming, and security in one clear place.</p>
+              </article>
+              <article class="mini-card" data-reveal style="--d:180ms">
+                <span class="mini-card__icon"><svg class="icon" aria-hidden="true"><use href="#i-layers"></use></svg></span>
+                <h3>Unified experience</h3>
+                <p>The shell, built-in applications, and artwork share one design system.</p>
+              </article>
+            </div>
+
+            <div class="login-features" data-reveal>
+              <p class="eyebrow">Login experience</p>
+              <ul class="pill-list">
+                <li>Secure authentication</li>
+                <li>Password masking</li>
+                <li>Session selection</li>
+                <li>Power controls</li>
+                <li>Clear feedback</li>
+              </ul>
+            </div>
+
+            <div class="shortcut-card" data-reveal>
+              <div class="shortcut-card__head">
+                <svg class="icon" aria-hidden="true"><use href="#i-keyboard"></use></svg>
+                <span>Keyboard, not command line</span>
+              </div>
+              <div class="shortcut-row">
+                <span><kbd>Meta</kbd> Open the launcher</span>
+                <span><kbd>Alt</kbd><i>+</i><kbd>Space</kbd> Search applications</span>
+              </div>
+              <p>Normal desktop use never requires a terminal.</p>
+            </div>
+          </div>
+
+          <div class="desktop-mock" data-reveal style="--d:120ms">
+            <div class="login-mock" aria-hidden="true">
+              <div class="login-screen">
+                <div class="login-card">
+                  <div class="login-brand">
+                    <img src="assets/brand/ominx-icon.svg" alt="" width="20" height="20">
+                    <span>OminX<span>OS</span></span>
+                  </div>
+                  <div class="login-avatar">AM</div>
+                  <p class="login-name">Alex Morgan</p>
+                  <p class="login-sub">Enter your password to unlock</p>
+                  <div class="login-field">
+                    <span>••••••••</span>
+                    <svg class="icon"><use href="#i-eye"></use></svg>
+                  </div>
+                  <div class="login-session">
+                    <span><svg class="icon"><use href="#i-layers"></use></svg>Session</span>
+                    <strong>OminXOS Aurora</strong>
+                    <svg class="icon login-session__chevron"><use href="#i-chevron"></use></svg>
+                  </div>
+                  <div class="login-btn">Sign in</div>
+                  <div class="login-footer">
+                    <span><svg class="icon"><use href="#i-refresh"></use></svg>Restart</span>
+                    <span><svg class="icon"><use href="#i-power"></use></svg>Shut down</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <p class="figure-caption">Illustration of the OminXOS login experience</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="software">
+      <div class="container">
+        <div class="section-head" data-reveal>
+          <p class="eyebrow"><span class="eyebrow__num">05</span><span class="eyebrow__dot"></span>Software installation</p>
+          <h2 class="h2">Install software <span class="text-grad">without research.</span></h2>
+          <p class="lead">Applications install through graphical tools, not command-line instructions. OminXOS connects native packages, established Linux ecosystems, and Windows software in one place.</p>
+        </div>
+
+        <div class="sources">
+          <article class="source" data-reveal>
+            <span class="source__num">01</span>
+            <span class="source__icon"><svg class="icon" aria-hidden="true"><use href="#i-bag"></use></svg></span>
+            <h3>Native OminX packages</h3>
+            <p>A curated catalog of applications prepared for the OminXOS desktop and its design language.</p>
+          </article>
+          <article class="source" data-reveal style="--d:80ms">
+            <span class="source__num">02</span>
+            <span class="source__icon"><svg class="icon" aria-hidden="true"><use href="#i-package"></use></svg></span>
+            <h3>External ecosystems</h3>
+            <p>Access to the broader Linux software library through integrated package sources, including Flathub.</p>
+          </article>
+          <article class="source" data-reveal style="--d:160ms">
+            <span class="source__num">03</span>
+            <span class="source__icon"><svg class="icon" aria-hidden="true"><use href="#i-exe"></use></svg></span>
+            <h3>Windows software</h3>
+            <p>Install .exe and .msi applications through the same compatibility layer as the rest of the system.</p>
+          </article>
+        </div>
+
+        <div class="libreoffice" data-reveal>
+          <div class="libreoffice__head">
+            <span class="icon-tile"><svg class="icon" aria-hidden="true"><use href="#i-doc"></use></svg></span>
+            <div>
+              <p class="eyebrow">Productivity, included</p>
+              <h3>LibreOffice, integrated from the start.</h3>
+              <p>A complete office suite is part of the system, with OminXOS styling and file compatibility for school, home, and work.</p>
+            </div>
+            <span class="pill">Six applications</span>
+          </div>
+          <div class="libreoffice__grid">
+            <article class="office-app">
+              <span class="office-app__icon"><svg class="icon" aria-hidden="true"><use href="#i-doc"></use></svg></span>
+              <h4>Writer</h4>
+              <p>Professional documents, reports, and everyday writing.</p>
+            </article>
+            <article class="office-app">
+              <span class="office-app__icon"><svg class="icon" aria-hidden="true"><use href="#i-sheet"></use></svg></span>
+              <h4>Calc</h4>
+              <p>Spreadsheets, accounting, budgets, analytics, and data processing.</p>
+            </article>
+            <article class="office-app">
+              <span class="office-app__icon"><svg class="icon" aria-hidden="true"><use href="#i-slides"></use></svg></span>
+              <h4>Impress</h4>
+              <p>Presentations, classroom material, and visual storytelling.</p>
+            </article>
+            <article class="office-app">
+              <span class="office-app__icon"><svg class="icon" aria-hidden="true"><use href="#i-draw"></use></svg></span>
+              <h4>Draw</h4>
+              <p>Diagrams, illustrations, and graphical work.</p>
+            </article>
+            <article class="office-app">
+              <span class="office-app__icon"><svg class="icon" aria-hidden="true"><use href="#i-math"></use></svg></span>
+              <h4>Math</h4>
+              <p>Mathematical formulas and notation.</p>
+            </article>
+            <article class="office-app">
+              <span class="office-app__icon"><svg class="icon" aria-hidden="true"><use href="#i-db"></use></svg></span>
+              <h4>Base</h4>
+              <p>Databases and structured information.</p>
+            </article>
+          </div>
+        </div>
+
+        <div class="app-strip" data-reveal>
+          <span class="app-strip__label"><svg class="icon" aria-hidden="true"><use href="#i-package"></use></svg>Also included</span>
+          <ul>
+            <li>Firefox ESR</li>
+            <li>Thunderbird</li>
+            <li>VLC</li>
+            <li>GIMP</li>
+            <li>Inkscape</li>
+            <li>Dolphin</li>
+            <li>Discover</li>
+            <li>KDE System Settings</li>
+            <li>Plasma System Monitor</li>
+            <li>Orca screen reader</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section--alt" id="updates">
+      <div class="container">
+        <div class="split">
+          <div class="split__copy" data-reveal>
+            <p class="eyebrow"><span class="eyebrow__num">06</span><span class="eyebrow__dot"></span>Update system</p>
+            <h2 class="h2">Your computer updates <span class="text-grad">when you choose.</span></h2>
+            <p class="lead">OminXOS respects user decisions. Schedule updates around your work, keep control of restarts, and always know what is changing. Your computer updates when you choose, not when the operating system decides.</p>
+
+            <div class="four-grid">
+              <article class="micro-card">
+                <span class="micro-card__icon"><svg class="icon" aria-hidden="true"><use href="#i-calendar"></use></svg></span>
+                <h3>You set the schedule</h3>
+                <p>Choose when security and feature updates are installed.</p>
+              </article>
+              <article class="micro-card">
+                <span class="micro-card__icon"><svg class="icon" aria-hidden="true"><use href="#i-monitor"></use></svg></span>
+                <h3>No forced interruptions</h3>
+                <p>Updates do not take over your desktop while you are working.</p>
+              </article>
+              <article class="micro-card">
+                <span class="micro-card__icon"><svg class="icon" aria-hidden="true"><use href="#i-power"></use></svg></span>
+                <h3>No unexpected restarts</h3>
+                <p>A restart happens only when you approve it.</p>
+              </article>
+              <article class="micro-card">
+                <span class="micro-card__icon"><svg class="icon" aria-hidden="true"><use href="#i-info"></use></svg></span>
+                <h3>Clear behavior</h3>
+                <p>Update status and history stay visible in one place.</p>
+              </article>
+            </div>
+          </div>
+
+          <div class="split__visual" data-reveal style="--d:100ms">
+            <div class="panel update-panel" aria-hidden="true">
+              <div class="panel__bar">
+                <span class="panel__title"><span class="panel__icon"><svg class="icon"><use href="#i-refresh"></use></svg></span>Update schedule</span>
+                <span class="status-pill status-pill--violet"><i></i>You decide</span>
+              </div>
+              <div class="schedule">
+                <div class="schedule__row">
+                  <span class="schedule__icon"><svg class="icon"><use href="#i-shield"></use></svg></span>
+                  <span class="schedule__text"><strong>Security updates</strong><span>Installed quietly in the background</span></span>
+                  <span class="schedule__time">Tuesday · 21:00</span>
+                </div>
+                <div class="schedule__row">
+                  <span class="schedule__icon"><svg class="icon"><use href="#i-package"></use></svg></span>
+                  <span class="schedule__text"><strong>Feature releases</strong><span>Waiting for your approval</span></span>
+                  <span class="schedule__time">Manual</span>
+                </div>
+                <div class="schedule__row">
+                  <span class="schedule__icon"><svg class="icon"><use href="#i-power"></use></svg></span>
+                  <span class="schedule__text"><strong>Restart</strong><span>Only when you approve it</span></span>
+                  <span class="schedule__time">Never automatic</span>
+                </div>
+              </div>
+              <div class="toggle-row">
+                <span class="toggle-row__text"><strong>Automatic restarts</strong><span>OminXOS will never restart on its own</span></span>
+                <span class="switch"><i></i></span>
+              </div>
+              <div class="panel__note"><svg class="icon"><use href="#i-info"></use></svg>Updates wait for you. There are no forced interruptions.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="education">
+      <div class="container">
+        <div class="section-head" data-reveal>
+          <p class="eyebrow"><span class="eyebrow__num">07</span><span class="eyebrow__dot"></span>Education and creation</p>
+          <h2 class="h2">Ready for the classroom. <span class="text-grad">Ready for the studio.</span></h2>
+          <p class="lead">OminXOS is developed with education in mind and equipped for creative and professional work, from first lesson to finished project.</p>
+        </div>
+
+        <div class="audience-grid">
+          <article class="audience" data-reveal>
+            <div class="audience__head">
+              <span class="icon-tile"><svg class="icon" aria-hidden="true"><use href="#i-graduation"></use></svg></span>
+              <div>
+                <p class="eyebrow">Education ready</p>
+                <h3>Built for learning.</h3>
+              </div>
+            </div>
+            <p class="audience__lead">Fast startup, a low learning curve, and familiar workflows make OminXOS easy for students and teachers to pick up.</p>
+            <ul class="check-grid">
+              <li>Fast startup</li>
+              <li>Low learning curve</li>
+              <li>Familiar workflows</li>
+              <li>Simple software installation</li>
+              <li>Presentation support</li>
+              <li>Document compatibility</li>
+              <li>Office productivity</li>
+              <li>Classroom usability</li>
+            </ul>
+            <div class="audience__foot">
+              <span class="pill">Student friendly</span>
+              <span class="pill">Teacher friendly</span>
+              <span class="pill">School deployment ready</span>
+            </div>
+          </article>
+
+          <article class="audience" data-reveal style="--d:100ms">
+            <div class="audience__head">
+              <span class="icon-tile icon-tile--violet"><svg class="icon" aria-hidden="true"><use href="#i-sparkle"></use></svg></span>
+              <div>
+                <p class="eyebrow">Creator ready</p>
+                <h3>Built for making.</h3>
+              </div>
+            </div>
+            <p class="audience__lead">A foundation for 3D modeling, video editing, digital art, audio production, and programming, with room for professional tools.</p>
+            <ul class="check-grid">
+              <li>3D modeling</li>
+              <li>Video editing</li>
+              <li>Digital art</li>
+              <li>Audio production</li>
+              <li>Programming</li>
+              <li>Professional workflows</li>
+            </ul>
+            <div class="audience__foot">
+              <span class="pill">Designers</span>
+              <span class="pill">Developers</span>
+              <span class="pill">Engineers</span>
+              <span class="pill">Students</span>
+              <span class="pill">Educators</span>
+            </div>
+          </article>
+        </div>
+
+        <p class="note audience-note" data-reveal>School deployment: OminXOS is designed to support large-scale educational environments while remaining easy for non-technical users.</p>
+
+        <p class="audience-line" data-reveal>One desktop for the whole day: classes, projects, games, and work.</p>
+      </div>
+    </section>
+
+    <section class="section section--alt" id="security">
+      <div class="container">
+        <div class="section-head" data-reveal>
+          <p class="eyebrow"><span class="eyebrow__num">08</span><span class="eyebrow__dot"></span>Security, privacy, and performance</p>
+          <h2 class="h2">Secure by design. <span class="text-grad">Quiet by default.</span></h2>
+          <p class="lead">Security and privacy are part of the platform architecture, not a settings page you have to find. Performance is tuned to stay out of the way.</p>
+        </div>
+
+        <div class="security-grid">
+          <article class="security-card" data-reveal>
+            <span class="security-card__icon"><svg class="icon" aria-hidden="true"><use href="#i-shield"></use></svg></span>
+            <h3>Secure by design</h3>
+            <p>Security features are incorporated throughout the platform while keeping everyday use straightforward.</p>
+          </article>
+          <article class="security-card" data-reveal style="--d:60ms">
+            <span class="security-card__icon"><svg class="icon" aria-hidden="true"><use href="#i-package"></use></svg></span>
+            <h3>Controlled compatibility</h3>
+            <p>Windows compatibility runs in a controlled environment designed to integrate safely with the system.</p>
+          </article>
+          <article class="security-card" data-reveal style="--d:120ms">
+            <span class="security-card__icon"><svg class="icon" aria-hidden="true"><use href="#i-lock"></use></svg></span>
+            <h3>Privacy focus</h3>
+            <p>You keep control of your system and your data. Nothing is designed to get in the way of that.</p>
+          </article>
+          <article class="security-card" data-reveal style="--d:180ms">
+            <span class="security-card__icon"><svg class="icon" aria-hidden="true"><use href="#i-sparkle"></use></svg></span>
+            <h3>Efficient performance</h3>
+            <p>Low overhead for startup, desktop interaction, gaming, and productivity workloads.</p>
+          </article>
+        </div>
+
+        <div class="performance" data-reveal>
+          <div class="performance__head">
+            <p class="eyebrow">Performance</p>
+            <h3>Built to disappear into the background.</h3>
+          </div>
+          <ul class="performance__list">
+            <li><svg class="icon" aria-hidden="true"><use href="#i-refresh"></use></svg>Fast startup</li>
+            <li><svg class="icon" aria-hidden="true"><use href="#i-monitor"></use></svg>Responsive desktop</li>
+            <li><svg class="icon" aria-hidden="true"><use href="#i-cpu"></use></svg>Low overhead</li>
+            <li><svg class="icon" aria-hidden="true"><use href="#i-gamepad"></use></svg>Gaming workloads</li>
+            <li><svg class="icon" aria-hidden="true"><use href="#i-doc"></use></svg>Productivity workloads</li>
+            <li><svg class="icon" aria-hidden="true"><use href="#i-layers"></use></svg>Modern hardware support</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="release">
+      <div class="container">
+        <div class="release-grid">
+          <div class="release-copy" data-reveal>
+            <p class="eyebrow"><span class="eyebrow__num">09</span><span class="eyebrow__dot"></span>Release model</p>
+            <h2 class="h2">OminXOS 1.0 is closed source. <span class="text-grad">By design.</span></h2>
+            <p class="lead">The first public release is planned as closed source. This protects the proprietary technologies developed during the platform's formative stages. Future sourcing decisions may be evaluated as OminXOS evolves.</p>
+            <p class="release-copy__note">The goal is to protect the work that makes OminXOS distinct while the platform matures, not to close off the desktop experience. The project repository remains the reference for the current build recipe and source assets.</p>
+            <a class="link-arrow" href="https://github.com/ma19031435-eng/OminX-Linux" rel="noopener">View the project repository <svg class="icon" aria-hidden="true"><use href="#i-external"></use></svg></a>
+          </div>
+
+          <aside class="protected" data-reveal style="--d:100ms" aria-label="Technologies protected by the 1.0 release model">
+            <div class="protected__head">
+              <span class="protected__icon"><svg class="icon" aria-hidden="true"><use href="#i-lock"></use></svg></span>
+              <div><p class="eyebrow">Protected technologies</p><h3>What 1.0 safeguards</h3></div>
+            </div>
+            <ul class="protected__list">
+              <li><span>01</span><div><strong>Compatibility framework</strong><p>The integrated layer that runs Windows software.</p></div></li>
+              <li><span>02</span><div><strong>Translation technology</strong><p>Core technology for application compatibility.</p></div></li>
+              <li><span>03</span><div><strong>Core intellectual property</strong><p>The platform work that makes OminXOS distinct.</p></div></li>
+              <li><span>04</span><div><strong>Platform innovations</strong><p>Proprietary systems developed for the OminXOS experience.</p></div></li>
+            </ul>
+            <p class="protected__note">Future sourcing decisions may be evaluated as the platform evolves.</p>
+          </aside>
+        </div>
+
+        <div class="roadmap" data-reveal>
+          <div class="roadmap__head">
+            <div>
+              <p class="eyebrow">Release plan</p>
+              <h3>From foundation to 1.0</h3>
+            </div>
+            <p class="roadmap__note">Indicative phases, not a delivery commitment</p>
+          </div>
+          <div class="roadmap__grid">
+            <article class="roadmap__item">
+              <span class="roadmap__phase">Phase 01</span>
+              <span class="status-pill status-pill--teal"><i></i>In development</span>
+              <h4>Foundation</h4>
+              <p>Linux-based core, custom architecture, desktop integration, and the original Aurora design system.</p>
+            </article>
+            <article class="roadmap__item">
+              <span class="roadmap__phase">Phase 02</span>
+              <span class="status-pill status-pill--teal"><i></i>In development</span>
+              <h4>Compatibility</h4>
+              <p>Windows application framework, .exe and .msi support, and an 89% compatibility testing target.</p>
+            </article>
+            <article class="roadmap__item">
+              <span class="roadmap__phase">Phase 03</span>
+              <span class="status-pill status-pill--teal"><i></i>In development</span>
+              <h4>Gaming</h4>
+              <p>Native Vulkan stack, DirectX compatibility pathway, and one-click game setup.</p>
+            </article>
+            <article class="roadmap__item">
+              <span class="roadmap__phase">Phase 04</span>
+              <span class="status-pill status-pill--violet"><i></i>Planned</span>
+              <h4>OminXOS 1.0</h4>
+              <p>The first public release, closed source, with the compatibility framework and platform innovations protected.</p>
+            </article>
+          </div>
+        </div>
+
+        <div class="ideal" data-reveal>
+          <div class="ideal__intro">
+            <p class="eyebrow">The ideal user</p>
+            <h3>OminXOS is built for people who want to leave Windows without leaving their workflow behind.</h3>
+          </div>
+          <ul class="check-grid check-grid--two">
+            <li>Want to leave Windows</li>
+            <li>Do not want to learn terminal commands</li>
+            <li>Need familiar workflows</li>
+            <li>Want strong application compatibility</li>
+            <li>Play games</li>
+            <li>Use productivity software daily</li>
+            <li>Prefer user-controlled updates</li>
+            <li>Want a modern desktop experience</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta-section">
+      <div class="container">
+        <div class="cta" data-reveal>
+          <div class="cta__backdrop" aria-hidden="true"></div>
+          <p class="eyebrow">OminXOS 1.0 · In development</p>
+          <h2>Your applications. Your games.<br>Your workflow. <span class="text-grad">Your control.</span></h2>
+          <p class="cta__lead">Linux for the Common Person.</p>
+          <div class="hero__actions cta__actions">
+            <a class="btn btn--primary" href="https://github.com/ma19031435-eng/OminX-Linux" rel="noopener">
+              View the repository
+              <svg class="icon" aria-hidden="true"><use href="#i-external"></use></svg>
+            </a>
+            <a class="btn btn--ghost" href="https://github.com/ma19031435-eng/OminX-Linux/blob/main/docs/production-os-roadmap.md" rel="noopener">Read the technical roadmap</a>
+          </div>
+          <p class="cta__note">Compatibility figures are testing targets, not guarantees. Availability may change as the platform develops.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer__top">
+        <div class="footer__brand">
+          <a class="brand" href="#overview" aria-label="OminXOS — back to top">
+            <img class="brand__icon" src="assets/brand/ominx-icon.svg" alt="" width="32" height="32">
+            <span class="brand__name">OminX<span>OS</span></span>
+          </a>
+          <p>A next-generation desktop operating system built on Linux foundations for everyday users, creators, gamers, students, teachers, and professionals.</p>
+          <p class="footer__tagline">Linux for the Common Person.</p>
+        </div>
+
+        <nav class="footer__nav" aria-label="Footer">
+          <div>
+            <h4>Platform</h4>
+            <a href="#overview">Overview</a>
+            <a href="#compatibility">Compatibility</a>
+            <a href="#gaming">Gaming</a>
+            <a href="#desktop">Desktop</a>
+          </div>
+          <div>
+            <h4>Software</h4>
+            <a href="#software">Installation</a>
+            <a href="#updates">Updates</a>
+            <a href="#education">Education</a>
+            <a href="#security">Security</a>
+          </div>
+          <div>
+            <h4>Project</h4>
+            <a href="#release">Release 1.0</a>
+            <a href="https://github.com/ma19031435-eng/OminX-Linux" rel="noopener">Repository <svg class="icon" aria-hidden="true"><use href="#i-external"></use></svg></a>
+            <a href="https://github.com/ma19031435-eng/OminX-Linux/blob/main/docs/production-os-roadmap.md" rel="noopener">Technical roadmap <svg class="icon" aria-hidden="true"><use href="#i-external"></use></svg></a>
+            <a href="https://github.com/ma19031435-eng/OminX-Linux/blob/main/LICENSE" rel="noopener">License <svg class="icon" aria-hidden="true"><use href="#i-external"></use></svg></a>
+          </div>
+        </nav>
+      </div>
+
+      <div class="footer__bottom">
+        <p>© 2026 OminXOS. All rights reserved.</p>
+        <p>OminXOS is an independent project and is not affiliated with or endorsed by Microsoft, Valve, or Debian. Debian, KDE Plasma, and third-party software retain their own licenses and trademarks.</p>
+        <a class="footer__top-link" href="#overview">Back to top <svg class="icon" aria-hidden="true"><use href="#i-arrow"></use></svg></a>
+      </div>
+      <p class="footer__fine">Original OminX Aurora artwork. Site content describes the OminXOS 1.0 vision and current development targets; availability and compatibility may change.</p>
+    </div>
+  </footer>
+
+  <script src="assets/js/main.js" defer></script>
+</body>
+</html>
