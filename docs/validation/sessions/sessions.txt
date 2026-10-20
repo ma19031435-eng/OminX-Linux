@@ -1,0 +1,5 @@
+PASS bios-pc-256: default user, UID/GID/capabilities, runtime, device policy, protected files/disks, file operations, keyboard, exec and respawn
+PASS bios-q35-512: default user, UID/GID/capabilities, runtime, device policy, protected files/disks, file operations, keyboard, exec and respawn
+PASS uefi-q35-512: default user, UID/GID/capabilities, runtime, device policy, protected files/disks, file operations, keyboard, exec and respawn
+PASS uefi-pc-1024: default user, UID/GID/capabilities, runtime, device policy, protected files/disks, file operations, keyboard, exec and respawn
+PASS bios-usb-512: default user, UID/GID/capabilities, runtime, device policy, protected files/disks, file operations, keyboard, exec and respawn

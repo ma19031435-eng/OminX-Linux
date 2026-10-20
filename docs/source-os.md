@@ -38,6 +38,14 @@ read-only FAT32/exFAT/NTFS imports are now implemented and tested. See
 [the validation report](validation/files-and-storage.md) for the precise results;
 a graphical file manager has not yet been integrated.
 
+## Subsequent session increment
+
+Normal boots now use an original UID/GID 1000 live-session setup, private home and
+runtime directories, `no_new_privs`, and an explicit character-device group policy.
+Root administration is a separately selected recovery mode. This is automatic
+live login, not authentication or a completed desktop session manager. See
+[sessions.md](sessions.md).
+
 ## Remaining product work
 
 1. Physical-machine testing, additional CPU/device coverage and 32-bit x86 if needed.

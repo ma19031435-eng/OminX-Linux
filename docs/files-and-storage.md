@@ -19,6 +19,11 @@ files move "/root/Imported notes.txt" "/root/Renamed notes.txt"
 files remove --confirm "/root/Renamed notes.txt"
 ```
 
+Normal boots now run as `ominx`, with `/home/ominx` as the working directory.
+Use that path for ordinary documents. Examples involving `/root`, data mounting
+or importing a mounted Windows volume below require explicit **root recovery**.
+See [session policy](sessions.md); no unprivileged mount broker exists yet.
+
 The console now supports single/double-quoted arguments and backslash escapes.
 Single quotes preserve backslashes literally. Unterminated quotes/trailing escapes
 are rejected. This is not a POSIX shell: pipes, redirection, variable expansion,
@@ -43,8 +48,7 @@ UTF-8 bytes. A Windows-style `C:\...` path is not translated to a Linux mount pa
 - The console's `cp` and `mv` now use the same no-overwrite implementation. The
   explicit `write` command still replaces its named file, and `rm` is unchanged.
 - These commands execute with the caller's permissions. They are not a sandbox or
-  a substitute for user accounts and access control; this development console is
-  still privileged. Recursive browsing and adversarial shared-directory isolation
+  a substitute for user accounts and access control; recovery consoles remain privileged, while normal live sessions run as UID 1000. Recursive browsing and adversarial shared-directory isolation
   must be designed before exposing a network service or multi-user desktop.
 
 ### Backend response contract
@@ -53,11 +57,12 @@ Except `help` and usage errors, responses are JSON. Success exits 0, operation
 failure exits 1, and incorrect invocation exits 2. Example:
 
 ```json
-{"entries":[{"name":"Project notes.txt","name_hex":"50726f6a656374206e6f7465732e747874","type":"file","size":42,"mode":420}],"complete":true}
+{"entries":[{"name":"Project notes.txt","name_hex":"50726f6a656374206e6f7465732e747874","type":"file","size":42,"mode":384,"uid":1000,"gid":1000}],"complete":true}
 ```
 
 Listing is bytewise sorted and uses metadata without following entry symlinks.
-The `mode` value is an integer containing permission/special bits (420 = 0644).
+The `mode` value is an integer containing permission/special bits (384 = 0600).
+`uid` and `gid` report numeric filesystem ownership; they do not imply authentication.
 Control characters are JSON-escaped to prevent terminal control sequences in
 listing output. Invalid UTF-8 displays as replacement characters; `name_hex`
 preserves exact POSIX filename bytes for a frontend that needs lossless access.

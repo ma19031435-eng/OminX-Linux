@@ -19,7 +19,8 @@ sudo apt-get install build-essential python3 git curl wget flex bison bc \
 JOBS=4 make toolchain       # upstream GCC + binutils + musl, built into build/toolchain
 JOBS=4 make build           # upstream Linux, original userspace, source bootloader, ISO
 make target-check          # tests run against the actual musl-linked target executable
-make boot-check            # boots actual media through BIOS and UEFI firmware
+python3 scripts/test-sessions.py  # default unprivileged sessions
+make boot-check            # recovery-mode firmware/storage regressions
 python3 scripts/test-windows-filesystems.py  # FAT32/exFAT/NTFS read-only import tests
 ```
 
@@ -35,8 +36,9 @@ missing or its libc resolves outside `build/toolchain/`. Output is ignored by Gi
 
 ## Boot to the terminal
 
-The build produces `build/ominx-x86_64.iso`, with BIOS and x86-64 UEFI boot paths,
-plus `bzImage`, `initramfs.cpio.gz`, and `SHA256SUMS`.
+The build produces the normal `build/ominx-x86_64.iso` and the explicitly privileged
+`build/ominx-recovery-x86_64.iso`, both with BIOS and x86-64 UEFI boot paths, plus
+`bzImage`, `initramfs.cpio.gz`, and `SHA256SUMS`. Use the **normal ISO** by default.
 
 ```sh
 (cd build && sha256sum -c SHA256SUMS)
@@ -48,7 +50,7 @@ independent serial terminal on standard input/output. Firmware loads the actual
 ISO bootloader; it does not bypass boot with QEMU's `-kernel` option.
 Secure Boot must be disabled: these development images are not signed.
 
-At `ominx:/root#`:
+Normal boots automatically enter `ominx` (UID/GID 1000) at `ominx:/home/ominx$`:
 
 ```text
 help
@@ -59,8 +61,14 @@ cp note backup
 cat backup
 mv backup renamed
 rm renamed
-poweroff
+id
 ```
+
+The default session has a private home/runtime directory, drops all saved root
+identity and enables `no_new_privs`. Administrative mount and power commands are
+restricted to the explicitly selected recovery menu entry. Until a controlled
+power service is added, stop a normal-mode VM through its host controls.
+[Session and device policy](docs/sessions.md).
 
 Original commands also include `ls`, `pwd`, `cd`, `mkdir`, `echo`, `sync`, `exit`,
 and `reboot`. `exit` restarts that console without exiting PID 1. Arguments support single/double quotes and backslash escapes; pipelines and shell
@@ -75,13 +83,14 @@ filenames with spaces and UTF-8 names work with quoting. JSON metadata is intend
 for the future graphical frontend. `files remove --confirm FILE` is nonrecursive.
 See [file operations and safety semantics](docs/files-and-storage.md).
 
-Read-only Windows-volume access is explicit: `attach DEVICE ro vfat`, `attach
+In **root recovery mode**, read-only Windows-volume access is explicit: `attach DEVICE ro vfat`, `attach
 DEVICE ro exfat`, or `attach DEVICE ro ntfs3`; then use `files` to inspect/import
 files and `detach` when done. This does not run Windows programs.
 
 ### Optional persistent data
 
-No disk is formatted or mounted automatically. The root filesystem is RAM-backed;
+These administrative commands require **root recovery mode**. No disk is formatted
+or mounted automatically. The root filesystem is RAM-backed;
 explicitly attach an **already formatted ext4 data device** to persist files:
 
 ```text
@@ -97,7 +106,16 @@ refuses writes. Data mounts prohibit executable files, device nodes, and setuid.
 A busy data mount prevents shutdown rather than silently forcing its removal.
 This is not an installer; use disposable virtual data disks for development.
 
-## Latest verified file/storage build
+## Latest verified session build
+
+**19 automated checks, five normal-user configurations, five recovery regressions,
+and all three Windows-filesystem cases passed.**
+[Download the current images](https://github.com/ma19031435-eng/OminX-Linux/actions/runs/39468027444/artifacts/12285774394)
+and review [the session validation report](docs/validation/sessions.md).
+Use `ominx-x86_64.iso` for normal operation; `ominx-recovery-x86_64.iso` deliberately
+starts root recovery. This remains automatic live login, not authenticated login.
+
+## Earlier verified file/storage build
 
 **17 target tests, five boot configurations, and FAT32/exFAT/NTFS read-only import
 checks passed.** [Download the newer ISO](https://github.com/ma19031435-eng/OminX-Linux/actions/runs/39455615377/artifacts/12280299360)
@@ -143,7 +161,8 @@ The existing desktop is retained via `make legacy-build` and `make legacy-check`
 It remains a separate Debian-based track and is **not** the independent OS image.
 KDE integration, original graphical applications/file manager, network services,
 authentication, installation, updates and Windows-file workflows are later layers.
-The new console has no login security; use it for isolated development.
+Normal mode is an unprivileged automatic live login, not authenticated login.
+Root recovery remains explicitly selectable; use these images for isolated development.
 
 ## Licensing
 
