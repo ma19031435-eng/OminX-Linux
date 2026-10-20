@@ -113,6 +113,22 @@ class CoreTests(unittest.TestCase):
         self.assertIn(b'bin/ominx-graphics-probe', gzip.decompress(graphics))
         self.assertEqual(graphics, module.archive(binary, graphics_probe=binary))
 
+    def test_optional_quick_probe_archive(self):
+        binary = BINARY.read_bytes()
+        self.assertNotIn(b'bin/ominx-quick-probe', gzip.decompress(module.archive(binary)))
+        packed = module.archive(binary, graphics_probe=binary, quick_probe=binary)
+        self.assertIn(b'bin/ominx-quick-probe', gzip.decompress(packed))
+        self.assertEqual(packed, module.archive(binary, graphics_probe=binary, quick_probe=binary))
+
+    def test_reject_dynamic_quick_probe(self):
+        with tempfile.TemporaryDirectory() as directory:
+            result = subprocess.run(['python3', str(ROOT / 'scripts/make-initramfs.py'),
+                                     str(BINARY), directory + '/bad.gz',
+                                     os.environ['OMINX_FILES_BINARY'], os.environ['OMINX_CONTROL_BINARY'],
+                                     str(BINARY), '/bin/ls'], capture_output=True, text=True)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertFalse(Path(directory, 'bad.gz').exists())
+
     def test_reject_dynamic_graphics_probe(self):
         with tempfile.TemporaryDirectory() as directory:
             result = subprocess.run(['python3', str(ROOT / 'scripts/make-initramfs.py'),

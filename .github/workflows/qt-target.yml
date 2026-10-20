@@ -2,7 +2,7 @@ name: Source-built target Qt graphics
 on:
   push:
     branches: [arena/11b46bb0-ominx-linux]
-    paths: ['desktop/qt/**', 'desktop/probe/**', 'scripts/build-qt-target.sh', 'scripts/test-qt-target.py', '.github/workflows/qt-target.yml']
+    paths: ['desktop/qt/source.env', 'desktop/probe/**', 'scripts/build-qt-target.sh', 'scripts/test-qt-target.py', '.github/workflows/qt-target.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -39,7 +39,7 @@ jobs:
             build/qt-target
             build/qt-prefix
             build/graphics-probe
-          key: target-qt-${{ runner.os }}-${{ hashFiles('desktop/qt/**', 'desktop/probe/**', 'scripts/build-qt-target.sh', 'toolchain/**') }}
+          key: target-qt-${{ runner.os }}-${{ hashFiles('desktop/qt/source.env', 'desktop/probe/**', 'scripts/build-qt-target.sh', 'toolchain/**') }}
       - name: Cross-build target Qt and original probe
         run: JOBS=4 scripts/build-qt-target.sh 2>&1 | tee build/qt-target.log
       - uses: actions/cache/save@v4
