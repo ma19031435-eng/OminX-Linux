@@ -10,6 +10,7 @@ MODE=${1:-all}
 case "$MODE" in all|--dependencies-only|--probe-only) ;; *) echo "Unknown build mode: $MODE" >&2; exit 1 ;; esac
 HOST="$ROOT/build/qt-quick-host"
 STAGE="$ROOT/build/qt-prefix"
+HOST_MODULES="$ROOT/build/qtshadertools-host;$ROOT/build/qtdeclarative-host"
 [ -f "$STAGE/lib/cmake/Qt6Widgets/Qt6WidgetsConfig.cmake" ] || {
     echo 'Build the source-linked target Qt base first' >&2; exit 1;
 }
@@ -51,6 +52,8 @@ for module in qtshadertools qtdeclarative; do
         -DCMAKE_TOOLCHAIN_FILE="$ROOT/build/qt-musl.cmake" \
         -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$STAGE" \
         -DCMAKE_INSTALL_PREFIX="$STAGE" -DQT_HOST_PATH="$HOST" \
+        -DQT_HOST_PATH_CMAKE_DIR="$HOST/lib/cmake" \
+        -DQT_ADDITIONAL_HOST_PACKAGES_PREFIX_PATH="$HOST_MODULES" \
         -DBUILD_SHARED_LIBS=OFF -DQT_BUILD_EXAMPLES=OFF -DQT_BUILD_TESTS=OFF
     cmake --build "build/$module-target" --parallel "${JOBS:-2}"
     cmake --install "build/$module-target"
@@ -59,7 +62,9 @@ fi
 [ "$MODE" != --dependencies-only ] || exit 0
 cmake -S desktop/quick-probe -B build/quick-probe -G Ninja \
     -DCMAKE_TOOLCHAIN_FILE="$ROOT/build/qt-musl.cmake" \
-    -DCMAKE_PREFIX_PATH="$STAGE" -DQT_HOST_PATH="$HOST" -DCMAKE_BUILD_TYPE=Release
+    -DCMAKE_PREFIX_PATH="$STAGE" -DQT_HOST_PATH="$HOST" \
+    -DQT_HOST_PATH_CMAKE_DIR="$HOST/lib/cmake" \
+    -DQT_ADDITIONAL_HOST_PACKAGES_PREFIX_PATH="$HOST_MODULES" -DCMAKE_BUILD_TYPE=Release
 cmake --build build/quick-probe --parallel "${JOBS:-2}"
 python3 - <<'PY'
 import importlib.util

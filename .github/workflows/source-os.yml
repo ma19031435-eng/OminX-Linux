@@ -2,7 +2,27 @@ name: Source-built OminX x86 acceptance
 on:
   push:
     branches: [arena/11b46bb0-ominx-linux]
-    paths: ['src/**', 'tests/**', 'scripts/**', 'toolchain/**', 'boot/**', 'build.sh', 'Makefile', '.github/workflows/source-os.yml']
+    # Qt/greeter-only changes have dedicated source-build/guest workflows. Do not
+    # rebuild the unchanged kernel for every desktop dependency recipe correction.
+    paths:
+      - 'src/**'
+      - 'tests/test_*.py'
+      - 'tests/fixtures/**'
+      - 'toolchain/**'
+      - 'boot/**'
+      - 'build.sh'
+      - 'Makefile'
+      - 'scripts/build-toolchain.sh'
+      - 'scripts/build-media.sh'
+      - 'scripts/check-kernel-graphics.py'
+      - 'scripts/fetch-source.sh'
+      - 'scripts/make-initramfs.py'
+      - 'scripts/smoke-boot.py'
+      - 'scripts/test-platforms.py'
+      - 'scripts/test-sessions.py'
+      - 'scripts/test-windows-filesystems.py'
+      - 'scripts/test-graphics.py'
+      - '.github/workflows/source-os.yml'
   workflow_dispatch:
 permissions:
   contents: read
