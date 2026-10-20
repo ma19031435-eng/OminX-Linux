@@ -1,0 +1,14 @@
+[
+  {
+    "name": "graphics-bochs",
+    "result": "PASS"
+  },
+  {
+    "name": "graphics-virtio",
+    "result": "PASS"
+  },
+  {
+    "name": "graphics-qxl",
+    "result": "PASS"
+  }
+]

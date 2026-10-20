@@ -1,8 +1,8 @@
 # Source-built target Qt bootstrap (experimental)
 
-This is an **in-progress dependency stage**, not a KDE desktop, a login manager,
-or proof that the graphics request is complete. Its CI outcome must be checked;
-adding a recipe does not establish that its output builds or boots.
+This dependency stage has passed source-build and guest raster/input acceptance;
+see [the recorded results](validation/target-qt.md). It is not a KDE desktop, a
+login manager, or proof that the full graphics request is complete.
 
 `scripts/build-qt-target.sh` uses the existing source-built GCC/musl C++ toolchain
 and pinned upstream Qt 6.8.3 source. It first builds native host code generators,

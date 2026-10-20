@@ -12,6 +12,13 @@ No host Qt libraries or display-manager binaries are copied into the musl target
 A successful theme test is not a successful OS login. The old Debian image remains
 a separate preserved build and is not used to bypass this distinction.
 
+## Recorded acceptance
+
+The [graphics/power results](validation/graphics-login.md) now include successful
+Bochs, virtio and QXL guest checks. Separately, [target Qt raster tests](validation/target-qt.md)
+passed in optional development media. That small Qt application is not a
+display manager and does not enable graphical login in the default image.
+
 ## Controlled system service
 
 `/sbin/ominx-control` is original C code, built statically with the source toolchain.
