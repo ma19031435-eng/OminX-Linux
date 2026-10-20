@@ -84,6 +84,12 @@ refuses writes. Data mounts prohibit executable files, device nodes, and setuid.
 A busy data mount prevents shutdown rather than silently forcing its removal.
 This is not an installer; use disposable virtual data disks for development.
 
+## Verified milestone
+
+**Segment one passed all five x86-64 firmware/device cases and eight target tests.**
+[Download the tested ISO and evidence](https://github.com/ma19031435-eng/OminX-Linux/actions/runs/39448085192/artifacts/12277394973)
+or review the [successful run](https://github.com/ma19031435-eng/OminX-Linux/actions/runs/39448085192).
+
 ## Acceptance and scope
 
 `scripts/test-platforms.py` tests real BIOS/UEFI ISO boot, USB-media boot, two QEMU

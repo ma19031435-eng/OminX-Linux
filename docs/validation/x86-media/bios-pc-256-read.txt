@@ -1,0 +1,65 @@
+[    1.420439] e1000e: Intel(R) PRO/1000 Network Driver
+[    1.420587] e1000e: Copyright(c) 1999 - 2015 Intel Corporation.
+[    1.420833] sky2: driver version 1.30
+[    1.422632] usbcore: registered new interface driver usblp
+[    1.422970] usbcore: registered new interface driver usb-storage
+[    1.423708] i8042: PNP: PS/2 Controller [PNP0303:KBD,PNP0f13:MOU] at 0x60,0x64 irq 1,12
+[    1.426504] serio: i8042 KBD port at 0x60,0x64 irq 1
+[    1.426838] serio: i8042 AUX port at 0x60,0x64 irq 12
+[    1.430286] rtc_cmos 00:05: RTC can wake from S4
+[    1.431337] input: AT Translated Set 2 keyboard as /devices/platform/i8042/serio0/input/input1
+[    1.434856] rtc_cmos 00:05: registered as rtc0
+[    1.435652] rtc_cmos 00:05: alarms up to one day, y3k, 242 bytes nvram, hpet irqs
+[    1.439111] device-mapper: ioctl: 4.48.0-ioctl (2023-03-01) initialised: dm-devel@lists.linux.dev
+[    1.439578] amd_pstate: the _CPC object is not present in SBIOS or ACPI disabled
+[    1.446371] [drm] Initialized simpledrm 1.0.0 for simple-framebuffer.0 on minor 0
+[    1.447110] hid: raw HID events driver (C) Jiri Kosina
+[    1.448475] usbcore: registered new interface driver usbhid
+[    1.448656] usbhid: USB HID core driver
+[    1.454432] Initializing XFRM netlink socket
+[    1.454916] NET: Registered PF_INET6 protocol family
+[    1.459836] Segment Routing with IPv6
+[    1.460355] In-situ OAM (IOAM) with IPv6
+[    1.461280] sit: IPv6, IPv4 and MPLS over IPv4 tunneling driver
+[    1.463862] NET: Registered PF_PACKET protocol family
+[    1.465062] 9pnet: Installing 9P2000 support
+[    1.465402] Key type dns_resolver registered
+[    1.467155] IPI shorthand broadcast: enabled
+[    1.483754] sched_clock: Marking stable (1451022480, 31860865)->(1487214814, -4331469)
+[    1.485659] registered taskstats version 1
+[    1.485862] Loading compiled-in X.509 certificates
+[    1.493723] Demotion targets for Node 0: null
+[    1.496455] PM:   Magic number: 14:699:639
+[    1.497280] printk: legacy console [netcon0] enabled
+[    1.497500] netconsole: network logging started
+[    1.498547] cfg80211: Loading compiled-in X.509 certificates for regulatory database
+[    1.504824] kworker/u4:2 (53) used greatest stack depth: 15048 bytes left
+[    1.513338] Loaded X.509 cert 'sforshee: 00b28ddf47aef9cea7'
+[    1.514228] Loaded X.509 cert 'wens: 61c038651aabdcf94bd0ac7ff06c7248db18c600'
+[    1.516203] ALSA device list:
+[    1.516366]   No soundcards found.
+[    1.517287] platform regulatory.0: Direct firmware load for regulatory.db failed with error -2
+[    1.517726] cfg80211: failed to load regulatory.db
+[    1.574288] ata2: found unknown device (class 0)
+[    1.578468] ata2.00: ATAPI: QEMU DVD-ROM, 2.5+, max UDMA/100
+[    1.585539] scsi 1:0:0:0: CD-ROM            QEMU     QEMU DVD-ROM     2.5+ PQ: 0 ANSI: 5
+[    1.594645] sr 1:0:0:0: [sr0] scsi3-mmc drive: 4x/4x cd/rw xa/form2 tray
+[    1.595062] cdrom: Uniform CD-ROM driver Revision: 3.20
+[    1.603335] sr 1:0:0:0: Attached scsi generic sg0 type 5
+[    1.664622] Freeing unused kernel image (initmem) memory: 2740K
+[    1.665669] Write protecting the kernel read-only data: 26624k
+[    1.667052] Freeing unused kernel image (rodata/data gap) memory: 1000K
+[    1.840147] x86/mm: Checked W+X mappings: passed, no W+X pages found.
+[    1.840591] Run /init as init process
+[    1.870140] input: ImExPS/2 Generic Explorer Mouse as /devices/platform/i8042/serio1/input/input3
+OminX console ready. Type help. No disk is mounted automatically.
+ominx:/root# attach /dev/vda
+[    1.911263] EXT4-fs (vda): mounted filesystem 9be0760e-742c-4723-abec-448ef1718fbf r/w with ordered data mode. Quota mode: none.
+Data attached at /mnt/data.
+ominx:/root# cat /mnt/data/probe
+persistentdata
+ominx:/root# poweroff
+[    1.935307] EXT4-fs (vda): unmounting filesystem 9be0760e-742c-4723-abec-448ef1718fbf.
+[    1.936750] jbd2/vda-8 (60) used greatest stack depth: 14120 bytes left
+[    1.943439] ACPI: PM: Preparing to enter system sleep state S5
+[    1.944179] reboot: Power down

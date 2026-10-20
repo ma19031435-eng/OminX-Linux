@@ -1,0 +1,65 @@
+[    1.430526] Initializing XFRM netlink socket
+[    1.430944] NET: Registered PF_INET6 protocol family
+[    1.435757] Segment Routing with IPv6
+[    1.436013] In-situ OAM (IOAM) with IPv6
+[    1.436855] sit: IPv6, IPv4 and MPLS over IPv4 tunneling driver
+[    1.439138] NET: Registered PF_PACKET protocol family
+[    1.440201] 9pnet: Installing 9P2000 support
+[    1.440479] Key type dns_resolver registered
+[    1.442056] IPI shorthand broadcast: enabled
+[    1.459513] sched_clock: Marking stable (1433022962, 25659398)->(1461930721, -3248361)
+[    1.461071] registered taskstats version 1
+[    1.461207] Loading compiled-in X.509 certificates
+[    1.469296] Demotion targets for Node 0: null
+[    1.471643] PM:   Magic number: 14:699:639
+[    1.472429] printk: legacy console [netcon0] enabled
+[    1.472597] netconsole: network logging started
+[    1.473542] cfg80211: Loading compiled-in X.509 certificates for regulatory database
+[    1.480003] kworker/u4:6 (66) used greatest stack depth: 15048 bytes left
+[    1.482999] cryptomgr_probe (69) used greatest stack depth: 14888 bytes left
+[    1.487994] Loaded X.509 cert 'sforshee: 00b28ddf47aef9cea7'
+[    1.488594] Loaded X.509 cert 'wens: 61c038651aabdcf94bd0ac7ff06c7248db18c600'
+[    1.490412] ALSA device list:
+[    1.490534]   No soundcards found.
+[    1.491094] platform regulatory.0: Direct firmware load for regulatory.db failed with error -2
+[    1.491457] cfg80211: failed to load regulatory.db
+[    1.672715] ata2: SATA link down (SStatus 0 SControl 300)
+[    1.674129] ata1: SATA link down (SStatus 0 SControl 300)
+[    1.680305] ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[    1.681732] ata5: SATA link down (SStatus 0 SControl 300)
+[    1.681898] ata4: SATA link down (SStatus 0 SControl 300)
+[    1.682041] ata6: SATA link down (SStatus 0 SControl 300)
+[    1.682955] ata3.00: LPM support broken, forcing max_power
+[    1.683360] ata3.00: ATAPI: QEMU DVD-ROM, 2.5+, max UDMA/100
+[    1.683528] ata3.00: applying bridge limits
+[    1.684471] ata3.00: LPM support broken, forcing max_power
+[    1.684731] ata3.00: configured for UDMA/100
+[    1.690632] scsi 2:0:0:0: CD-ROM            QEMU     QEMU DVD-ROM     2.5+ PQ: 0 ANSI: 5
+[    1.701283] sr 2:0:0:0: [sr0] scsi3-mmc drive: 4x/4x cd/rw xa/form2 tray
+[    1.701568] cdrom: Uniform CD-ROM driver Revision: 3.20
+[    1.707231] sr 2:0:0:0: Attached scsi generic sg0 type 5
+[    1.769202] Freeing unused kernel image (initmem) memory: 2740K
+[    1.770841] usb 2-1: new SuperSpeed USB device number 2 using xhci_hcd
+[    1.771385] Write protecting the kernel read-only data: 26624k
+[    1.772796] Freeing unused kernel image (rodata/data gap) memory: 1000K
+[    1.946302] x86/mm: Checked W+X mappings: passed, no W+X pages found.
+[    1.949231] usb 2-1: New USB device found, idVendor=46f4, idProduct=0001, bcdDevice= 0.00
+[    1.949417] usb 2-1: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+[    1.949545] usb 2-1: Product: QEMU USB HARDDRIVE
+[    1.949632] usb 2-1: Manufacturer: QEMU
+[    1.949763] usb 2-1: SerialNumber: 1-0000:00:02.0-1
+[    1.951199] input: ImExPS/2 Generic Explorer Mouse as /devices/platform/i8042/serio1/input/input3
+[    1.954358] usb-storage 2-1:1.0: USB Mass Storage device detected
+[    1.956155] scsi host6: usb-storage 2-1:1.0
+[    1.957212] Run /init as init process
+OminX console ready. Type help. No disk is mounted automatically.
+ominx:/root# attach /dev/vda
+[    2.023512] EXT4-fs (vda): mounted filesystem 299938d6-b701-4b58-92f6-7987b60a5293 r/w with ordered data mode. Quota mode: none.
+Data attached at /mnt/data.
+ominx:/root# cat /mnt/data/probe
+persistentdata
+ominx:/root# poweroff
+[    2.044057] EXT4-fs (vda): unmounting filesystem 299938d6-b701-4b58-92f6-7987b60a5293.
+[    2.045443] jbd2/vda-8 (76) used greatest stack depth: 14120 bytes left
+[    2.055358] ACPI: PM: Preparing to enter system sleep state S5
+[    2.056048] reboot: Power down

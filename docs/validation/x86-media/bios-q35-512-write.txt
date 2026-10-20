@@ -1,0 +1,65 @@
+[    1.652968] ata1.00: LPM support broken, forcing max_power
+[    1.653169] ata1.00: configured for UDMA/100
+[    1.659005] scsi 0:0:0:0: Direct-Access     ATA      QEMU HARDDISK    2.5+ PQ: 0 ANSI: 5
+[    1.663946] sd 0:0:0:0: Attached scsi generic sg0 type 0
+[    1.664944] sd 0:0:0:0: [sda] 131072 512-byte logical blocks: (67.1 MB/64.0 MiB)
+[    1.666438] scsi 2:0:0:0: CD-ROM            QEMU     QEMU DVD-ROM     2.5+ PQ: 0 ANSI: 5
+[    1.668551] sd 0:0:0:0: [sda] Write Protect is off
+[    1.669074] sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[    1.670203] sd 0:0:0:0: [sda] Preferred minimum I/O size 512 bytes
+[    1.673569] sr 2:0:0:0: [sr0] scsi3-mmc drive: 4x/4x cd/rw xa/form2 tray
+[    1.673939] cdrom: Uniform CD-ROM driver Revision: 3.20
+[    1.686863] sr 2:0:0:0: Attached scsi generic sg1 type 5
+[    1.687995] sd 0:0:0:0: [sda] Attached SCSI disk
+[    1.748562] Freeing unused kernel image (initmem) memory: 2740K
+[    1.751255] Write protecting the kernel read-only data: 26624k
+[    1.752579] Freeing unused kernel image (rodata/data gap) memory: 1000K
+[    1.928485] x86/mm: Checked W+X mappings: passed, no W+X pages found.
+[    1.929918] input: ImExPS/2 Generic Explorer Mouse as /devices/platform/i8042/serio1/input/input3
+[    1.931467] Run /init as init process
+OminX console ready. Type help. No disk is mounted automatically.
+ominx:/root# uname
+Linux 6.12.60 x86_64
+ominx:/root# cat /etc/os-release
+NAME=OminX
+ID=ominx
+PRETTY_NAME="OminX source-built console"
+ominx:/root# nonsense
+Unknown command or wrong argument count. Type help.
+ominx:/root# cat /missing-ominx-test
+/missing-ominx-test: No such file or directory
+ominx:/root# attach /etc/os-release
+Refusing: device is not a block device.
+ominx:/root# write /root/probe ramdata
+ominx:/root# cp /root/probe /root/copy
+ominx:/root# mv /root/copy /root/moved
+ominx:/root# cat /root/moved
+ramdata
+ominx:/root# rm /root/moved
+ominx:/root# exit
+[    1.997418] init (70) used greatest stack depth: 14320 bytes left
+[    2.019040] tsc: Refined TSC clocksource calibration: 2596.116 MHz
+[    2.019479] clocksource: tsc: mask: 0xffffffffffffffff max_cycles: 0x256be70e5f7, max_idle_ns: 440795228363 ns
+[    2.019795] clocksource: Switched to clocksource tsc
+OminX console ready. Type help. No disk is mounted automatically.
+ominx:/root# cat /root/probe
+ramdata
+ominx:/root# cat /root/keyboard
+keyboardok
+ominx:/root# attach /dev/sda
+[    4.973949] EXT4-fs (sda): mounted filesystem 17eb684f-612a-45bf-a0f4-1e8acbdbd870 r/w with ordered data mode. Quota mode: none.
+Data attached at /mnt/data.
+ominx:/root# attach /dev/sda
+Data already attached; detach first.
+ominx:/root# write /mnt/data/probe persistentdata
+ominx:/root# cat /mnt/data/probe
+persistentdata
+ominx:/root# detach
+[    5.084521] EXT4-fs (sda): unmounting filesystem 17eb684f-612a-45bf-a0f4-1e8acbdbd870.
+[    5.086181] jbd2/sda-8 (72) used greatest stack depth: 14264 bytes left
+Data detached.
+ominx:/root# poweroff
+[    5.092541] sd 0:0:0:0: [sda] Synchronizing SCSI cache
+[    5.093096] sd 0:0:0:0: [sda] Stopping disk
+[    5.094768] ACPI: PM: Preparing to enter system sleep state S5
+[    5.095419] reboot: Power down

@@ -1,0 +1,13 @@
+{
+  "run": 39448085192,
+  "source_commit": "c753b4671c41dd68192c87b67e591032fff19fb4",
+  "evidence": "GitHub check-run platforms.log annotation; full results.json is in the run artifact",
+  "passed_cases": [
+    "bios-pc-256",
+    "bios-q35-512",
+    "bios-usb-512",
+    "uefi-pc-1024",
+    "uefi-q35-512"
+  ],
+  "hosted_target_unit_tests_passed": 8
+}
