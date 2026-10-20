@@ -31,6 +31,13 @@ and host filesystem-authoring tools are test/build infrastructure, not target
 root filesystems. Test cases create their own disposable disk files exclusively
 and never accept a path to a physical disk.
 
+## Subsequent file/storage increment
+
+The original `ominx-files` backend, quoted paths, no-overwrite copy/move and
+read-only FAT32/exFAT/NTFS imports are now implemented and tested. See
+[the validation report](validation/files-and-storage.md) for the precise results;
+a graphical file manager has not yet been integrated.
+
 ## Remaining product work
 
 1. Physical-machine testing, additional CPU/device coverage and 32-bit x86 if needed.

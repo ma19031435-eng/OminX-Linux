@@ -1,0 +1,65 @@
+[    1.932589] sit: IPv6, IPv4 and MPLS over IPv4 tunneling driver
+[    1.935615] NET: Registered PF_PACKET protocol family
+[    1.936993] 9pnet: Installing 9P2000 support
+[    1.937384] Key type dns_resolver registered
+[    1.939375] IPI shorthand broadcast: enabled
+[    1.966532] sched_clock: Marking stable (1929036014, 36772587)->(1973104247, -7295646)
+[    1.968571] registered taskstats version 1
+[    1.968719] Loading compiled-in X.509 certificates
+[    1.979406] Demotion targets for Node 0: null
+[    1.982531] PM:   Magic number: 14:702:540
+[    1.982924]  node: hash matches
+[    1.983541] printk: legacy console [netcon0] enabled
+[    1.983732] netconsole: network logging started
+[    1.985192] cfg80211: Loading compiled-in X.509 certificates for regulatory database
+[    1.992750] kworker/u4:6 (65) used greatest stack depth: 15048 bytes left
+[    2.002716] Loaded X.509 cert 'sforshee: 00b28ddf47aef9cea7'
+[    2.003544] Loaded X.509 cert 'wens: 61c038651aabdcf94bd0ac7ff06c7248db18c600'
+[    2.005672] ALSA device list:
+[    2.006211] platform regulatory.0: Direct firmware load for regulatory.db failed with error -2
+[    2.006645] cfg80211: failed to load regulatory.db
+[    2.007221]   No soundcards found.
+[    2.182551] ata1: SATA link down (SStatus 0 SControl 300)
+[    2.184502] ata2: SATA link down (SStatus 0 SControl 300)
+[    2.185021] ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[    2.186723] ata5: SATA link down (SStatus 0 SControl 300)
+[    2.186963] ata6: SATA link down (SStatus 0 SControl 300)
+[    2.187125] ata4: SATA link down (SStatus 0 SControl 300)
+[    2.188079] ata3.00: LPM support broken, forcing max_power
+[    2.188589] ata3.00: ATAPI: QEMU DVD-ROM, 2.5+, max UDMA/100
+[    2.188785] ata3.00: applying bridge limits
+[    2.190037] ata3.00: LPM support broken, forcing max_power
+[    2.190316] ata3.00: configured for UDMA/100
+[    2.196524] scsi 2:0:0:0: CD-ROM            QEMU     QEMU DVD-ROM     2.5+ PQ: 0 ANSI: 5
+[    2.205411] sr 2:0:0:0: [sr0] scsi3-mmc drive: 4x/4x cd/rw xa/form2 tray
+[    2.205720] cdrom: Uniform CD-ROM driver Revision: 3.20
+[    2.213209] sr 2:0:0:0: Attached scsi generic sg0 type 5
+[    2.292201] Freeing unused kernel image (initmem) memory: 2760K
+[    2.292629] Write protecting the kernel read-only data: 26624k
+[    2.294568] Freeing unused kernel image (rodata/data gap) memory: 960K
+[    2.530499] x86/mm: Checked W+X mappings: passed, no W+X pages found.
+[    2.532266] input: ImExPS/2 Generic Explorer Mouse as /devices/platform/i8042/serio1/input/input3
+[    2.533492] Run /init as init process
+OminX console ready. Type help. No disk is mounted automatically.
+ominx:/root# attach /dev/vdb ro exfat
+Data attached at /mnt/data.
+ominx:/root# files list /mnt/data
+{"entries":[{"name":"Windows Notes.txt","name_hex":"57696e646f7773204e6f7465732e747874","type":"file","size":25,"mode":493}],"complete":true}
+[    2.633164] ominx-files (71) used greatest stack depth: 13720 bytes left
+ominx:/root# cat "/mnt/data/Windows Notes.txt"
+OMINX_WINDOWS_FILE_READ
+
+ominx:/root# files copy "/mnt/data/Windows Notes.txt" "/root/imported notes.txt"
+{"ok":true}
+ominx:/root# cat "/root/imported notes.txt"
+OMINX_WINDOWS_FILE_READ
+
+ominx:/root# write /mnt/data/forbidden blocked
+/mnt/data/forbidden: Read-only file system
+ominx:/root# files remove --confirm "/mnt/data/Windows Notes.txt"
+{"error":"Read-only file system"}
+ominx:/root# detach
+Data detached.
+ominx:/root# poweroff
+[    2.664484] ACPI: PM: Preparing to enter system sleep state S5
+[    2.665314] reboot: Power down

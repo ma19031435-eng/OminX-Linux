@@ -15,11 +15,12 @@ not target OS packages. On a Debian/Ubuntu **build host**, prerequisites are:
 ```sh
 sudo apt-get install build-essential python3 git curl wget flex bison bc \
   libelf-dev libssl-dev autoconf automake libtool texinfo nasm mtools xorriso \
-  qemu-system-x86 ovmf e2fsprogs
+  qemu-system-x86 ovmf e2fsprogs dosfstools exfatprogs ntfs-3g
 JOBS=4 make toolchain       # upstream GCC + binutils + musl, built into build/toolchain
 JOBS=4 make build           # upstream Linux, original userspace, source bootloader, ISO
 make target-check          # tests run against the actual musl-linked target executable
 make boot-check            # boots actual media through BIOS and UEFI firmware
+python3 scripts/test-windows-filesystems.py  # FAT32/exFAT/NTFS read-only import tests
 ```
 
 Exact upstream revisions and versions live in `toolchain/sources.env`. The pinned
@@ -62,9 +63,21 @@ poweroff
 ```
 
 Original commands also include `ls`, `pwd`, `cd`, `mkdir`, `echo`, `sync`, `exit`,
-and `reboot`. `exit` restarts that console without exiting PID 1. Arguments are
-whitespace-separated; quoting, pipelines and shell expansion are not implemented.
+and `reboot`. `exit` restarts that console without exiting PID 1. Arguments support single/double quotes and backslash escapes; pipelines and shell
+expansion are not implemented.
 Absolute-path execution is supported for compatible executables added to the image.
+
+### Original file-management backend
+
+`files list PATH`, `files info PATH`, `files copy SOURCE DEST`, and `files move
+SOURCE DEST` provide the new OminX Files backend. Copy and move refuse overwrites;
+filenames with spaces and UTF-8 names work with quoting. JSON metadata is intended
+for the future graphical frontend. `files remove --confirm FILE` is nonrecursive.
+See [file operations and safety semantics](docs/files-and-storage.md).
+
+Read-only Windows-volume access is explicit: `attach DEVICE ro vfat`, `attach
+DEVICE ro exfat`, or `attach DEVICE ro ntfs3`; then use `files` to inspect/import
+files and `detach` when done. This does not run Windows programs.
 
 ### Optional persistent data
 
@@ -84,7 +97,15 @@ refuses writes. Data mounts prohibit executable files, device nodes, and setuid.
 A busy data mount prevents shutdown rather than silently forcing its removal.
 This is not an installer; use disposable virtual data disks for development.
 
-## Verified milestone
+## Latest verified file/storage build
+
+**17 target tests, five boot configurations, and FAT32/exFAT/NTFS read-only import
+checks passed.** [Download the newer ISO](https://github.com/ma19031435-eng/OminX-Linux/actions/runs/39455615377/artifacts/12280299360)
+and review [the recorded file/storage validation](docs/validation/files-and-storage.md).
+The file-management layer is an original C backend with a console/JSON interface;
+its graphical frontend and KDE integration are later steps.
+
+## Original verified boot milestone
 
 **Segment one passed all five x86-64 firmware/device cases and eight target tests.**
 [Download the tested ISO and evidence](https://github.com/ma19031435-eng/OminX-Linux/actions/runs/39448085192/artifacts/12277394973)
@@ -108,7 +129,8 @@ initial x86 target is **x86-64**; a 32-bit-only i686 image is not included.
 ```text
 toolchain/                  Pinned upstream identities
 boot/                       Independent bootloader configuration
-src/core/                   Original init, console, file and data-mount operations
+src/core/                   Original init, console and data-mount operations
+src/files/, src/lib/         Original file backend, safe copy/move and argument parser
 scripts/build-toolchain.sh  Source cross-toolchain build
 scripts/build-media.sh      Source bootloader and hybrid ISO creation
 scripts/test-platforms.py   Firmware/media/terminal/storage acceptance matrix

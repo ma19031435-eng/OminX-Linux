@@ -1,0 +1,24 @@
+python3 scripts/make-initramfs.py build/ominx build/initramfs.cpio.gz build/ominx-files
+OMINX_FILES_BINARY=/home/runner/work/OminX-Linux/OminX-Linux/build/ominx-files OMINX_TEST_BINARY=/home/runner/work/OminX-Linux/OminX-Linux/build/ominx python3 -m unittest discover -s tests -v
+test_archive (test_core.CoreTests.test_archive) ... ok
+test_copy_move_delete (test_core.CoreTests.test_copy_move_delete) ... ok
+test_errors_and_safety (test_core.CoreTests.test_errors_and_safety) ... ok
+test_explicit_execution (test_core.CoreTests.test_explicit_execution) ... ok
+test_files (test_core.CoreTests.test_files) ... ok
+test_limits_and_eof (test_core.CoreTests.test_limits_and_eof) ... ok
+test_quoted_names (test_core.CoreTests.test_quoted_names) ... ok
+test_reject_dynamic_binary (test_core.CoreTests.test_reject_dynamic_binary) ... ok
+test_reject_malformed_elf (test_core.CoreTests.test_reject_malformed_elf) ... ok
+test_storage_host_guard (test_core.CoreTests.test_storage_host_guard) ... ok
+test_copy_and_explicit_remove (test_files.FileManagerTests.test_copy_and_explicit_remove) ... ok
+test_copy_refuses_overwrite_and_cleans_temporary (test_files.FileManagerTests.test_copy_refuses_overwrite_and_cleans_temporary) ... ok
+test_listing_unicode_controls_and_invalid_bytes (test_files.FileManagerTests.test_listing_unicode_controls_and_invalid_bytes) ... ok
+test_missing_directory_returns_error (test_files.FileManagerTests.test_missing_directory_returns_error) ... ok
+test_move_and_directory_operations (test_files.FileManagerTests.test_move_and_directory_operations) ... ok
+test_special_files_and_directories_refused (test_files.FileManagerTests.test_special_files_and_directories_refused) ... ok
+test_symlinks_not_followed_for_copy (test_files.FileManagerTests.test_symlinks_not_followed_for_copy) ... ok
+
+----------------------------------------------------------------------
+Ran 17 tests in 0.103s
+
+OK
