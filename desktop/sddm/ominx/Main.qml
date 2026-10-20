@@ -17,6 +17,18 @@ Rectangle {
     readonly property bool compact: height < 760
     readonly property color accent: "#74e0c7"
     readonly property bool caps: typeof keyboard !== "undefined" && keyboard.capsLock
+    component QuietButton: Button {
+        id: quietButton
+        implicitWidth: 104; implicitHeight: 36
+        contentItem: Text {
+            text: quietButton.text; color: "#e5f0f2"; font.pixelSize: 13
+            horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter
+        }
+        background: Rectangle {
+            radius: 9; color: quietButton.hovered ? "#294b57" : "#17333f"
+            border.color: quietButton.activeFocus ? root.accent : "#4a6d77"
+        }
+    }
     function login() {
         if (busy) return
         if (username.text.trim().length === 0) {
@@ -120,7 +132,7 @@ Rectangle {
                 Layout.fillWidth: true; implicitHeight: 44
                 text: userModel ? userModel.lastUser : ""; placeholderText: qsTr("Username")
                 enabled: !root.busy; color: "#f1f7f9"; font.pixelSize: 15
-                selectByMouse: true
+                selectByMouse: true; placeholderTextColor: "#9bb3bd"
                 Accessible.name: qsTr("Username")
                 background: Rectangle { radius: 10; color: "#10212d"; border.width: 1; border.color: username.activeFocus ? root.accent : "#3c5664" }
                 onAccepted: password.forceActiveFocus()
@@ -128,7 +140,7 @@ Rectangle {
             TextField {
                 id: password; objectName: "password"
                 Layout.fillWidth: true; implicitHeight: 44
-                placeholderText: qsTr("Password"); echoMode: TextInput.Password
+                placeholderText: qsTr("Password"); placeholderTextColor: "#9bb3bd"; echoMode: TextInput.Password
                 enabled: !root.busy; color: "#f1f7f9"; font.pixelSize: 15
                 inputMethodHints: Qt.ImhSensitiveData | Qt.ImhNoPredictiveText
                 Accessible.name: qsTr("Password")
@@ -174,12 +186,12 @@ Rectangle {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom; anchors.bottomMargin: root.compact ? 12 : 30
         spacing: 12
-        Button {
+        QuietButton {
             objectName: "restartButton"
             text: qsTr("Restart"); enabled: !root.busy && sddm && sddm.canReboot
             onClicked: { root.powerAction = "reboot"; confirmation.open() }
         }
-        Button {
+        QuietButton {
             objectName: "shutdownButton"
             text: qsTr("Shut down"); enabled: !root.busy && sddm && sddm.canPowerOff
             onClicked: { root.powerAction = "poweroff"; confirmation.open() }

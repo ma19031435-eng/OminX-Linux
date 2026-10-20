@@ -45,7 +45,7 @@ jobs:
           if path.exists():
               image = Image.open(path).convert('RGB')
               image.thumbnail((800, 500))
-              image = image.quantize(colors=32)
+              image = image.quantize(colors=128)
               buffer = io.BytesIO()
               image.save(buffer, format='PNG', optimize=True)
               encoded = base64.b64encode(buffer.getvalue()).decode()
