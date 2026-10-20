@@ -4,6 +4,7 @@ import importlib.util
 import json
 from pathlib import Path
 import subprocess
+import time
 
 spec = importlib.util.spec_from_file_location('platforms', Path(__file__).with_name('test-platforms.py'))
 p = importlib.util.module_from_spec(spec)
@@ -46,7 +47,6 @@ try:
                 key = 'ret' if char == '\n' else char
                 vm.qmp_command('send-key', {'keys': [{'type': 'qcode', 'data': key}], 'hold-time': 80})
                 # Waiting for release avoids overlapping QMP key-down events.
-                import time
                 time.sleep(0.12)
             vm.expect('OMINX_QUICK_NO_SESSION_REFUSED')
             vm.qmp_command('send-key', {'keys': [{'type': 'qcode', 'data': 'esc'}], 'hold-time': 80})

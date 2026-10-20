@@ -6,11 +6,14 @@ cd "$ROOT"
 . desktop/qt/source.env
 . desktop/qt/quick.env
 . toolchain/sources.env
+MODE=${1:-all}
+case "$MODE" in all|--dependencies-only|--probe-only) ;; *) echo "Unknown build mode: $MODE" >&2; exit 1 ;; esac
 HOST="$ROOT/build/qt-host"
 STAGE="$ROOT/build/qt-prefix"
 [ -f "$STAGE/lib/cmake/Qt6Widgets/Qt6WidgetsConfig.cmake" ] || {
     echo 'Build the source-linked target Qt base first' >&2; exit 1;
 }
+if [ "$MODE" != --probe-only ]; then
 for module in qtshadertools qtdeclarative; do
     case "$module" in
         qtshadertools) commit=$QTSHADERTOOLS_COMMIT ;;
@@ -48,6 +51,8 @@ for module in qtshadertools qtdeclarative; do
     cmake --build "build/$module-target" --parallel "${JOBS:-2}"
     cmake --install "build/$module-target"
 done
+fi
+[ "$MODE" != --dependencies-only ] || exit 0
 cmake -S desktop/quick-probe -B build/quick-probe -G Ninja \
     -DCMAKE_TOOLCHAIN_FILE="$ROOT/build/qt-musl.cmake" \
     -DCMAKE_PREFIX_PATH="$STAGE" -DQT_HOST_PATH="$HOST" -DCMAKE_BUILD_TYPE=Release

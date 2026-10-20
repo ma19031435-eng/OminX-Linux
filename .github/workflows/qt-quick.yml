@@ -64,10 +64,9 @@ jobs:
             build/qtshadertools-target
             build/qtdeclarative-host
             build/qtdeclarative-target
-            build/quick-probe
-          key: target-quick-${{ runner.os }}-${{ hashFiles('desktop/qt/**', 'desktop/quick-probe/**', 'desktop/sddm/ominx/**', 'scripts/build-qt-quick-target.sh', 'toolchain/**') }}
-      - name: Source-build target Qt Quick and theme validation application
-        run: JOBS=4 scripts/build-qt-quick-target.sh 2>&1 | tee build/qt-quick-build.log
+          key: target-quick-${{ runner.os }}-${{ hashFiles('desktop/qt/**', 'scripts/build-qt-target.sh', 'scripts/build-qt-quick-target.sh', 'toolchain/**') }}
+      - name: Source-build target Qt Quick dependencies
+        run: JOBS=4 scripts/build-qt-quick-target.sh --dependencies-only 2>&1 | tee build/qt-quick-build.log
       - uses: actions/cache/save@v4
         if: steps.quick-cache.outputs.cache-hit != 'true'
         with:
@@ -80,8 +79,9 @@ jobs:
             build/qtshadertools-target
             build/qtdeclarative-host
             build/qtdeclarative-target
-            build/quick-probe
           key: ${{ steps.quick-cache.outputs.cache-primary-key }}
+      - name: Build the original theme validation application
+        run: JOBS=4 scripts/build-qt-quick-target.sh --probe-only 2>&1 | tee build/qt-quick-probe.log
       - name: Require accepted source-built kernel provenance
         env:
           GH_TOKEN: ${{ github.token }}
@@ -115,7 +115,7 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          paths = [Path('build/qt-target.log'), Path('build/qt-quick-build.log'), Path('build/qt-quick-guest.log'), Path('build/acceptance/qt-quick.json')]
+          paths = [Path('build/qt-target.log'), Path('build/qt-quick-build.log'), Path('build/qt-quick-probe.log'), Path('build/qt-quick-guest.log'), Path('build/acceptance/qt-quick.json')]
           paths += sorted(Path('build/acceptance').glob('quick-*.txt'))
           for p in paths:
               if p.exists():
@@ -131,6 +131,7 @@ jobs:
           path: |
             build/qt-target.log
             build/qt-quick-build.log
+            build/qt-quick-probe.log
             build/qt-quick-guest.log
             build/provenance
             build/source-run.json
