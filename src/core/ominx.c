@@ -125,7 +125,7 @@ int main(int argc, char **argv) {
     filesystem("tmpfs", "/run"); filesystem("tmpfs", "/tmp");
     if (chmod("/tmp", 01777)) error("/tmp permissions");
     setenv("PATH", "/bin", 1); setenv("HOME", "/root", 1);
-    chdir("/root");
+    if (chdir("/root")) error("/root");
     signal(SIGINT, SIG_IGN);
     /* PID 1 never exits. A child owns the console; PID 1 reaps orphans. */
     for (;;) {

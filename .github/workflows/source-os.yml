@@ -17,15 +17,29 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential flex bison libelf-dev libssl-dev bc qemu-system-x86 python3
       - name: Test original userspace
-        run: make check
+        run: |
+          mkdir -p build
+          make check 2>&1 | tee build/userspace.log
       - name: Obtain upstream kernel
         run: |
           git clone --depth 1 --branch v6.12 https://github.com/torvalds/linux.git "$RUNNER_TEMP/linux"
           git -C "$RUNNER_TEMP/linux" rev-parse HEAD > build/kernel-source-commit.txt
       - name: Build Linux and OminX
-        run: LINUX_SOURCE="$RUNNER_TEMP/linux" JOBS=4 ./build.sh
+        run: LINUX_SOURCE="$RUNNER_TEMP/linux" JOBS=4 ./build.sh 2>&1 | tee build/kernel-build.log
       - name: Boot acceptance
         run: python3 scripts/smoke-boot.py
+      - name: Publish boot evidence and failure diagnostics
+        if: always()
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          for name in ("userspace.log", "kernel-build.log", "boot.log"):
+              path = Path("build") / name
+              if path.exists():
+                  text = "\n".join(path.read_text(errors="replace").splitlines()[-45:])
+                  text = text.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+                  print(f"::notice title={name}::{text}")
+          PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -36,4 +50,6 @@ jobs:
             build/SHA256SUMS
             build/kernel-source-commit.txt
             build/boot.log
+            build/userspace.log
+            build/kernel-build.log
           retention-days: 7

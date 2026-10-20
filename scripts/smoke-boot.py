@@ -14,34 +14,65 @@ process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIP
 log = bytearray()
 selector = selectors.DefaultSelector()
 selector.register(process.stdout, selectors.EVENT_READ)
-# Test file operations and console restart, then orderly shutdown.
-stages = [(b'OminX console ready.', b'write /root/probe OMINX_BOOT_OK\ncat /root/probe\nexit\n'),
-          (b'OminX console ready.', b'poweroff\n')]
-stage = 0
 cursor = 0
-try:
-    deadline = time.monotonic() + 120
-    while time.monotonic() < deadline:
-        for key, _ in selector.select(1):
-            chunk = os.read(key.fileobj.fileno(), 65536)
-            if not chunk:
-                selector.unregister(key.fileobj)
-                continue
+deadline = time.monotonic() + 120
+
+
+def receive():
+    for key, _ in selector.select(1):
+        chunk = os.read(key.fileobj.fileno(), 65536)
+        if chunk:
             log.extend(chunk)
-        if stage < len(stages) and stages[stage][0] in log[cursor:]:
-            cursor = len(log)
-            process.stdin.write(stages[stage][1])
-            process.stdin.flush()
-            stage += 1
-        if process.poll() is not None:
-            break
-    else:
-        raise RuntimeError('Boot test timed out')
-    if process.returncode != 0 or stage != 2 or b'\r\nOMINX_BOOT_OK\r\n' not in log:
-        raise RuntimeError('Boot, file round-trip, console restart or shutdown failed')
-    if b'Kernel panic' in log:
-        raise RuntimeError('Kernel panic')
-    print('PASS: kernel boot, original init, file round-trip, console restart, poweroff')
+        else:
+            selector.unregister(key.fileobj)
+
+
+def expect(marker):
+    global cursor
+    while True:
+        found = log.find(marker, cursor)
+        if found >= 0:
+            cursor = found + len(marker)
+            return
+        if time.monotonic() >= deadline:
+            raise RuntimeError(f'Timed out waiting for {marker!r}')
+        if not selector.get_map():
+            raise RuntimeError(f'Emulator closed before {marker!r}')
+        receive()
+
+
+def send(command):
+    process.stdin.write(command + b'\n')
+    process.stdin.flush()
+
+
+try:
+    expect(b'OminX console ready.')
+    expect(b'ominx:/root# ')
+    send(b'uname')
+    expect(b'Linux ')
+    expect(b'ominx:/root# ')
+    send(b'write /root/probe OMINX_BOOT_OK')
+    expect(b'ominx:/root# ')
+    send(b'cat /root/probe')
+    # Require actual file contents on their own line, not echoed input.
+    expect(b'\r\nOMINX_BOOT_OK\r\n')
+    expect(b'ominx:/root# ')
+    send(b'exit')
+    expect(b'OminX console ready.')
+    expect(b'ominx:/root# ')
+    send(b'cat /root/probe')
+    expect(b'\r\nOMINX_BOOT_OK\r\n')
+    expect(b'ominx:/root# ')
+    send(b'poweroff')
+    expect(b'Power down')
+    process.wait(timeout=max(1, deadline - time.monotonic()))
+    while selector.get_map():
+        receive()
+    if process.returncode != 0 or b'Kernel panic' in log:
+        raise RuntimeError('Abnormal emulator exit or kernel panic')
+    proof = 'PASS: kernel boot, original init, uname, file round-trip, console restart, poweroff'
+    log.extend(('\n' + proof + '\n').encode())
 finally:
     if process.poll() is None:
         process.kill()
