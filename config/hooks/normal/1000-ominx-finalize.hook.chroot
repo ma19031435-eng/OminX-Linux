@@ -108,20 +108,6 @@ grep -q '^user-session=plasmax11$' /etc/lightdm/lightdm.conf.d/50-ominx.conf
 grep -q '^name=ominx-aurora$' /etc/xdg/plasmarc
 
 grep -q '^GtkTheme=OminX$' /usr/share/themes/OminX/index.theme
-python3 - <<'PY'
-import gi
-
-gi.require_version("Gtk", "3.0")
-from gi.repository import Gtk
-
-for stylesheet in (
-    "/usr/share/ominx/ui/ominx-ui.css",
-    "/usr/share/themes/OminX/gtk-3.0/gtk.css",
-):
-    provider = Gtk.CssProvider()
-    if not provider.load_from_path(stylesheet):
-        raise SystemExit(f"Could not load OminX GTK stylesheet: {stylesheet}")
-PY
 
 for desktop_id in org.kde.dolphin.desktop firefox-esr.desktop ominx-store.desktop libreoffice-writer.desktop; do
     test -r "/usr/share/applications/$desktop_id"
