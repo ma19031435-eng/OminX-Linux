@@ -6,8 +6,10 @@ The independent image now has a root power broker and an expanded **kernel graph
 configuration**. The original login theme has been rendered and interaction-tested
 with Qt 6, and rendered by an upstream SDDM greeter built on the **build host**.
 
-**The source-built target does not yet contain Qt, SDDM/PAM, a display server or
-KDE Plasma. It still boots its live console, not an authenticated graphical login.**
+**The default source-built image still boots its live console, not an authenticated
+graphical login. It does not package Qt, SDDM/PAM, a display server or KDE Plasma.**
+Optional development media now run source-built Qt and Qt Quick validation
+applications, but still have no real display manager or desktop session.
 No host Qt libraries or display-manager binaries are copied into the musl target.
 A successful theme test is not a successful OS login. The old Debian image remains
 a separate preserved build and is not used to bypass this distinction.
@@ -18,6 +20,9 @@ The [graphics/power results](validation/graphics-login.md) now include successfu
 Bochs, virtio and QXL guest checks. Separately, [target Qt raster tests](validation/target-qt.md)
 passed in optional development media. That small Qt application is not a
 display manager and does not enable graphical login in the default image.
+[Target Qt Quick/theme acceptance](validation/target-qt-quick.md) now also passes
+on those three emulated adapters, using an explicitly disabled authentication
+context and an empty session model—not a fabricated Plasma login.
 
 ## Controlled system service
 

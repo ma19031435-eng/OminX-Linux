@@ -110,8 +110,10 @@ This is not an installer; use disposable virtual data disks for development.
 
 The image now builds a narrow local power broker and additional kernel graphics
 drivers. An original SDDM/Qt6 login theme is available under `desktop/sddm/ominx/`.
-**The target still has no Qt/KDE/SDDM runtime and does not yet boot to graphical
+**The default image still has no Qt/KDE/SDDM runtime and does not yet boot to graphical
 login.** Host theme rendering must not be confused with target authentication.
+Optional development media now pass [source-built Qt Quick/theme guest checks](docs/validation/target-qt-quick.md),
+with authentication explicitly disabled and no installed desktop session.
 See [implementation details, test boundaries and remaining integration](docs/graphics-login.md).
 
 ## Earlier verified session build

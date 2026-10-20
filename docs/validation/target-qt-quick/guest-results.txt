@@ -1,0 +1,3 @@
+PASS quick-bochs: source-built Qt Quick, actual theme pixels, masked input, absent-session refusal, Escape clearing
+PASS quick-virtio: source-built Qt Quick, actual theme pixels, masked input, absent-session refusal, Escape clearing
+PASS quick-qxl: source-built Qt Quick, actual theme pixels, masked input, absent-session refusal, Escape clearing

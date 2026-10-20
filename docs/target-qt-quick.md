@@ -1,6 +1,7 @@
 # Source-built Qt Quick and theme integration stage
 
-This stage is under validation. It must not be described as a completed display
+This stage passed actual guest rendering/input acceptance; see the
+[recorded evidence](validation/target-qt-quick.md). It is not a completed display
 manager, authentication system, or KDE desktop. The default ISO remains the
 original live console until the real desktop/session dependencies are present.
 
@@ -15,7 +16,10 @@ The shader compiler requires **native** Qt Gui, so its build uses a separate
 `build/qt-quick-host` tree rather than mutating the accepted Core-only generator
 configuration. Native developer-build modules emit their tools and CMake metadata
 into that host tree; they are not installed into the musl prefix. Only separately
-cross-compiled target libraries enter `build/qt-prefix`.
+cross-compiled target libraries enter `build/qt-prefix`. Native Quick tooling
+must match the target module features (including `qmltestrunner`); it uses the
+separate `qtdeclarative-host-full` configuration. Split native tool metadata is
+resolved through Qt's explicit additional host-package prefixes.
 
 The workflow caches dependency build workspaces independently of the original
 validation application. A workspace may contain a failed partial build; a cache
