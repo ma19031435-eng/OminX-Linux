@@ -1,0 +1,14 @@
+[SddmGreeterTheme]
+Name=OminX Aurora
+Description=Original OminX login theme for SDDM and Plasma sessions
+Author=OminX Project
+Copyright=OminX Project
+License=AGPL-3.0-only
+Type=sddm-theme
+Version=0.1
+Website=https://github.com/ma19031435-eng/OminX-Linux
+MainScript=Main.qml
+ConfigFile=theme.conf
+Theme-Id=ominx-aurora
+Theme-API=2.0
+QtVersion=6

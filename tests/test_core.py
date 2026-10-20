@@ -74,8 +74,9 @@ class CoreTests(unittest.TestCase):
     def test_archive(self):
         binary = BINARY.read_bytes()
         files = Path(os.environ['OMINX_FILES_BINARY']).read_bytes()
-        packed = module.archive(binary, files)
-        self.assertEqual(packed, module.archive(binary, files))
+        control = Path(os.environ['OMINX_CONTROL_BINARY']).read_bytes()
+        packed = module.archive(binary, files, control)
+        self.assertEqual(packed, module.archive(binary, files, control))
         raw = gzip.decompress(packed)
         entries = {}
         pos = 0
@@ -92,6 +93,8 @@ class CoreTests(unittest.TestCase):
                 break
         self.assertEqual(entries['init'][1], binary)
         self.assertEqual(entries['bin/ominx-files'][1], files)
+        self.assertEqual(entries['sbin/ominx-control'][1], control)
+        self.assertNotIn(b'test-only-no-power-action', control)
         self.assertEqual(entries['init'][0][1], 0o100755)
         self.assertEqual(entries['dev/console'][0][9:11], [5, 1])
         self.assertEqual(entries['tmp'][0][1], 0o41777)
@@ -113,7 +116,7 @@ class CoreTests(unittest.TestCase):
     def test_reject_dynamic_binary(self):
         with tempfile.TemporaryDirectory() as directory:
             result = subprocess.run(['python3', str(ROOT / 'scripts/make-initramfs.py'),
-                                     '/bin/ls', directory + '/bad.gz', str(BINARY)], capture_output=True, text=True)
+                                     '/bin/ls', directory + '/bad.gz', str(BINARY), os.environ['OMINX_CONTROL_BINARY']], capture_output=True, text=True)
             self.assertNotEqual(result.returncode, 0)
             self.assertFalse(Path(directory, 'bad.gz').exists())
 

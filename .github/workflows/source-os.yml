@@ -50,16 +50,18 @@ jobs:
         run: python3 scripts/test-platforms.py 2>&1 | tee build/platforms.log
       - name: Verify read-only Windows filesystems and file import
         run: python3 scripts/test-windows-filesystems.py 2>&1 | tee build/windows-filesystems.log
+      - name: Verify kernel graphics and framebuffer consoles
+        run: python3 scripts/test-graphics.py 2>&1 | tee build/graphics.log
       - name: Publish evidence and failure diagnostics
         if: always()
         run: |
           python3 - <<'PY'
           from pathlib import Path
           # GitHub caps notices per step; publish summaries first, then a few diagnostics.
-          paths = [Path('build') / name for name in ('sessions.log', 'platforms.log', 'windows-filesystems.log', 'userspace.log')]
-          paths += sorted(Path('build/acceptance').glob('*.json'))
+          paths = [Path('build') / name for name in ('sessions.log', 'platforms.log', 'windows-filesystems.log', 'graphics.log', 'userspace.log')]
           paths += [Path('build/kernel-build.log')]
-          paths += sorted(Path('build/acceptance').glob('session-*.txt'))[-1:]
+          paths += sorted(Path('build/acceptance').glob('*.json'))
+          paths += sorted(Path('build/acceptance').glob('graphics-*.txt'))[-1:]
           paths = paths[:10]
           for path in paths:
               if path.exists():

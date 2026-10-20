@@ -3,6 +3,7 @@
 #include "../lib/parse.h"
 #include "../lib/files.h"
 #include "../lib/session.h"
+#include "../lib/control.h"
 #include <sys/prctl.h>
 #include <dirent.h>
 #include <errno.h>
@@ -43,7 +44,7 @@ static void shell(void) {
         if (!n) continue;
         const char *cmd = args[0];
         if (!strcmp(cmd, "help")) {
-            puts("help | id | uname | pwd | cd PATH | ls [PATH] | cat FILE\n"
+            puts("help | control | id | uname | pwd | cd PATH | ls [PATH] | cat FILE\n"
                  "mkdir PATH | write FILE WORDS... | echo WORDS... | sync\n"
                  "cp SOURCE DEST | mv SOURCE DEST | rm FILE\n"
                  "attach DEVICE [ro [ext4|vfat|exfat|ntfs3]] | detach\n"
@@ -134,15 +135,13 @@ static void shell(void) {
             sync();
             if (umount("/mnt/data")) error("detach"); else puts("Data detached.");
         } else if (!strcmp(cmd, "sync")) sync();
-        else if (!strcmp(cmd, "reboot") || !strcmp(cmd, "poweroff")) {
+        else if (!strcmp(cmd, "control") || !strcmp(cmd, "reboot") || !strcmp(cmd, "poweroff")) {
             if (!is_init) { puts("Power controls only run in the OminX boot environment."); continue; }
-            if (geteuid()) { puts("Recovery mode required for power controls."); continue; }
-            if (chdir("/root")) error("/root");
-            sync();
-            if (umount("/mnt/data") && errno != EINVAL && errno != ENOENT) {
-                error("Detach data disk before shutdown"); continue;
-            }
-            if (reboot(!strcmp(cmd, "reboot") ? RB_AUTOBOOT : RB_POWER_OFF)) error(cmd);
+            if (n != 1) { puts("Control commands accept no arguments."); continue; }
+            char response[128];
+            if (ominx_control_request(!strcmp(cmd, "control") ? "status" : cmd, response, sizeof response))
+                error("control service");
+            else fputs(response, stdout);
         } else if (cmd[0] == '/' || !strcmp(cmd, "files")) {
             pid_t pid = fork();
             if (pid == 0) {
@@ -181,6 +180,16 @@ static pid_t start_console(const char *device) {
     shell();
     exit(0);
 }
+static pid_t start_control(void) {
+    pid_t child = fork();
+    if (child == 0) {
+        if (chdir("/")) _exit(1);
+        if (clearenv()) _exit(1);
+        execl("/sbin/ominx-control", "ominx-control", (char *)NULL);
+        error("control service exec"); _exit(1);
+    }
+    return child;
+}
 int main(int argc, char **argv) {
     is_init = getpid() == 1;
     if (!is_init && (argc != 2 || strcmp(argv[1], "--shell"))) {
@@ -194,6 +203,12 @@ int main(int argc, char **argv) {
     if (fd >= 0) {
         for (int i = 0; i < 3; i++) if (dup2(fd, i) < 0) error("dup2");
         if (fd > 2) close(fd);
+    }
+    if (mkdir("/dev/pts", 0755) && errno != EEXIST) error("/dev/pts");
+    if (mount("devpts", "/dev/pts", "devpts", MS_NOSUID | MS_NOEXEC, "newinstance,ptmxmode=0666,mode=0620,gid=5")) error("devpts");
+    else {
+        if (unlink("/dev/ptmx") && errno != ENOENT) error("ptmx replacement");
+        if (symlink("pts/ptmx", "/dev/ptmx")) error("ptmx link");
     }
     filesystem("proc", "/proc"); filesystem("sysfs", "/sys");
     filesystem("tmpfs", "/run"); filesystem("tmpfs", "/tmp");
@@ -214,6 +229,7 @@ int main(int argc, char **argv) {
     signal(SIGINT, SIG_IGN);
     /* Independent local-keyboard and serial sessions; PID 1 reaps all children. */
     const char *devices[] = {"/dev/tty1", "/dev/ttyS0"};
+    pid_t control = start_control();
     pid_t consoles[2];
     for (int i = 0; i < 2; i++) consoles[i] = start_console(devices[i]);
     for (;;) {
@@ -225,6 +241,10 @@ int main(int argc, char **argv) {
                 sleep(1); /* Rate-limit failed console devices. */
                 consoles[i] = start_console(devices[i]);
             }
+        }
+        if (control < 0 || ended == control) {
+            sleep(1);
+            control = start_control();
         }
         ominx_device_policy();
         usleep(250000);

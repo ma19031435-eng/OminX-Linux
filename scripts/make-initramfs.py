@@ -7,7 +7,7 @@ import struct
 import sys
 
 
-def archive(binary, files=None):
+def archive(binary, files=None, control=None):
     output = bytearray()
     def entry(name, mode, data=b'', major=0, minor=0, uid=0, gid=0):
         encoded = name.encode() + b'\0'
@@ -17,7 +17,7 @@ def archive(binary, files=None):
         output.extend(b'\0' * (-len(output) % 4))
         output.extend(data)
         output.extend(b'\0' * (-len(output) % 4))
-    for name in ('dev', 'proc', 'sys', 'run', 'tmp', 'etc', 'bin', 'mnt', 'mnt/data'):
+    for name in ('dev', 'proc', 'sys', 'run', 'tmp', 'etc', 'bin', 'sbin', 'mnt', 'mnt/data'):
         entry(name, stat.S_IFDIR | (0o1777 if name == 'tmp' else 0o755))
     entry('root', stat.S_IFDIR | 0o700)
     entry('home', stat.S_IFDIR | 0o755)
@@ -25,13 +25,15 @@ def archive(binary, files=None):
     entry('etc/passwd', stat.S_IFREG | 0o644,
           b'root:x:0:0:Recovery:/root:/init\nominx:x:1000:1000:OminX live user:/home/ominx:/init\n')
     entry('etc/group', stat.S_IFREG | 0o644,
-          b'root:x:0:\nvideo:x:44:ominx\ninput:x:104:ominx\nrender:x:107:ominx\nominx:x:1000:\n')
+          b'root:x:0:\ntty:x:5:\nvideo:x:44:ominx\ninput:x:104:ominx\nrender:x:107:ominx\nominx:x:1000:\n')
     entry('etc/shadow', stat.S_IFREG | 0o600,
           b'root:!:0:0:99999:7:::\nominx:!:0:0:99999:7:::\n')
     entry('dev/console' , stat.S_IFCHR | 0o600, major=5, minor=1)
     entry('init', stat.S_IFREG | 0o755, binary)
     if files is not None:
         entry('bin/ominx-files', stat.S_IFREG | 0o755, files)
+    if control is not None:
+        entry('sbin/ominx-control', stat.S_IFREG | 0o755, control)
     entry('etc/os-release', stat.S_IFREG | 0o644,
           b'NAME=OminX\nID=ominx\nPRETTY_NAME="OminX source-built console"\n')
     entry('TRAILER!!!', 0)
@@ -54,10 +56,10 @@ def static_elf(path):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 4:
-        raise SystemExit('Usage: make-initramfs.py INIT OUTPUT FILES_EXECUTABLE')
+    if len(sys.argv) != 5:
+        raise SystemExit('Usage: make-initramfs.py INIT OUTPUT FILES_EXECUTABLE CONTROL_EXECUTABLE')
     try:
-        packed = archive(static_elf(sys.argv[1]), static_elf(sys.argv[3]))
+        packed = archive(static_elf(sys.argv[1]), static_elf(sys.argv[3]), static_elf(sys.argv[4]))
     except ValueError as error:
         raise SystemExit(str(error))
     Path(sys.argv[2]).write_bytes(packed)

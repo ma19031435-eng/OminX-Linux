@@ -8,24 +8,30 @@ toolchain:
 	./scripts/build-toolchain.sh
 build:
 	./build.sh
-build/ominx: src/core/ominx.c src/lib/parse.c src/lib/files.c src/lib/parse.h src/lib/files.h src/lib/session.c src/lib/session.h
+build/ominx: src/core/ominx.c src/lib/parse.c src/lib/files.c src/lib/parse.h src/lib/files.h src/lib/session.c src/lib/session.h src/lib/control.c src/lib/control.h
 	mkdir -p build
 	$(CC) $(CFLAGS) -static -o $@ $(filter %.c,$^)
 build/ominx-files: src/files/main.c src/lib/files.c src/lib/files.h
 	mkdir -p build
 	$(CC) $(CFLAGS) -static -o $@ $(filter %.c,$^)
-initramfs: build/ominx build/ominx-files scripts/make-initramfs.py
-	python3 scripts/make-initramfs.py build/ominx build/initramfs.cpio.gz build/ominx-files
-build/host/ominx: src/core/ominx.c src/lib/parse.c src/lib/files.c src/lib/parse.h src/lib/files.h src/lib/session.c src/lib/session.h
+build/ominx-control: src/control/main.c src/lib/control.h src/lib/session.h
+	mkdir -p build
+	$(CC) $(CFLAGS) -static -o $@ $(filter %.c,$^)
+initramfs: build/ominx build/ominx-files build/ominx-control scripts/make-initramfs.py
+	python3 scripts/make-initramfs.py build/ominx build/initramfs.cpio.gz build/ominx-files build/ominx-control
+build/host/ominx: src/core/ominx.c src/lib/parse.c src/lib/files.c src/lib/parse.h src/lib/files.h src/lib/session.c src/lib/session.h src/lib/control.c src/lib/control.h
 	mkdir -p build/host
 	$(HOSTCC) $(CFLAGS) -static -o $@ $(filter %.c,$^)
 build/host/ominx-files: src/files/main.c src/lib/files.c src/lib/files.h
 	mkdir -p build/host
 	$(HOSTCC) $(CFLAGS) -static -o $@ $(filter %.c,$^)
-check: build/host/ominx build/host/ominx-files
-	OMINX_FILES_BINARY=$(CURDIR)/build/host/ominx-files OMINX_TEST_BINARY=$(CURDIR)/build/host/ominx python3 -m unittest discover -s tests -v
+build/host/ominx-control: src/control/main.c src/lib/control.h src/lib/session.h
+	mkdir -p build/host
+	$(HOSTCC) $(CFLAGS) -static -o $@ $(filter %.c,$^)
+check: build/host/ominx build/host/ominx-files build/host/ominx-control
+	OMINX_CONTROL_BINARY=$(CURDIR)/build/host/ominx-control OMINX_FILES_BINARY=$(CURDIR)/build/host/ominx-files OMINX_TEST_BINARY=$(CURDIR)/build/host/ominx python3 -m unittest discover -s tests -v
 target-check: initramfs
-	OMINX_FILES_BINARY=$(CURDIR)/build/ominx-files OMINX_TEST_BINARY=$(CURDIR)/build/ominx python3 -m unittest discover -s tests -v
+	OMINX_CONTROL_BINARY=$(CURDIR)/build/ominx-control OMINX_FILES_BINARY=$(CURDIR)/build/ominx-files OMINX_TEST_BINARY=$(CURDIR)/build/ominx python3 -m unittest discover -s tests -v
 media:
 	./scripts/build-media.sh
 run:

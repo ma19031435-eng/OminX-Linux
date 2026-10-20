@@ -45,8 +45,10 @@ def check(case):
         vm.command(f'cat {vm.device}', 'Permission denied')
         vm.command(f'attach {vm.device}', 'Recovery mode required')
         vm.command('detach', 'Recovery mode required')
-        vm.command('poweroff', 'Recovery mode required')
-        vm.command('reboot', 'Recovery mode required')
+        vm.command('control', 'OK service=ominx-control protocol=1')
+        vm.command('/sbin/ominx-control', 'requires root service context')
+        vm.command('cat /proc/mounts', 'devpts /dev/pts devpts')
+        vm.command('poweroff unexpected', 'accept no arguments')
         vm.command('files info /dev/dri/card0', '"mode":432,"uid":0,"gid":44')
         vm.command('files info /dev/input/event0', '"mode":432,"uid":0,"gid":104')
         vm.keyboard_check()
@@ -63,12 +65,12 @@ def check(case):
         vm.prompt()
         vm.command('id', 'uid=1000 euid=1000 suid=1000')
         vm.command('cat "my notes.txt"', '\r\nunprivileged document\r\n')
-        # Shutdown is deliberately not delegated to a live user yet; stop through
-        # the external VM manager, not a hidden in-guest root escape.
-        vm.qmp_command('quit')
-        vm.process.wait(timeout=10)
-        if vm.process.returncode or b'Kernel panic' in vm.log:
-            raise RuntimeError('Abnormal session guest exit')
+        vm.send('reboot')
+        vm.expect('reboot: Restarting system')
+        vm.expect('OminX console ready.')
+        vm.prompt()
+        vm.command('id', 'uid=1000 euid=1000 suid=1000')
+        vm.shutdown()  # normal user requests power through the root broker
     finally:
         vm.close()
     disk.unlink()

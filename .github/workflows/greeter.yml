@@ -1,0 +1,53 @@
+name: OminX SDDM Qt6 theme verification
+on:
+  push:
+    branches: [arena/11b46bb0-ominx-linux]
+    paths: ['desktop/**', 'tests/ui/**', 'scripts/build-greeter-host.sh', '.github/workflows/greeter.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+defaults:
+  run:
+    shell: bash
+jobs:
+  theme:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build-host UI test dependencies (not target packages)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake pkg-config qt6-base-dev qt6-declarative-dev \
+            qt6-tools-dev qt6-tools-dev-tools qt6-l10n-tools libpam0g-dev libxcb1-dev libxcb-xkb-dev \
+            libxkbcommon-dev libxkbcommon-x11-dev libxau-dev xauth xvfb imagemagick python3-venv \
+            fonts-dejavu-core qml6-module-qtquick qml6-module-qtquick-controls qml6-module-qtquick-layouts \
+            qml6-module-qtqml-workerscript qml6-module-qtquick-window qml6-module-qtquick-templates
+      - name: Test theme behavior with Qt6 and mock SDDM context
+        run: |
+          python3 -m venv build/ui-venv
+          build/ui-venv/bin/pip install PySide6==6.8.3
+          mkdir -p build/greeter
+          build/ui-venv/bin/python tests/ui/test_greeter.py 2>&1 | tee build/greeter/theme-tests.txt
+      - name: Build pinned upstream SDDM greeter using host Qt6
+        run: JOBS=4 scripts/build-greeter-host.sh 2>&1 | tee build/greeter/sddm-build.txt
+      - name: Render in actual SDDM test mode
+        run: xvfb-run -a -s '-screen 0 1440x900x24' python3 tests/ui/test_real_greeter.py 2>&1 | tee build/greeter/sddm-test.txt
+      - name: Report UI test evidence
+        if: always()
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          for path in Path('build/greeter').glob('*.txt'):
+              text = '\n'.join(path.read_text(errors='replace').splitlines()[-50:])
+              text = text.replace('%','%25').replace('\r','%0D').replace('\n','%0A')
+              print(f'::notice title={path.name}::{text}')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: OminX-login-theme-${{ github.sha }}
+          path: |
+            build/greeter
+            desktop/sddm/ominx
+          retention-days: 14

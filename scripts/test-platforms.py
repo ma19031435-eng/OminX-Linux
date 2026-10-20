@@ -39,6 +39,8 @@ class VM:
                 '-cpu', case['cpu'], '-m', str(case['ram']), '-display', 'none',
                 '-serial', 'stdio', '-monitor', 'none', '-nic', 'none',
                 '-qmp', f'unix:{self.qmp_path},server=on,wait=off']
+        if case.get('vga'):
+            args += ['-vga', case['vga']]
         if case.get('usb'):
             args += ['-device', 'qemu-xhci', '-drive', f'if=none,id=bootusb,file={iso},format=raw,readonly=on',
                      '-device', 'usb-storage,drive=bootusb,bootindex=1']
