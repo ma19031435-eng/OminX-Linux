@@ -30,7 +30,9 @@ interfaces, linking and derived code. Preserve upstream notices and track source
 
 ## Remaining milestones (not claimed complete)
 
-1. Run kernel boot acceptance on CI and local VM; exercise failure/restart paths.
+1. Kernel boot acceptance **passed in CI QEMU** (see `validation/segment-one.md`),
+   including console restart. Local VM, physical hardware and broader failure-path
+   testing remain outstanding.
 2. Choose a maintained kernel, reproducible toolchain/libc and verified source lock.
 3. Persistent filesystem lifecycle, safe disk selection and recovery; no implicit
    formatting or installation. Dedicated image/USB bootloader and UEFI testing.

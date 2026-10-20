@@ -6,6 +6,21 @@ system with original OminX userspace and a future customized KDE Plasma desktop.
 finished desktop, installer, or production-secure OS.** It does not use Debian
 packages or BusyBox in the target image. Host build tools are still required.
 
+## Segment one: first terminal boot verified
+
+**Passed in QEMU on 2026-10-20**, with source revision
+`663eef5ac547ce3d19cdbc5c9e51dd3580372166`:
+Linux 6.12.0 booted the original OminX `/init`, reached `ominx:/root#`,
+executed `uname`, wrote/read a file, restarted the console after `exit`,
+read the same RAM-backed file again, and powered off cleanly.
+
+- [Successful build and boot run](https://github.com/ma19031435-eng/OminX-Linux/actions/runs/39441574159)
+- [Boot transcript](docs/validation/first-terminal-boot.txt)
+- [Download and run instructions](docs/validation/segment-one.md)
+
+This verifies the serial terminal under QEMU, not a desktop, physical-machine
+boot, persistent installation, or production release.
+
 ## Build and test
 
 On an x86-64 Linux host, install a C compiler with static libc, make and Python 3.

@@ -1,0 +1,45 @@
+[    2.273056] Key type dns_resolver registered
+[    2.274990] IPI shorthand broadcast: enabled
+[    2.298854] sched_clock: Marking stable (2257033751, 40983412)->(2304047112, -6029949)
+[    2.300698] registered taskstats version 1
+[    2.300894] Loading compiled-in X.509 certificates
+[    2.311903] Demotion targets for Node 0: null
+[    2.314946] PM:   Magic number: 14:352:890
+[    2.315892] printk: legacy console [netcon0] enabled
+[    2.316271] netconsole: network logging started
+[    2.317460] cfg80211: Loading compiled-in X.509 certificates for regulatory database
+[    2.325145] kworker/u4:2 (48) used greatest stack depth: 15032 bytes left
+[    2.335530] Loaded X.509 cert 'sforshee: 00b28ddf47aef9cea7'
+[    2.336432] Loaded X.509 cert 'wens: 61c038651aabdcf94bd0ac7ff06c7248db18c600'
+[    2.338656] ALSA device list:
+[    2.338859]   No soundcards found.
+[    2.339383] platform regulatory.0: Direct firmware load for regulatory.db failed with error -2
+[    2.339917] cfg80211: failed to load regulatory.db
+[    2.379355] ata2: found unknown device (class 0)
+[    2.384646] ata2.00: ATAPI: QEMU DVD-ROM, 2.5+, max UDMA/100
+[    2.395064] scsi 1:0:0:0: CD-ROM            QEMU     QEMU DVD-ROM     2.5+ PQ: 0 ANSI: 5
+[    2.408668] sr 1:0:0:0: [sr0] scsi3-mmc drive: 4x/4x cd/rw xa/form2 tray
+[    2.409100] cdrom: Uniform CD-ROM driver Revision: 3.20
+[    2.416661] sr 1:0:0:0: Attached scsi generic sg0 type 5
+[    2.486923] Freeing unused kernel image (initmem) memory: 2768K
+[    2.488130] Write protecting the kernel read-only data: 26624k
+[    2.490308] Freeing unused kernel image (rodata/data gap) memory: 1188K
+[    2.724235] x86/mm: Checked W+X mappings: passed, no W+X pages found.
+[    2.725852] input: ImExPS/2 Generic Explorer Mouse as /devices/platform/i8042/serio1/input/input3
+[    2.726974] Run /init as init process
+OminX console ready. Type help. No disk is mounted automatically.
+ominx:/root# uname
+Linux 6.12.0 x86_64
+ominx:/root# write /root/probe OMINX_BOOT_OK
+ominx:/root# cat /root/probe
+OMINX_BOOT_OK
+ominx:/root# exit
+[    2.810478] init (53) used greatest stack depth: 14544 bytes left
+OminX console ready. Type help. No disk is mounted automatically.
+ominx:/root# cat /root/probe
+OMINX_BOOT_OK
+ominx:/root# poweroff
+[    3.821398] ACPI: PM: Preparing to enter system sleep state S5
+[    3.822201] reboot: Power down
+
+PASS: kernel boot, original init, uname, file round-trip, console restart, poweroff
