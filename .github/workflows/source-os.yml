@@ -59,9 +59,9 @@ jobs:
           from pathlib import Path
           # GitHub caps notices per step; publish summaries first, then a few diagnostics.
           paths = [Path('build') / name for name in ('sessions.log', 'platforms.log', 'windows-filesystems.log', 'graphics.log', 'userspace.log')]
-          paths += [Path('build/kernel-build.log')]
-          paths += sorted(Path('build/acceptance').glob('*.json'))
           paths += sorted(Path('build/acceptance').glob('graphics-*.txt'))[-1:]
+          paths += sorted(Path('build/acceptance').glob('*.json'))
+          paths += [Path('build/kernel-build.log')]
           paths = paths[:10]
           for path in paths:
               if path.exists():

@@ -65,9 +65,9 @@ id
 ```
 
 The default session has a private home/runtime directory, drops all saved root
-identity and enables `no_new_privs`. Administrative mount and power commands are
-restricted to the explicitly selected recovery menu entry. Until a controlled
-power service is added, stop a normal-mode VM through its host controls.
+identity and enables `no_new_privs`. Administrative mount commands are restricted to the explicitly selected recovery
+menu entry. Power actions are delegated to the dedicated service. Normal-mode `control`, `reboot` and `poweroff` now use the bounded root power
+broker; mount administration remains recovery-only.
 [Session and device policy](docs/sessions.md).
 
 Original commands also include `ls`, `pwd`, `cd`, `mkdir`, `echo`, `sync`, `exit`,
@@ -106,7 +106,15 @@ refuses writes. Data mounts prohibit executable files, device nodes, and setuid.
 A busy data mount prevents shutdown rather than silently forcing its removal.
 This is not an installer; use disposable virtual data disks for development.
 
-## Latest verified session build
+## Graphics/service work and login theme
+
+The image now builds a narrow local power broker and additional kernel graphics
+drivers. An original SDDM/Qt6 login theme is available under `desktop/sddm/ominx/`.
+**The target still has no Qt/KDE/SDDM runtime and does not yet boot to graphical
+login.** Host theme rendering must not be confused with target authentication.
+See [implementation details, test boundaries and remaining integration](docs/graphics-login.md).
+
+## Earlier verified session build
 
 **19 automated checks, five normal-user configurations, five recovery regressions,
 and all three Windows-filesystem cases passed.**

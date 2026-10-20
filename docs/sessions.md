@@ -65,12 +65,13 @@ In default sessions:
 
 - Filesystem permissions prevent changing `/etc`, reading `/etc/shadow`, entering
   `/root`, or directly opening raw data disks.
-- `attach`, `detach`, `reboot` and `poweroff` refuse administrative actions.
+- `attach` and `detach` refuse administrative actions; `reboot` and `poweroff` now
+  use the bounded root broker described in [graphics-login.md](graphics-login.md).
 - There is no `sudo`, setuid helper, password bypass or hidden root command.
 
-Choose the recovery menu entry for existing data-mount/import and power-control
-workflows. Until a narrow privileged service is implemented, normal users must
-stop a VM through its host controls instead of a guest `poweroff` command. Do not
+Choose recovery for data-mount/import administration. Normal-user power commands
+are now delegated through the authenticated local-UID socket broker, without
+granting root identity to the console. Do not
 use the recovery ISO as the normal default. Users who can change boot choices
 can intentionally obtain root; this is not physical-access protection, Secure
 Boot, an authenticated install or a hardened multi-user appliance.
@@ -80,9 +81,10 @@ Boot, an authenticated install or a hardened multi-user appliance.
 `python3 scripts/test-sessions.py` boots the **normal ISO** on all five existing
 firmware/device configurations. It checks IDs and saved IDs, zero permitted,
 effective and ambient capabilities, `no_new_privs`, runtime/home ownership,
-private file modes, denied system-file/raw-disk access, refused admin commands,
+private file modes, denied system-file/raw-disk access, refused mount commands and delegated power controls,
 card/input permissions, local keyboard operation, program execution and respawn.
-It exits those VMs using QMP, not an in-guest root escape. The existing storage,
+It now verifies user-requested reboot and poweroff through the broker, not an
+in-guest root shell escape. The existing storage,
 shutdown and Windows-filesystem tests now boot the **explicit recovery ISO**.
 
 The next gate is a narrowly scoped privileged control/seat service and the

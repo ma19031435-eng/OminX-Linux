@@ -46,12 +46,18 @@ Root administration is a separately selected recovery mode. This is automatic
 live login, not authentication or a completed desktop session manager. See
 [sessions.md](sessions.md).
 
+## Graphics and controlled-power increment
+
+The target now includes a supervised power broker and additional kernel graphics
+drivers. A separately tested SDDM theme is available, but target Qt/KDE and
+authenticated graphical startup remain unfinished. See [graphics-login.md](graphics-login.md).
+
 ## Remaining product work
 
 1. Physical-machine testing, additional CPU/device coverage and 32-bit x86 if needed.
 2. Authenticated users, permissions policy, service lifecycle, networking, time,
-   trust store, logging and security updates. The current root console is not a
-   multi-user security boundary.
+   trust store, logging and security updates. The automatic single-user live session and separately selected root recovery
+   are not authenticated multi-user login.
 3. Source-build graphics/input dependencies, Qt, KDE Frameworks and Plasma;
    integrate the original OminX bottom-taskbar desktop and accessibility behavior.
 4. Original graphical file manager, settings, setup and application-management
