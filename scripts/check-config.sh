@@ -5,7 +5,7 @@ set -eu
 ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 cd "$ROOT"
 
-shell_files="auto/config build.sh scripts/verify-boot-menu.sh config/hooks/normal/1000-ominx-finalize.hook.chroot config/includes.chroot/usr/local/bin/ominx-welcome config/includes.chroot/usr/local/bin/ominx-protontricks config/includes.chroot/usr/local/bin/ominx-open-windows config/includes.chroot/usr/local/bin/ominx-store config/includes.chroot/usr/local/bin/ominx-settings config/includes.chroot/usr/local/bin/ominx-setup"
+shell_files="auto/config build.sh scripts/build-debian-legacy.sh scripts/verify-boot-menu.sh config/hooks/normal/1000-ominx-finalize.hook.chroot config/includes.chroot/usr/local/bin/ominx-welcome config/includes.chroot/usr/local/bin/ominx-protontricks config/includes.chroot/usr/local/bin/ominx-open-windows config/includes.chroot/usr/local/bin/ominx-store config/includes.chroot/usr/local/bin/ominx-settings config/includes.chroot/usr/local/bin/ominx-setup"
 for file in $shell_files; do
     sh -n "$file"
 done
@@ -28,7 +28,7 @@ package_list_path = root / "config/package-lists/ominx.list.chroot"
 package_list = package_list_path.read_text(encoding="utf-8")
 hook_path = root / "config/hooks/normal/1000-ominx-finalize.hook.chroot"
 hook = hook_path.read_text(encoding="utf-8")
-build_script = (root / "build.sh").read_text(encoding="utf-8")
+build_script = (root / "scripts/build-debian-legacy.sh").read_text(encoding="utf-8")
 build_workflow = (root / ".github/workflows/build-iso.yml").read_text(encoding="utf-8")
 
 for marker in ("build-info.txt", "${GITHUB_SHA}", "${GITHUB_RUN_ID}", "date -u"):
@@ -123,7 +123,7 @@ if metadata.get("KPlugin", {}).get("Id") != "com.ominx.aurora":
 layout_path = look_and_feel / "contents/layouts/org.kde.plasma.desktop-layout.js"
 layout = layout_path.read_text(encoding="utf-8")
 for setting in (
-    'panel.location = "top"',
+    'panel.location = "bottom"',
     'panel.alignment = "center"',
     'panel.lengthMode = "custom"',
     "panel.height = 46",

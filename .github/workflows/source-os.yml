@@ -1,0 +1,39 @@
+name: Source-built OminX core
+on:
+  push:
+    branches: [arena/11b46bb0-ominx-linux]
+    paths: ['src/**', 'tests/**', 'scripts/make-initramfs.py', 'scripts/smoke-boot.py', 'build.sh', 'Makefile', '.github/workflows/source-os.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  boot:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install host build and test tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential flex bison libelf-dev libssl-dev bc qemu-system-x86 python3
+      - name: Test original userspace
+        run: make check
+      - name: Obtain upstream kernel
+        run: |
+          git clone --depth 1 --branch v6.12 https://github.com/torvalds/linux.git "$RUNNER_TEMP/linux"
+          git -C "$RUNNER_TEMP/linux" rev-parse HEAD > build/kernel-source-commit.txt
+      - name: Build Linux and OminX
+        run: LINUX_SOURCE="$RUNNER_TEMP/linux" JOBS=4 ./build.sh
+      - name: Boot acceptance
+        run: python3 scripts/smoke-boot.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: OminX-core-${{ github.sha }}
+          path: |
+            build/bzImage
+            build/initramfs.cpio.gz
+            build/SHA256SUMS
+            build/kernel-source-commit.txt
+            build/boot.log
+          retention-days: 7

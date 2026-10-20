@@ -1,4 +1,4 @@
-// OminX Aurora's Plasma layout: a floating command bar with native widgets.
+// OminX Aurora's Plasma layout: a familiar bottom taskbar with native widgets.
 // The panel scripting API and widget IDs are provided by Plasma Workspace.
 
 var desktops = desktopsForActivity(currentActivity());
@@ -14,16 +14,16 @@ for (var desktopIndex = 0; desktopIndex < desktops.length; desktopIndex++) {
 
 var panel = new Panel;
 var geometry = screenGeometry(panel.screen);
-var panelWidth = Math.min(1480, Math.max(560, geometry.width - 36));
+var panelWidth = geometry.width;
 
-panel.location = "top";
+panel.location = "bottom";
 panel.alignment = "center";
 panel.lengthMode = "custom";
 panel.length = panelWidth;
 panel.minimumLength = Math.min(560, panelWidth);
 panel.maximumLength = panelWidth;
 panel.height = 46;
-panel.offset = 10;
+panel.offset = 0;
 panel.hiding = "none";
 panel.floating = true;
 panel.opacity = "translucent";

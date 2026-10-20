@@ -1,0 +1,78 @@
+import gzip
+import importlib.util
+from pathlib import Path
+import subprocess
+import tempfile
+import unittest
+
+ROOT = Path(__file__).resolve().parents[1]
+spec = importlib.util.spec_from_file_location('initramfs', ROOT / 'scripts/make-initramfs.py')
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+
+
+class CoreTests(unittest.TestCase):
+    def shell(self, text, cwd=None):
+        return subprocess.run([str(ROOT / 'build/ominx'), '--shell'], input=text,
+                              text=True, capture_output=True, cwd=cwd, timeout=5)
+
+    def test_files(self):
+        with tempfile.TemporaryDirectory() as directory:
+            result = self.shell('mkdir work\ncd work\nwrite note hello OminX\ncat note\npwd\nls\nexit\n', directory)
+            self.assertEqual(result.returncode, 0)
+            self.assertEqual(result.stderr, '')
+            self.assertEqual((Path(directory) / 'work/note').read_text(), 'hello OminX\n')
+            self.assertIn('hello OminX', result.stdout)
+            self.assertIn('/work', result.stdout)
+
+    def test_errors_and_safety(self):
+        result = self.shell('cat /nonexistent-ominx-file\ncd\nreboot\npoweroff\nhelp\nexit\n')
+        self.assertIn('No such file', result.stderr)
+        self.assertIn('wrong argument count', result.stdout)
+        self.assertEqual(result.stdout.count('Power controls only'), 2)
+        self.assertIn('no quoting', result.stdout)
+
+    def test_limits_and_eof(self):
+        result = self.shell('echo ' + 'word ' * 80 + '\nuname\n')
+        self.assertIn('Too many arguments', result.stdout)
+        self.assertIn('Linux', result.stdout)
+        self.assertEqual(result.returncode, 0)
+
+    def test_explicit_execution(self):
+        result = self.shell('/bin/echo external-ok\nexit\n')
+        self.assertIn('external-ok', result.stdout)
+
+    def test_archive(self):
+        binary = (ROOT / 'build/ominx').read_bytes()
+        packed = module.archive(binary)
+        self.assertEqual(packed, module.archive(binary))
+        raw = gzip.decompress(packed)
+        entries = {}
+        pos = 0
+        while True:
+            self.assertEqual(raw[pos:pos + 6], b'070701')
+            fields = [int(raw[pos + 6 + i * 8:pos + 14 + i * 8], 16) for i in range(13)]
+            start = pos + 110
+            name = raw[start:start + fields[11] - 1].decode()
+            data_start = (start + fields[11] + 3) & ~3
+            data = raw[data_start:data_start + fields[6]]
+            entries[name] = (fields, data)
+            pos = (data_start + fields[6] + 3) & ~3
+            if name == 'TRAILER!!!':
+                break
+        self.assertEqual(entries['init'][1], binary)
+        self.assertEqual(entries['init'][0][1], 0o100755)
+        self.assertEqual(entries['dev/console'][0][9:11], [5, 1])
+        self.assertEqual(entries['tmp'][0][1], 0o41777)
+        self.assertIn(b'ID=ominx', entries['etc/os-release'][1])
+
+    def test_reject_dynamic_binary(self):
+        with tempfile.TemporaryDirectory() as directory:
+            result = subprocess.run(['python3', str(ROOT / 'scripts/make-initramfs.py'),
+                                     '/bin/ls', directory + '/bad.gz'], capture_output=True, text=True)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertFalse(Path(directory, 'bad.gz').exists())
+
+
+if __name__ == '__main__':
+    unittest.main()
