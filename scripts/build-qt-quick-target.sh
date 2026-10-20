@@ -8,7 +8,7 @@ cd "$ROOT"
 . toolchain/sources.env
 MODE=${1:-all}
 case "$MODE" in all|--dependencies-only|--probe-only) ;; *) echo "Unknown build mode: $MODE" >&2; exit 1 ;; esac
-HOST="$ROOT/build/qt-host"
+HOST="$ROOT/build/qt-quick-host"
 STAGE="$ROOT/build/qt-prefix"
 [ -f "$STAGE/lib/cmake/Qt6Widgets/Qt6WidgetsConfig.cmake" ] || {
     echo 'Build the source-linked target Qt base first' >&2; exit 1;
@@ -21,14 +21,17 @@ for module in qtshadertools qtdeclarative; do
     esac
     scripts/fetch-source.sh "https://github.com/qt/$module.git" "$QT_TAG" "$commit" "$ROOT/build/sources/$module"
 done
-# qsb needs native Qt Gui. Upgrade only host generators; never install host code
-# into the musl prefix. All rendering/font dependencies here are Qt's bundled sources.
+# qsb needs native Qt Gui. Use an independent GUI-enabled host build: toggling
+# GUI on a cached Core-only configure can retain invalid dependency metadata.
+# Never install host code into the musl prefix. All rendering/font dependencies here are Qt's bundled sources.
 cmake -S build/sources/qtbase -B "$HOST" -G Ninja \
     -DCMAKE_BUILD_TYPE=Release -DQT_BUILD_EXAMPLES=OFF -DQT_BUILD_TESTS=OFF \
     -DFEATURE_developer_build=ON -DFEATURE_gui=ON -DFEATURE_widgets=ON \
     -DINPUT_opengl=no -DFEATURE_opengl=OFF -DFEATURE_vulkan=OFF \
     -DFEATURE_xcb=OFF -DFEATURE_eglfs=OFF -DFEATURE_dbus=OFF -DFEATURE_icu=OFF \
-    -DFEATURE_fontconfig=OFF -DFEATURE_system_freetype=OFF -DFEATURE_system_harfbuzz=OFF
+    -DFEATURE_fontconfig=OFF -DFEATURE_system_freetype=OFF -DFEATURE_system_harfbuzz=OFF \
+    -DFEATURE_system_png=OFF -DFEATURE_system_jpeg=OFF -DFEATURE_system_zlib=OFF \
+    -DFEATURE_system_pcre2=OFF
 cmake --build "$HOST" --parallel "${JOBS:-2}"
 for module in qtshadertools qtdeclarative; do
     # No native Quick renderer is needed for code generation. Disabling animation

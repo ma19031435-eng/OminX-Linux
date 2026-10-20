@@ -56,7 +56,7 @@ jobs:
         id: quick-cache
         with:
           path: |
-            build/qt-host
+            build/qt-quick-host
             build/qt-prefix
             build/sources/qtshadertools
             build/sources/qtdeclarative
@@ -71,7 +71,7 @@ jobs:
         if: steps.quick-cache.outputs.cache-hit != 'true'
         with:
           path: |
-            build/qt-host
+            build/qt-quick-host
             build/qt-prefix
             build/sources/qtshadertools
             build/sources/qtdeclarative
