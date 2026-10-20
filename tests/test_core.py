@@ -1,4 +1,5 @@
 import gzip
+import os
 import importlib.util
 from pathlib import Path
 import subprocess
@@ -6,6 +7,7 @@ import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
+BINARY = Path(os.environ.get('OMINX_TEST_BINARY', ROOT / 'build/ominx'))
 spec = importlib.util.spec_from_file_location('initramfs', ROOT / 'scripts/make-initramfs.py')
 module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
@@ -13,7 +15,7 @@ spec.loader.exec_module(module)
 
 class CoreTests(unittest.TestCase):
     def shell(self, text, cwd=None):
-        return subprocess.run([str(ROOT / 'build/ominx'), '--shell'], input=text,
+        return subprocess.run([str(BINARY), '--shell'], input=text,
                               text=True, capture_output=True, cwd=cwd, timeout=5)
 
     def test_files(self):
@@ -24,6 +26,21 @@ class CoreTests(unittest.TestCase):
             self.assertEqual((Path(directory) / 'work/note').read_text(), 'hello OminX\n')
             self.assertIn('hello OminX', result.stdout)
             self.assertIn('/work', result.stdout)
+
+    def test_copy_move_delete(self):
+        with tempfile.TemporaryDirectory() as directory:
+            result = self.shell('write original keepme\ncp original copy\ncp original original\n'
+                                'mv copy moved\ncat moved\nrm moved\nexit\n', directory)
+            self.assertEqual(result.stderr, '')
+            self.assertIn('same file', result.stdout)
+            self.assertEqual((Path(directory) / 'original').read_text(), 'keepme\n')
+            self.assertFalse((Path(directory) / 'copy').exists())
+            self.assertFalse((Path(directory) / 'moved').exists())
+
+    def test_storage_host_guard(self):
+        result = self.shell('attach /dev/does-not-exist\ndetach\nexit\n')
+        self.assertEqual(result.stdout.count('Disk attachment only'), 2)
+        self.assertEqual(result.stderr, '')
 
     def test_errors_and_safety(self):
         result = self.shell('cat /nonexistent-ominx-file\ncd\nreboot\npoweroff\nhelp\nexit\n')
@@ -43,7 +60,7 @@ class CoreTests(unittest.TestCase):
         self.assertIn('external-ok', result.stdout)
 
     def test_archive(self):
-        binary = (ROOT / 'build/ominx').read_bytes()
+        binary = BINARY.read_bytes()
         packed = module.archive(binary)
         self.assertEqual(packed, module.archive(binary))
         raw = gzip.decompress(packed)

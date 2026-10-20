@@ -10,7 +10,7 @@ scripts/fetch-source.sh https://github.com/limine-bootloader/limine.git "$LIMINE
 if [ ! -f "$SOURCE/configure" ]; then (cd "$SOURCE" && ./bootstrap); fi
 mkdir -p build/limine
 (cd build/limine && "$SOURCE/configure" --enable-bios --enable-bios-cd \
-    --enable-uefi-x86-64 --enable-uefi-cd TOOLCHAIN_FOR_TARGET="$PREFIX")
+    --enable-uefi-x86-64 --enable-uefi-cd TOOLCHAIN_FOR_TARGET="${PREFIX%-}")
 make -C build/limine -j"${JOBS:-2}"
 STAGE="$ROOT/build/media-root"
 mkdir -p "$STAGE/boot/limine" "$STAGE/EFI/BOOT"

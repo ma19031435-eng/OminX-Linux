@@ -6,6 +6,9 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+defaults:
+  run:
+    shell: bash
 jobs:
   boot:
     runs-on: ubuntu-24.04
@@ -17,7 +20,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential flex bison libelf-dev libssl-dev bc qemu-system-x86 \
             python3 autoconf automake libtool texinfo nasm mtools xorriso ovmf e2fsprogs curl wget
-      - uses: actions/cache@v4
+      - uses: actions/cache/restore@v4
         id: compiler
         with:
           path: |
@@ -29,10 +32,18 @@ jobs:
         run: |
           mkdir -p build
           JOBS=4 make toolchain 2>&1 | tee build/toolchain.log
+      - name: Save completed source toolchain independently of later boot tests
+        if: steps.compiler.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            build/toolchain
+            build/provenance
+          key: ${{ steps.compiler.outputs.cache-primary-key }}
       - name: Build source-based kernel, userspace and BIOS/UEFI ISO
         run: JOBS=4 ./build.sh 2>&1 | tee build/kernel-build.log
       - name: Test musl-linked original userspace
-        run: make check CC="$PWD/build/toolchain/bin/x86_64-linux-musl-gcc" 2>&1 | tee build/userspace.log
+        run: make target-check CC="$PWD/build/toolchain/bin/x86_64-linux-musl-gcc" 2>&1 | tee build/userspace.log
       - name: Boot real media and verify x86 platform matrix
         run: python3 scripts/test-platforms.py 2>&1 | tee build/platforms.log
       - name: Publish evidence and failure diagnostics

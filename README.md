@@ -1,99 +1,126 @@
-# OminX — independent source-built OS
+# OminX — source-built x86-64 operating system
 
-OminX is migrating from a Debian live-image recipe to an independent Linux-based
-system with original OminX userspace and a future customized KDE Plasma desktop.
-**The new build currently produces a minimal RAM-only console foundation, not a
-finished desktop, installer, or production-secure OS.** It does not use Debian
-packages or BusyBox in the target image. Host build tools are still required.
+OminX is an independent Linux-based project. The new target is built from upstream
+Linux, a source-built GCC/binutils/musl cross toolchain, a source-built Limine
+bootloader, and original OminX init and console utilities. **No existing Linux
+distribution, distribution root filesystem, package database, or host libc is used
+as the new target's base.** The old Debian desktop build is preserved separately.
 
-## Segment one: first terminal boot verified
+## Build from source
 
-**Passed in QEMU on 2026-10-20**, with source revision
-`663eef5ac547ce3d19cdbc5c9e51dd3580372166`:
-Linux 6.12.0 booted the original OminX `/init`, reached `ominx:/root#`,
-executed `uname`, wrote/read a file, restarted the console after `exit`,
-read the same RAM-backed file again, and powered off cleanly.
-
-- [Successful build and boot run](https://github.com/ma19031435-eng/OminX-Linux/actions/runs/39441574159)
-- [Boot transcript](docs/validation/first-terminal-boot.txt)
-- [Download and run instructions](docs/validation/segment-one.md)
-
-This verifies the serial terminal under QEMU, not a desktop, physical-machine
-boot, persistent installation, or production release.
-
-## Build and test
-
-On an x86-64 Linux host, install a C compiler with static libc, make and Python 3.
-For the kernel also install flex, bison, bc, libelf/OpenSSL development headers;
-QEMU's x86 system emulator is needed for boot testing. On Debian/Ubuntu hosts:
+Use an x86-64 Linux build host with approximately 20 GB free disk space, internet
+access and a C/C++ bootstrap compiler. The host distribution supplies build tools,
+not target OS packages. On a Debian/Ubuntu **build host**, prerequisites are:
 
 ```sh
-sudo apt-get install build-essential python3 flex bison bc libelf-dev libssl-dev qemu-system-x86
-make check                     # compile original userspace, test commands and archive
-./build.sh                     # build initramfs only
-# Obtain and verify an upstream Linux source tree separately, then:
-LINUX_SOURCE=/absolute/path/to/linux JOBS=4 ./build.sh
-make run                       # serial console; Ctrl-A X exits QEMU
-python3 scripts/smoke-boot.py   # real boot, file round-trip, console restart, shutdown
+sudo apt-get install build-essential python3 git curl wget flex bison bc \
+  libelf-dev libssl-dev autoconf automake libtool texinfo nasm mtools xorriso \
+  qemu-system-x86 ovmf e2fsprogs
+JOBS=4 make toolchain       # upstream GCC + binutils + musl, built into build/toolchain
+JOBS=4 make build           # upstream Linux, original userspace, source bootloader, ISO
+make target-check          # tests run against the actual musl-linked target executable
+make boot-check            # boots actual media through BIOS and UEFI firmware
 ```
 
-Outputs are `build/ominx`, `build/initramfs.cpio.gz`, and, when kernel source is
-provided, `build/bzImage` and `build/SHA256SUMS`. The build runs without root.
-`make run` attaches no disks and disables emulated networking. Kernel configuration
-starts from upstream x86-64 defaults with the required initramfs/console features.
-CI uses Linux v6.12 as a fixed **development test baseline**, not as a current
-security-maintained release recommendation. Production requires a maintained,
-reviewed kernel version and source verification policy.
+Exact upstream revisions and versions live in `toolchain/sources.env`. The pinned
+musl-cross-make build recipe fetches and checks upstream source archive hashes;
+Linux and Limine checkouts are validated against fixed commits. It is a toolchain
+build utility, not a distribution. The build records source hashes, configuration,
+compiler details and target libc identity under `build/provenance/`.
 
-At the prompt:
+`make check` runs fast host-side tests in `build/host/`; it does **not** package host
+libraries or replace target output. Target builds fail if the cross toolchain is
+missing or its libc resolves outside `build/toolchain/`. Output is ignored by Git.
+
+## Boot to the terminal
+
+The build produces `build/ominx-x86_64.iso`, with BIOS and x86-64 UEFI boot paths,
+plus `bzImage`, `initramfs.cpio.gz`, and `SHA256SUMS`.
+
+```sh
+(cd build && sha256sum -c SHA256SUMS)
+make run
+```
+
+`make run` opens the VM display for its local keyboard terminal and exposes the
+independent serial terminal on standard input/output. Firmware loads the actual
+ISO bootloader; it does not bypass boot with QEMU's `-kernel` option.
+Secure Boot must be disabled: these development images are not signed.
+
+At `ominx:/root#`:
 
 ```text
 help
 uname
 cat /etc/os-release
-mkdir /root/work
-cd /root/work
 write note Hello from OminX
-cat note
-ls
+cp note backup
+cat backup
+mv backup renamed
+rm renamed
 poweroff
 ```
 
-Commands are implemented in `src/core/ominx.c`. There is no POSIX shell parser:
-quoting, redirection, pipelines and expansion are not supported. An absolute path
-can execute an additional compatible executable, but none are bundled. `write`
-replaces the named file. All changes disappear at shutdown. This early console is
-root-only, unauthenticated and for isolated VM development, not exposed machines.
+Original commands also include `ls`, `pwd`, `cd`, `mkdir`, `echo`, `sync`, `exit`,
+and `reboot`. `exit` restarts that console without exiting PID 1. Arguments are
+whitespace-separated; quoting, pipelines and shell expansion are not implemented.
+Absolute-path execution is supported for compatible executables added to the image.
 
-## Repository structure
+### Optional persistent data
+
+No disk is formatted or mounted automatically. The root filesystem is RAM-backed;
+explicitly attach an **already formatted ext4 data device** to persist files:
 
 ```text
-src/core/ominx.c             Original PID 1 supervisor and console utilities
-scripts/make-initramfs.py    Rootless, deterministic newc/gzip image builder
-scripts/smoke-boot.py        QEMU boot acceptance test
-build.sh                    Standalone kernel/initramfs build entry point
-Makefile                    Build, check and VM commands
-tests/                      Host-side userspace and image-format tests
-.github/workflows/source-os.yml  Kernel build and real boot CI
-config/                     Preserved legacy desktop assets and Debian recipes
-auto/                       Preserved legacy live-build configuration
-docs/legacy-debian.md        Previous desktop/ISO documentation
-docs/source-os.md            Architecture, licensing boundaries and remaining gates
+attach /dev/vda
+write /mnt/data/note This survives reboot
+cat /mnt/data/note
+detach
 ```
 
-The previous Debian desktop build is available explicitly via `make legacy-build`
-and its checks via `make legacy-check`. It is not part of the new standalone
-image. Its documentation is historical; it does not describe the new build.
+Choose the correct device for your VM; `/dev/vda` is an example, not an instruction
+to modify an arbitrary disk. `attach DEVICE ro` mounts without journal replay and
+refuses writes. Data mounts prohibit executable files, device nodes, and setuid.
+A busy data mount prevents shutdown rather than silently forcing its removal.
+This is not an installer; use disposable virtual data disks for development.
 
-## Desktop direction and licensing
+## Acceptance and scope
 
-The intended desktop uses KDE Plasma with an original OminX theme, a bottom taskbar,
-launcher, pinned applications, window controls and familiar keyboard workflows.
-Existing Plasma assets remain available for integration; Plasma is **not yet
-included in the standalone image**. No Microsoft code or artwork is included.
+`scripts/test-platforms.py` tests real BIOS/UEFI ISO boot, USB-media boot, two QEMU
+chipsets/CPU models, 256–1024 MiB RAM, PS/2 keyboard input into the local display
+terminal, independent serial control, files, invalid-input handling, console
+restart, virtio/SATA/NVMe data access, persistence across cold boots, read-only
+mounts, reboot, shutdown and post-shutdown filesystem integrity. It saves serial
+transcripts, framebuffer screenshots and machine-readable results.
 
-Linux, KDE and other upstream components retain their own licenses. Original
-proprietary applications can be separated where ownership and dependency licenses
-permit. **This checkout remains under its existing AGPLv3 license**; no existing
-code has been relicensed and no proprietary rights are implied. See
-[the architecture plan](docs/source-os.md) before distributing a product.
+[Recorded segment-one results and artifact instructions](docs/validation/segment-one.md).
+Tests establish only the configurations actually run, not all physical PCs. The
+initial x86 target is **x86-64**; a 32-bit-only i686 image is not included.
+
+## Layout and next layers
+
+```text
+toolchain/                  Pinned upstream identities
+boot/                       Independent bootloader configuration
+src/core/                   Original init, console, file and data-mount operations
+scripts/build-toolchain.sh  Source cross-toolchain build
+scripts/build-media.sh      Source bootloader and hybrid ISO creation
+scripts/test-platforms.py   Firmware/media/terminal/storage acceptance matrix
+tests/                      Host and target executable unit tests
+config/, auto/              Preserved old desktop assets and Debian recipes
+docs/legacy-debian.md        Historical desktop build documentation
+```
+
+The existing desktop is retained via `make legacy-build` and `make legacy-check`.
+It remains a separate Debian-based track and is **not** the independent OS image.
+KDE integration, original graphical applications/file manager, network services,
+authentication, installation, updates and Windows-file workflows are later layers.
+The new console has no login security; use it for isolated development.
+
+## Licensing
+
+This checkout retains its existing AGPLv3 license; it has not been relicensed.
+Linux, musl, GCC, Limine and their dependencies retain upstream licenses. Original
+proprietary components require confirmed ownership and compatible dependency use.
+Source manifests are reproducibility aids, not a substitute for distribution
+license obligations. See [architecture and boundaries](docs/source-os.md).

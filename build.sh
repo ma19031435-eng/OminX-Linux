@@ -9,6 +9,11 @@ if [ ! -x "${PREFIX}gcc" ]; then
     echo 'Build the source toolchain first: make toolchain' >&2
     exit 1
 fi
+LIBC=$(readlink -f "$("${PREFIX}gcc" -print-file-name=libc.a)")
+case "$LIBC" in
+    "$ROOT/build/toolchain/"*) ;;
+    *) echo "Refusing target libc outside source toolchain: $LIBC" >&2; exit 1 ;;
+esac
 mkdir -p build/sources build/kernel build/provenance
 LINUX_SOURCE="$ROOT/build/sources/linux"
 scripts/fetch-source.sh https://github.com/gregkh/linux.git "$LINUX_TAG" "$LINUX_COMMIT" "$LINUX_SOURCE"
@@ -33,4 +38,5 @@ cp toolchain/sources.env build/provenance/
 if grep -q INTERP build/provenance/ominx-elf.txt; then
     echo 'Unexpected dynamic target executable' >&2; exit 1
 fi
+sha256sum "$LIBC" > build/provenance/target-libc.sha256
 scripts/build-media.sh

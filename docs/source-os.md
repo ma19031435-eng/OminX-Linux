@@ -1,54 +1,59 @@
-# Source-built architecture and acceptance gates
+# Source-built architecture
 
-## Implemented foundation
+## Target versus build host
 
-The target image contains an upstream Linux kernel and a static original OminX
-executable linked with the build host's libc. OminX implements PID 1 supervision,
-orphan reaping, pseudo-filesystem setup, a console, basic file commands and power
-controls. A Python build-host utility writes the Linux newc initramfs format;
-neither Python nor a third-party shell is included in the image. The original
-console is intentionally small, not a replacement for every POSIX utility.
+The independent x86-64 target consists of upstream Linux, an original OminX
+statically linked init/console, source-built musl libc and a source-built Limine
+bootloader. The static executable is built by a dedicated upstream GCC/binutils
+cross toolchain. No existing distribution's target binaries or libraries are
+copied into the image. musl-cross-make is a pinned upstream compiler-build recipe,
+not a distro or target userspace.
 
-Static libc is still a third-party dependency. Distribution must respect its
-license (including applicable LGPL relinking/source obligations when using glibc).
-Kernel source, build configuration, notices and corresponding sources must be
-provided as their licenses require. A CI binary artifact is a development artifact,
-not a complete compliant release package. Review and assemble those materials
-before product distribution.
+A Linux host and its bootstrap compiler, make, Python, autotools and other build
+utilities are prerequisites. Using host build tools is not using a distro as the
+target base. Host tests use a separate output directory; target packaging requires
+the dedicated source toolchain and rejects a libc outside its directory.
 
-## Ownership and proprietary boundary
+## Segment-one implementation
 
-The user accepts open-source upstream infrastructure. Write original product logic
-where practical; do not duplicate mature cryptography, browser engines, graphics
-stacks or hardware drivers merely to call them proprietary. Linux and KDE are not
-original OminX code. KDE modifications must follow each component's license.
+- Pinned source builds with manifests and target ELF/static-link audit.
+- Hybrid ISO with BIOS and x86-64 UEFI paths, compiled bootloader, local display
+  terminal and an independent serial terminal. No Secure Boot signature yet.
+- Original PID 1 supervises both console sessions and reaps orphaned children.
+- Original command handling and basic filesystem operations, with errors surfaced.
+- Explicit ext4 data mounts; no implicit formatting, partitioning or disk writes.
+- Read-only attachment, sync, clean unmount on shutdown and console restart.
+- Real media boot acceptance across a finite x86-64 virtual-hardware matrix,
+  including keyboard events, screenshots, persistence, restart and filesystem checks.
 
-The repository license is AGPLv3 and remains unchanged. Establish contributor
-ownership and a component-level licensing policy before adding proprietary terms.
-Separate processes are not automatically exempt from license obligations; review
-interfaces, linking and derived code. Preserve upstream notices and track sources.
+Exact test results are in `validation/segment-one.md`. Firmware, device emulation
+and host filesystem-authoring tools are test/build infrastructure, not target
+root filesystems. Test cases create their own disposable disk files exclusively
+and never accept a path to a physical disk.
 
-## Remaining milestones (not claimed complete)
+## Remaining product work
 
-1. Kernel boot acceptance **passed in CI QEMU** (see `validation/segment-one.md`),
-   including console restart. Local VM, physical hardware and broader failure-path
-   testing remain outstanding.
-2. Choose a maintained kernel, reproducible toolchain/libc and verified source lock.
-3. Persistent filesystem lifecycle, safe disk selection and recovery; no implicit
-   formatting or installation. Dedicated image/USB bootloader and UEFI testing.
-4. Users, authentication, permissions, device/session lifecycle, service management,
-   networking, time, TLS trust, logging and updates. The current root console is not
-   a security boundary or a general service manager.
-5. Source-build graphics/input dependencies, Qt, KDE Frameworks and Plasma. Integrate
-   original taskbar/launcher design with native KDE behavior and accessibility.
-6. Original installer, setup, settings and application-management services; do not
-   wire the old Debian-specific wrappers into a non-Debian system unchanged.
-7. A signed update protocol, atomic upgrade/rollback, licensing materials, dependency
-   inventory, vulnerability response and supported-hardware testing.
-8. Desktop acceptance: boot/login, launch file manager and browser, configure a
-   network, audio playback, persistent documents, reboot, upgrade and recovery.
+1. Physical-machine testing, additional CPU/device coverage and 32-bit x86 if needed.
+2. Authenticated users, permissions policy, service lifecycle, networking, time,
+   trust store, logging and security updates. The current root console is not a
+   multi-user security boundary.
+3. Source-build graphics/input dependencies, Qt, KDE Frameworks and Plasma;
+   integrate the original OminX bottom-taskbar desktop and accessibility behavior.
+4. Original graphical file manager, settings, setup and application-management
+   services. Old Debian-specific app wrappers cannot simply be reused unchanged.
+5. Windows-file workflows (explicitly define file formats/filesystems separately
+   from running Windows executables), storage discovery and removable-media policy.
+6. Installer, safe disk-selection UI, recovery, signed updates, rollback and a
+   maintained security-release policy for all pinned upstream dependencies.
 
-A console boot is useful engineering progress but does not satisfy desktop
-acceptance. The old Debian ISO and new standalone build are separate tracks;
-retaining the former is a migration safety measure, not an assertion that it meets
-the independent-source architecture.
+## Licensing and proprietary boundary
+
+The repository remains AGPLv3. Establish ownership and a component-level licensing
+policy before applying proprietary terms to original work. Linux and KDE remain
+under their upstream licenses; do not imply that original branding changes that.
+Static musl is under its upstream permissive license; GCC runtime use is governed
+by its applicable exception and licenses. Keep all upstream notices and sources
+as required. The pinned source recipes and generated provenance are useful for
+rebuilding but do not alone constitute a complete compliant release-source offer.
+Development images must undergo dependency/license/security review before product
+release. No new proprietary license is asserted by these changes.
