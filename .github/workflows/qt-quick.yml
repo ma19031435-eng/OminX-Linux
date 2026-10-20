@@ -2,7 +2,7 @@ name: Source-built target Qt Quick
 on:
   push:
     branches: [arena/11b46bb0-ominx-linux]
-    paths: ['desktop/qt/quick.env', 'desktop/quick-probe/**', 'desktop/sddm/ominx/**', 'scripts/build-qt-quick-target.sh', 'scripts/test-qt-quick.py', '.github/workflows/qt-quick.yml']
+    paths: ['desktop/qt/quick.env', 'desktop/quick-probe/**', 'desktop/sddm/ominx/**', 'scripts/build-qt-quick-target.sh', 'scripts/test-qt-quick.py', 'scripts/export-quick-preview.py', '.github/workflows/qt-quick.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -19,7 +19,7 @@ jobs:
       - name: Install build tools only
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential cmake ninja-build python3 pkg-config autoconf automake libtool texinfo nasm mtools xorriso qemu-system-x86 ovmf e2fsprogs
+          sudo apt-get install -y build-essential cmake ninja-build python3 python3-pil pkg-config autoconf automake libtool texinfo nasm mtools xorriso qemu-system-x86 ovmf e2fsprogs
       - uses: actions/cache/restore@v4
         id: compiler
         with:
@@ -112,6 +112,8 @@ jobs:
           JOBS=4 scripts/build-media.sh
       - name: Verify Qt on real BIOS and UEFI media
         run: python3 scripts/test-qt-quick.py 2>&1 | tee build/qt-quick-guest.log
+      - name: Export actual guest-rendered preview
+        run: python3 scripts/export-quick-preview.py
       - name: Publish bounded diagnostics
         if: always()
         run: |

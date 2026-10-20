@@ -1,5 +1,6 @@
 // Target-side Qt Quick/theme compatibility test. No authentication implementation.
 #include <QAbstractListModel>
+#include <QFont>
 #include <QFontDatabase>
 #include <QGuiApplication>
 #include <QKeyEvent>
@@ -72,8 +73,8 @@ public:
 };
 int main(int argc, char **argv) {
     qputenv("QT_QUICK_BACKEND", "software");
-    QQuickStyle::setStyle("Basic");
     QGuiApplication app(argc, argv);
+    QQuickStyle::setStyle("Basic");
     int font = QFontDatabase::addApplicationFont(":/fonts/DejaVuSans.ttf");
     if (font < 0) return 1;
     app.setFont(QFont(QFontDatabase::applicationFontFamilies(font).at(0)));
