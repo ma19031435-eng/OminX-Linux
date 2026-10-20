@@ -10,7 +10,7 @@ MODE=${1:-all}
 case "$MODE" in all|--dependencies-only|--probe-only) ;; *) echo "Unknown build mode: $MODE" >&2; exit 1 ;; esac
 HOST="$ROOT/build/qt-quick-host"
 STAGE="$ROOT/build/qt-prefix"
-HOST_MODULES="$ROOT/build/qtshadertools-host;$ROOT/build/qtdeclarative-host"
+HOST_MODULES="$ROOT/build/qtshadertools-host;$ROOT/build/qtdeclarative-host-full"
 [ -f "$STAGE/lib/cmake/Qt6Widgets/Qt6WidgetsConfig.cmake" ] || {
     echo 'Build the source-linked target Qt base first' >&2; exit 1;
 }
@@ -35,14 +35,18 @@ cmake -S build/sources/qtbase -B "$HOST" -G Ninja \
     -DFEATURE_system_pcre2=OFF
 cmake --build "$HOST" --parallel "${JOBS:-2}"
 for module in qtshadertools qtdeclarative; do
+    case "$module" in
+        qtdeclarative) host_build=build/qtdeclarative-host-full ;;
+        *) host_build="build/$module-host" ;;
+    esac
     # Match host module features: Qt cross-builds also resolve GUI-facing tools
     # such as qmltestrunner and qmleasing from this native tool installation.
-    cmake -S "build/sources/$module" -B "build/$module-host" -G Ninja \
+    cmake -S "build/sources/$module" -B "$host_build" -G Ninja \
         -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$HOST;$HOST_MODULES" \
         -DQT_ADDITIONAL_PACKAGES_PREFIX_PATH="$HOST_MODULES" \
         -DCMAKE_INSTALL_PREFIX="$HOST" -DQT_BUILD_EXAMPLES=OFF -DQT_BUILD_TESTS=OFF \
         -DFEATURE_qml_animation=ON
-    cmake --build "build/$module-host" --parallel "${JOBS:-2}"
+    cmake --build "$host_build" --parallel "${JOBS:-2}"
     # Developer-build modules place generators and CMake metadata directly in
     # the Qt host build tree; a non-prefix developer build must not be installed.
 done

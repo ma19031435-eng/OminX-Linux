@@ -62,7 +62,7 @@ jobs:
             build/sources/qtdeclarative
             build/qtshadertools-host
             build/qtshadertools-target
-            build/qtdeclarative-host
+            build/qtdeclarative-host-full
             build/qtdeclarative-target
           key: target-quick-${{ runner.os }}-${{ hashFiles('desktop/qt/**', 'toolchain/**') }}-${{ hashFiles('scripts/build-qt-target.sh', 'scripts/build-qt-quick-target.sh') }}
           restore-keys: |
@@ -79,7 +79,7 @@ jobs:
             build/sources/qtdeclarative
             build/qtshadertools-host
             build/qtshadertools-target
-            build/qtdeclarative-host
+            build/qtdeclarative-host-full
             build/qtdeclarative-target
           key: ${{ steps.quick-cache.outputs.cache-primary-key }}
       - name: Build the original theme validation application
