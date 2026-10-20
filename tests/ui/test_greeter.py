@@ -75,7 +75,7 @@ def call(obj, method):
     assert QMetaObject.invokeMethod(obj, method), method
     QTest.qWait(30)
 
-assert child('password').property('echoMode') == 2  # TextInput.Password
+assert root.property('passwordIsMasked')
 assert child('username').property('text') == 'Alex'
 assert view.grabWindow().save(str(OUT / 'ominx-login-1440.png'))
 username, password = child('username'), child('password')
@@ -119,4 +119,7 @@ for width, height in [(1024, 768), (800, 600)]:
     assert panel.property('y') + panel.property('height') <= height - 45
     assert view.grabWindow().save(str(OUT / f'ominx-login-{width}.png'))
 assert not errors, errors
+view.setSource(QUrl())
+view.close()
+app.processEvents()
 print('PASS Qt 6 theme: render 1440/1024/800, masked password, keyboard submit, busy/error/reset, session guard, confirmed power callbacks')

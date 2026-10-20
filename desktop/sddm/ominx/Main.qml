@@ -10,6 +10,7 @@ Rectangle {
     width: 1440; height: 900
     color: "#101d32"
     property bool busy: false
+    readonly property bool passwordIsMasked: password.echoMode === TextInput.Password
     property string failure: ""
     property string powerAction: ""
     property date clock: new Date()
@@ -117,7 +118,7 @@ Rectangle {
             TextField {
                 id: username; objectName: "username"
                 Layout.fillWidth: true; implicitHeight: 44
-                text: userModel.lastUser; placeholderText: qsTr("Username")
+                text: userModel ? userModel.lastUser : ""; placeholderText: qsTr("Username")
                 enabled: !root.busy; color: "#f1f7f9"; font.pixelSize: 15
                 selectByMouse: true
                 Accessible.name: qsTr("Username")
@@ -143,7 +144,7 @@ Rectangle {
             ComboBox {
                 id: session; objectName: "session"
                 Layout.fillWidth: true; implicitHeight: 38
-                model: sessionModel; textRole: "name"; currentIndex: sessionModel.lastIndex
+                model: sessionModel; textRole: "name"; currentIndex: sessionModel ? sessionModel.lastIndex : -1
                 enabled: !root.busy
                 Accessible.name: qsTr("Desktop session")
                 contentItem: Text { text: session.displayText; color: "#cad9df"; verticalAlignment: Text.AlignVCenter; leftPadding: 12; rightPadding: 25; elide: Text.ElideRight; font.pixelSize: 13 }
@@ -175,12 +176,12 @@ Rectangle {
         spacing: 12
         Button {
             objectName: "restartButton"
-            text: qsTr("Restart"); enabled: !root.busy && sddm.canReboot
+            text: qsTr("Restart"); enabled: !root.busy && sddm && sddm.canReboot
             onClicked: { root.powerAction = "reboot"; confirmation.open() }
         }
         Button {
             objectName: "shutdownButton"
-            text: qsTr("Shut down"); enabled: !root.busy && sddm.canPowerOff
+            text: qsTr("Shut down"); enabled: !root.busy && sddm && sddm.canPowerOff
             onClicked: { root.powerAction = "poweroff"; confirmation.open() }
         }
     }
