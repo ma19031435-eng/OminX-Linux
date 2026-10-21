@@ -156,7 +156,7 @@ view = load(ROOT / 'desktop/desktop-shell/Session.qml', {'session': session})
 root = view.rootObject()
 assert child(root, 'taskbar') is not None
 assert child(root, 'startMenu').property('opened') is False
-QTest.keyClick(view, Qt.Key_Esc)
+QTest.keyClick(view, Qt.Key_Escape)
 QTest.qWait(200)
 menu = child(root, 'startMenu')
 assert menu.property('opened') is True, 'start menu did not open'
