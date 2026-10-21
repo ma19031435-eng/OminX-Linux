@@ -91,11 +91,16 @@ try:
             wait_for(vm, '/run/ominx/greeter.log', 'OMINX_LOGIN_DENIED user=ominx reason=credentials')
             wait_for(vm, '/run/ominx/login-service.log', 'login: denied name=ominx reason=credentials')
             assert 'session started' not in read_file(vm, '/run/ominx/seat.log'), 'session started after refusal'
-            # The ordinary console identity may not use the login service at all.
+            # The ordinary session identity cannot even reach the login service:
+            # its socket is root:greeter 0660, so the kernel refuses the
+            # connection before the broker's peer-credential check is reached.
             vm.command('write /home/ominx/credential %s' % PASSWORD)
-            vm.command('/bin/ominx-login-probe AUTH ominx --password-file /home/ominx/credential', 'DENY')
-            vm.command('/bin/ominx-login-probe SESSION', 'DENY')
-            vm.command('/bin/ominx-login-probe LIST', 'DENY')
+            for request in ('AUTH ominx --password-file /home/ominx/credential', 'SESSION', 'LIST'):
+                vm.command('/bin/ominx-login-probe ' + request, 'Permission denied')
+            # Even with the correct password available, no session was granted.
+            assert 'session started' not in read_file(vm, '/run/ominx/seat.log'), 'unauthenticated session'
+            vm.command('/sbin/ominx-login --check ominx --password-file /home/ominx/credential',
+                       'requires the root source boot context')
             # The correct password starts the real user session.
             type_text(vm, PASSWORD + '\n')
             wait_for(vm, '/run/ominx/seat.log', 'session started uid=1000')
