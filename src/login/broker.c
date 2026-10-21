@@ -345,12 +345,14 @@ int main(int argc, char **argv) {
         }
         if (unlink(path)) return 1;
     } else if (errno != ENOENT) return 1;
-    umask(077);
 #ifndef OMINX_LOGIN_TEST
-    /* Keep service diagnostics off the boot console; never log a password. */
+    /* Keep service diagnostics off the boot console; never log a password.
+       The log holds no credentials, so it stays readable for diagnosis. */
+    umask(022);
     if (!freopen(OMINX_LOGIN_BROKER_LOG, "a", stdout)) { perror("login log"); return 1; }
     setvbuf(stdout, NULL, _IOLBF, 0);
 #endif
+    umask(077);
     int server = socket(AF_UNIX, SOCK_SEQPACKET | SOCK_CLOEXEC, 0);
     if (server < 0 || bind(server, (struct sockaddr *)&address, sizeof address)) {
         perror("login bind");
