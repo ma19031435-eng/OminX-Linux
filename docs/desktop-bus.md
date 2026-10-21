@@ -2,7 +2,9 @@
 
 This dependency stage has passed real guest authorization and lifecycle tests.
 See [the validation report](validation/desktop-bus.md). It does **not** complete
-SDDM, PAM/password authentication, a seat manager, Qt DBus integration or Plasma.
+SDDM, PAM/password authentication, a seat manager or Plasma. A separate
+[source-built Qt Core/DBus bootstrap](validation/target-qt-dbus.md) now passes
+actual guest object-call tests; consolidating it with the GUI stack remains open.
 
 ## Source boundary
 
@@ -116,6 +118,7 @@ source-built kernel artifact, rebuilds current original userspace and authors
 new BIOS/UEFI media. It does not use a host kernel or an existing distro base.
 
 Before desktop integration, the system policy must be deliberately extended for
-real greeter/seat accounts and narrowly allowed interfaces, and target Qt DBus,
-authentication, compositor and Plasma services must be built and tested. Do not
+real greeter/seat accounts and narrowly allowed interfaces. A consolidated target
+GUI/DBus runtime, authentication, compositor and Plasma services must be built
+and tested. Do not
 replace these gates with a permissive system policy or fabricated session model.

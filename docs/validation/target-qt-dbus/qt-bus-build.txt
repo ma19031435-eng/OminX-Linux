@@ -1,0 +1,25 @@
+-- Detecting CXX compile features - done
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+-- Found Threads: TRUE
+-- Using Qt bundled ZLIB.
+-- Found WrapZLIB: TRUE (found version "6.8.3")
+-- Performing Test HAVE_STDATOMIC
+-- Performing Test HAVE_STDATOMIC - Success
+-- Found WrapAtomic: TRUE
+-- Using Qt bundled PCRE2.
+-- Found WrapPCRE2: TRUE (found version "6.8.3")
+-- Performing Test HAVE_GETTIME
+-- Performing Test HAVE_GETTIME - Success
+-- Performing Test HAVE_SHM_OPEN_SHM_UNLINK
+-- Performing Test HAVE_SHM_OPEN_SHM_UNLINK - Success
+-- Found WrapRt: TRUE
+-- Found PkgConfig: /usr/bin/pkg-config (found version "1.8.1")
+-- Found WrapDBus1: /home/runner/work/OminX-Linux/OminX-Linux/build/bus-prefix/lib/libdbus-1.a (found suitable version "1.16.2", minimum required is "
+-- Configuring done (0.5s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/runner/work/OminX-Linux/OminX-Linux/build/qt-bus-probe
+[1/4] Automatic MOC for target ominx-qt-bus-probe
+[2/4] Building CXX object CMakeFiles/ominx-qt-bus-probe.dir/ominx-qt-bus-probe_autogen/mocs_compilation.cpp.o
+[3/4] Building CXX object CMakeFiles/ominx-qt-bus-probe.dir/main.cpp.o
+[4/4] Linking CXX executable ominx-qt-bus-probe

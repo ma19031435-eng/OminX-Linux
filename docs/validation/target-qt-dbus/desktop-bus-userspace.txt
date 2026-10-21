@@ -1,0 +1,25 @@
+test_local_external_only_no_activation (test_desktop_bus.DesktopBusTests.test_local_external_only_no_activation) ... ok
+test_qt_bus_packaging_requires_dependencies_and_notices (test_desktop_bus.DesktopBusTests.test_qt_bus_packaging_requires_dependencies_and_notices) ...
+test_qt_bus_rejects_non_static_input (test_desktop_bus.DesktopBusTests.test_qt_bus_rejects_non_static_input) ... ok
+test_supervisor_refuses_host_and_arguments (test_desktop_bus.DesktopBusTests.test_supervisor_refuses_host_and_arguments) ... ok
+test_copy_and_explicit_remove (test_files.FileManagerTests.test_copy_and_explicit_remove) ... ok
+test_copy_refuses_overwrite_and_cleans_temporary (test_files.FileManagerTests.test_copy_refuses_overwrite_and_cleans_temporary) ... ok
+test_listing_unicode_controls_and_invalid_bytes (test_files.FileManagerTests.test_listing_unicode_controls_and_invalid_bytes) ... ok
+test_missing_directory_returns_error (test_files.FileManagerTests.test_missing_directory_returns_error) ... ok
+test_move_and_directory_operations (test_files.FileManagerTests.test_move_and_directory_operations) ... ok
+test_special_files_and_directories_refused (test_files.FileManagerTests.test_special_files_and_directories_refused) ... ok
+test_symlinks_not_followed_for_copy (test_files.FileManagerTests.test_symlinks_not_followed_for_copy) ... ok
+test_builtins (test_kernel_config.KernelGraphicsConfigTests.test_builtins) ... ok
+test_missing_fb_device_rejected (test_kernel_config.KernelGraphicsConfigTests.test_missing_fb_device_rejected) ... ok
+test_modules_are_not_packaged (test_kernel_config.KernelGraphicsConfigTests.test_modules_are_not_packaged) ... ok
+test_exact_recovery_flag (test_session.SessionPolicyTests.test_exact_recovery_flag) ... ok
+test_host_shell_does_not_change_identity (test_session.SessionPolicyTests.test_host_shell_does_not_change_identity) ... ok
+test_added_file_rejected (test_source_archive.SourceArchiveTests.test_added_file_rejected) ... ok
+test_digest (test_source_archive.SourceArchiveTests.test_digest) ... ok
+test_unsafe_members (test_source_archive.SourceArchiveTests.test_unsafe_members) ... ok
+test_verified_reuse_and_mutation (test_source_archive.SourceArchiveTests.test_verified_reuse_and_mutation) ... ok
+
+----------------------------------------------------------------------
+Ran 40 tests in 1.364s
+
+OK

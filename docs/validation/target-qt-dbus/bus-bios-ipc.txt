@@ -1,0 +1,25 @@
+[    3.422089] random: crng init done
+OminX bus service: system pid=76
+OminX bus service: session pid=77
+dbus-daemon[76]: [system] Rejected send message, 1 matched rules; type="method_call", sender=":1.0" (uid=1000 pid=75 comm="/bin/ominx-bus-probe --gues
+[    3.629959] dbus-daemon (77) used greatest stack depth: 13144 bytes left
+OminX bus service: session pid=78
+PASS bus: external credentials, system policy, session roundtrip, supervised restart
+ominx:/home/ominx$ files info /etc/machine-id
+{"type":"file","size":33,"mode":292,"uid":0,"gid":0}
+ominx:/home/ominx$ write /etc/machine-id denied
+/etc/machine-id: Permission denied
+ominx:/home/ominx$ /sbin/ominx-desktop-bus
+ominx-desktop-bus requires root source boot context
+ominx:/home/ominx$ id
+uid=1000 euid=1000 suid=1000 gid=1000 egid=1000 sgid=1000 no_new_privs=1
+groups=44,104,107
+HOME=/home/ominx XDG_RUNTIME_DIR=/run/user/1000
+ominx:/home/ominx$ /bin/ominx-qt-bus-probe --guest-test
+PASS Qt bus: source-linked Qt DBus, policy and asynchronous object roundtrip
+ominx:/home/ominx$ control
+OK service=ominx-control protocol=1
+ominx:/home/ominx$ poweroff
+OK poweroff-requested
+ominx:/home/ominx$ [    4.703308] ACPI: PM: Preparing to enter system sleep state S5
+[    4.709898] reboot: Power down

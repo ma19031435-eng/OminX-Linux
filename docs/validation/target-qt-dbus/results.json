@@ -1,0 +1,17 @@
+[
+  {
+    "name": "bus-bios",
+    "result": "PASS",
+    "qt_dbus_tested": true
+  },
+  {
+    "name": "bus-uefi",
+    "result": "PASS",
+    "qt_dbus_tested": true
+  },
+  {
+    "name": "bus-isolation",
+    "result": "PASS",
+    "qt_dbus_tested": false
+  }
+]
