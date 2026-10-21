@@ -95,6 +95,58 @@ Wine Mono, which is an explicit opt-in follow-up, not a silent download.
 `win doctor` checks the runtime, binfmt registration, `max_map_count`
 and `/dev/ntsync` (kernel ≥ 6.14; until then esync/fsync are used).
 
+## Game framework
+
+Games are declared, not hard-coded. Each title has a profile in
+`compat/games/<id>.game` (installed read-only to `/usr/share/ominx/games`;
+format in `compat/games/README.md`). The profile records the runner
+(`proton` with a per-title prefix, or `wine`), the install folder and program,
+and the publisher's anti-cheat status for Linux.
+
+- `win game list` shows every profile and whether it may launch here.
+- `win game info|check ID` explains the policy decision and any missing host
+  requirement. `check` exits 0 only when the title may launch.
+- `win game launch ID` sends `GAMELAUNCH` to the per-user daemon. The daemon
+  loads the same profile, re-applies the same gate, verifies the program is a
+  32/64-bit PE executable, and starts it in the prepared prefix. A client that
+  skips the gate still gets refused.
+
+Launch policy (`src/lib/gamedb.c`, `ominx_game_gate`):
+
+| publisher status | result |
+| --- | --- |
+| `anticheat = none` | launches once the runtime is ready |
+| `denied` | refused, always |
+| `pending` | refused until the publisher enables Linux |
+| `vendor-opt-in` | launches; if `requires = eac-v2`, the host must also pass Epic's EAC Linux v2 checks |
+
+**Anti-cheat is not bypassed.** The framework has no exemptions, spoofed
+hardware IDs, driver workarounds or "run anyway" override, and the shipped
+profiles must not gain one:
+
+- **VALORANT** (`valorant.game`) uses Riot Vanguard, a Windows kernel driver.
+  Riot has not announced Linux support, so the profile is `denied`. Proton and
+  Wine cannot change that.
+- **Fortnite** (`fortnite.game`) uses Easy Anti-Cheat. Epic announced EAC Linux
+  v2 on 2026-10-14 and will bring Fortnite to Linux through the Epic Games
+  Launcher once it works with distributions. There is no release date, so the
+  profile is `pending` and stays refused until Epic enables Linux for the title.
+
+EAC Linux v2 host checks (`ominx_host_eac_v2_missing`, read-only, sysfs and
+procfs): module signature enforcement, TPM 2.0, Secure Boot, measured boot
+(TPM binary log), IOMMU present, kernel lockdown (integrity or
+confidentiality), kexec disabled, and the BPF LSM. The signed-kernel
+requirement is not checked from userspace; it depends on the distribution's
+signing chain and remains a documented gap. Epic says the Steam Deck does not
+yet meet these requirements, so an OminX profile must not assume it does.
+Source: Epic Online Services, "Awesome Gaming on Linux Without Cheating"
+(2026-10-14), and PC Gamer's coverage of the same announcement.
+
+Validation is in `tests/test_games.py`: strict profile parsing, consistency
+rules (for example, Vanguard must be `denied`), path-traversal refusal, the
+policy for each status, the EAC v2 checks against a fake sysfs, and the
+daemon's `GAMELAUNCH` refusals.
+
 ## Proton behaviour
 
 `PROTON` launches use Steam's layout conventions so tools and user
@@ -148,7 +200,8 @@ desktop-shell UI test and `scripts/check-config.sh`; CI workflow
 `wine-compat.yml`): services, first-boot/first-login setup state
 machines, persistent wineserver supervision, binfmt registration,
 PE/MSI classification and refusals, Proton prefix lifecycle, packaging
-audits, kernel configuration, console + desktop frontend. Daemon tests
+audits, kernel configuration, console + desktop frontend, and the game
+profile framework with its anti-cheat launch policy. Daemon tests
 drive a **stub runtime** that logs every Wine invocation — they prove
 the OminX behavior contract, not Wine itself.
 

@@ -57,6 +57,17 @@ class WinPackagingTests(unittest.TestCase):
         self.assertIn('application/x-msi', desktop)
         self.assertIn(b'*.exe', image['usr/share/mime/packages/ominx-windows.xml'][1])
         self.assertIn('var/lib/ominx/wine', image)
+        # No profiles in the stage: the games directory is still present but empty.
+        self.assertNotIn('usr/share/ominx/games/valorant.game', image)
+        self.assertEqual(image['usr/share/ominx/games'][0], stat.S_IFDIR | 0o755)
+
+    def test_game_profiles_ship_read_only(self):
+        profiles = {'valorant.game': b'id = valorant\n', 'fortnite.game': b'id = fortnite\n'}
+        image = entries(packaging.archive(self.binary, win=self.win, win_games=profiles))
+        for name, data in profiles.items():
+            path = 'usr/share/ominx/games/' + name
+            self.assertEqual(image[path][0], stat.S_IFREG | 0o644, path)
+            self.assertEqual(image[path][1], data)
         # Deterministic like every other bundle.
         self.assertEqual(packaging.archive(self.binary, win=self.win),
                          packaging.archive(self.binary, win=self.win))

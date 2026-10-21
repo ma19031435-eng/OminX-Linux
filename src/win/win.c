@@ -4,6 +4,7 @@
  * starts it on demand for console sessions. Repository license applies. */
 #define _GNU_SOURCE
 #include "../lib/files.h"
+#include "../lib/gamedb.h"
 #include "../lib/pe.h"
 #include "../lib/winproto.h"
 #include <ctype.h>
@@ -293,9 +294,120 @@ static void usage(void) {
          "                              Run in a per-game Proton-style prefix\n"
          "  win apps                    Programs installed in your Windows environment\n"
          "  win stop | win quit         Stop Windows programs / the background service\n"
+         "  win game list               Game profiles and their anti-cheat status\n"
+         "  win game info|check ID      Details and launch policy for one title\n"
+         "  win game launch ID          Start a launchable title in the background service\n"
          "  win doctor                  Check kernel and runtime prerequisites\n"
          "Only run programs you trust: Wine is not a sandbox.");
 }
+/* ---- Game framework (win game ...) ---------------------------------------- */
+static const char *games_path(void) {
+#ifdef OMINX_WIN_TEST
+    const char *test = getenv("OMINX_GAMES_DIR");
+    if (test && *test) return test;
+#endif
+    return OMINX_GAME_DIR_DEFAULT;
+}
+
+static const char *sysroot_path(void) {
+#ifdef OMINX_WIN_TEST
+    const char *test = getenv("OMINX_SYSROOT");
+    if (test && *test) return test;
+#endif
+    return "/";
+}
+
+static void explain_refusal(const char *reason) {
+    if (!strcmp(reason, "anticheat-denied"))
+        puts("  The publisher blocks Linux for this title (anti-cheat denied).\n"
+             "  OminX does not offer workarounds for anti-cheat.");
+    else if (!strcmp(reason, "anticheat-pending-publisher-support"))
+        puts("  The publisher has not enabled Linux support for this title yet.");
+    else if (!strncmp(reason, "eac-v2-requirements-unmet:", 26))
+        printf("  This host is missing EAC Linux v2 requirements: %s\n", reason + 26);
+    else
+        printf("  Refused: %s\n", reason);
+}
+
+static void print_game_row(const char *id, const struct ominx_game *game, const char *error, void *context) {
+    (void)context;
+    if (!game) { printf("%-14s invalid profile (%s)\n", id, error); return; }
+    char reason[256] = "";
+    int allowed = ominx_game_gate(game, sysroot_path(), reason, sizeof reason) == 0;
+    printf("%-14s %-20s anticheat=%-9s status=%-18s %s\n", game->id, game->name,
+           ominx_game_anticheat_name(game->anticheat), ominx_game_status_name(game->status),
+           allowed ? "launchable" : "refused");
+}
+
+static int game_command(int argc, char **argv) {
+    const char *verb = argv[2];
+    if (!strcmp(verb, "list") && argc == 3) {
+        int result = ominx_game_for_each(games_path(), print_game_row, NULL);
+        if (result < 0) { perror(games_path()); return 1; }
+        return 0;
+    }
+    if ((!strcmp(verb, "info") || !strcmp(verb, "check") || !strcmp(verb, "launch")) && argc == 4) {
+        struct ominx_game game;
+        char error[64], reason[256] = "";
+        if (ominx_game_load(games_path(), argv[3], &game, error, sizeof error)) {
+            fprintf(stderr, "Unknown or invalid game '%s': %s\n", argv[3], error);
+            return 1;
+        }
+        int allowed = ominx_game_gate(&game, sysroot_path(), reason, sizeof reason) == 0;
+        if (!strcmp(verb, "info")) {
+            printf("id:            %s\nname:          %s\nrunner:        %s\nappid:         %s\n"
+                   "install dir:   $HOME/%s\nprogram:       %s\nanti-cheat:    %s\n"
+                   "publisher:     %s\nrequires:      %s\nlaunchable:    %s\n",
+                   game.id, game.name, ominx_game_runner_name(game.runner), game.appid,
+                   game.dir, game.exe, ominx_game_anticheat_name(game.anticheat),
+                   ominx_game_status_name(game.status), ominx_game_requirement_name(game.requires),
+                   allowed ? "yes" : "no");
+            if (game.notes[0]) printf("notes:         %s\n", game.notes);
+            if (!allowed) explain_refusal(reason);
+            return 0;
+        }
+        if (!strcmp(verb, "check")) {
+            if (allowed) { printf("%s: launchable on this host.\n", game.name); return 0; }
+            printf("%s: not launchable.\n", game.name);
+            explain_refusal(reason);
+            return 1;
+        }
+        /* launch: the daemon repeats the same gate before it starts anything. */
+        if (!allowed) {
+            printf("%s will not start.\n", game.name);
+            explain_refusal(reason);
+            return 1;
+        }
+        if (find_socket()) { fputs("No user runtime directory for the Windows service.\n", stderr); return 1; }
+        char request[256], reply[16384];
+        snprintf(request, sizeof request, "GAMELAUNCH\t%s\n", game.id);
+        if (request_daemon(request, reply, sizeof reply, 1)) { perror("Windows service"); return 1; }
+        if (!strncmp(reply, "OK ", 3)) {
+            printf("Started %s (%s", game.name, reply + 3);
+            return 0;
+        }
+        if (!strncmp(reply, "ERR prefix-not-ready", 20)) {
+            puts("Your Windows environment is still being prepared in the background.\n"
+                 "Run `ominx-win status` and try again when it reports ready.");
+            return 1;
+        }
+        if (!strncmp(reply, "ERR refused-", 12)) {
+            char refusal[256];
+            size_t length = strcspn(reply + 12, "\n");
+            if (length >= sizeof refusal) length = sizeof refusal - 1;
+            memcpy(refusal, reply + 12, length);
+            refusal[length] = 0;
+            printf("%s will not start.\n", game.name);
+            explain_refusal(refusal);
+            return 1;
+        }
+        fprintf(stderr, "Could not start %s: %s", game.name, reply);
+        return 1;
+    }
+    usage();
+    return 2;
+}
+
 int main(int argc, char **argv) {
     const char *name = strrchr(argv[0], '/');
     name = name ? name + 1 : argv[0];
@@ -314,6 +426,7 @@ int main(int argc, char **argv) {
         print_probe(argv[argc - 1], json);
     }
     if (argc == 2 && !strcmp(argv[1], "doctor")) { doctor(); return 0; }
+    if (argc >= 3 && !strcmp(argv[1], "game")) return game_command(argc, argv);
     if (argc < 2 || !strcmp(argv[1], "help") || !strcmp(argv[1], "--help")) { usage(); return argc < 2 ? 2 : 0; }
     if (find_socket()) { fputs("No user runtime directory for the Windows service.\n", stderr); return 1; }
     char reply[16384];

@@ -10,6 +10,7 @@
  * not a sandbox. See docs/windows-compatibility.md. */
 #define _GNU_SOURCE
 #include "../lib/pe.h"
+#include "../lib/gamedb.h"
 #include "../lib/winproto.h"
 #include <dirent.h>
 #include <errno.h>
@@ -37,6 +38,7 @@ static struct {
     char root[PATHBUF], wine[PATHBUF], wineserver[PATHBUF], version[65];
 } runtime;
 static char home_dir[PATHBUF], prefix[PATHBUF], proton_base[PATHBUF];
+static char games_dir[PATHBUF] = OMINX_GAME_DIR_DEFAULT, sysroot[PATHBUF] = "/";
 static char log_path[PATHBUF], socket_path[PATHBUF];
 static enum state state = ST_PENDING;
 static int step_percent;
@@ -517,6 +519,52 @@ static void handle(int client, char *request, ssize_t size) {
         if (start_setup(pfx, 1, fields[1])) { out = "ERR setup-failed-to-start\n"; goto send; }
         out = "OK setup-started\n"; goto send;
     }
+    if (!strcmp(fields[0], "GAMELAUNCH") && count == 2) {
+        /* Launches a reviewed game profile only. The daemon re-applies the
+           anti-cheat gate itself: a client that skips it still gets refused. */
+        if (!valid_appid(fields[1]) || strlen(fields[1]) > OMINX_GAME_ID_MAX) { out = "ERR bad-game-id\n"; goto send; }
+        struct ominx_game game;
+        char error[64], reason[256];
+        if (ominx_game_load(games_dir, fields[1], &game, error, sizeof error)) {
+            append(reply, sizeof reply, &used, "ERR game-profile-%s\n", error); goto send;
+        }
+        if (ominx_game_gate(&game, sysroot, reason, sizeof reason)) {
+            append(reply, sizeof reply, &used, "ERR refused-%s\n", reason); goto send;
+        }
+        if (!runtime.present) { out = "ERR runtime-missing\n"; goto send; }
+        char exe[PATHBUF], pfx[PATHBUF], appdir[PATHBUF], directory[PATHBUF];
+        int proton = game.runner == OMINX_GAME_RUNNER_PROTON;
+        if (join(directory, sizeof directory, home_dir, game.dir) ||
+            join(exe, sizeof exe, directory, game.exe)) { out = "ERR path-too-long\n"; goto send; }
+        if (proton) {
+            if (join(appdir, sizeof appdir, proton_base, game.appid) || join(pfx, sizeof pfx, appdir, "pfx")) {
+                out = "ERR path-too-long\n"; goto send;
+            }
+            if (!marker_ready(pfx)) {
+                if (worker < 0) (void)start_setup(pfx, 1, game.appid);
+                out = "ERR prefix-not-ready\n"; goto send;
+            }
+        } else {
+            if (state != ST_READY) {
+                if (worker < 0 && state != ST_FAILED) (void)start_setup(prefix, 0, "");
+                out = "ERR prefix-not-ready\n"; goto send;
+            }
+            snprintf(pfx, sizeof pfx, "%s", prefix);
+        }
+        struct ominx_pe_info info;
+        int result = ominx_pe_inspect_path(exe, &info);
+        if (result == -2) { out = "ERR game-binary-missing\n"; goto send; }
+        if (result || info.kind != OMINX_PE_EXE) { out = "ERR game-binary-invalid\n"; goto send; }
+        if (info.arch != OMINX_PE_ARCH_I386 && info.arch != OMINX_PE_ARCH_AMD64) {
+            out = "ERR unsupported-architecture\n"; goto send;
+        }
+        if (running_count() >= OMINX_WIN_MAX_RUNNING) { out = "ERR too-many-programs\n"; goto send; }
+        pid_t pid = launch(pfx, exe, NULL, 0, 0, proton, proton ? game.appid : "");
+        if (pid < 0) { out = "ERR launch-failed\n"; goto send; }
+        track(pid, exe);
+        append(reply, sizeof reply, &used, "OK pid=%ld game=%s\n", (long)pid, game.id);
+        goto send;
+    }
     if (!strcmp(fields[0], "RUN") || !strcmp(fields[0], "MSI") || !strcmp(fields[0], "PROTON")) {
         int proton = !strcmp(fields[0], "PROTON");
         int msi = !strcmp(fields[0], "MSI");
@@ -670,6 +718,13 @@ int main(int argc, char **argv) {
     else
 #endif
     join(proton_base, sizeof proton_base, home_dir, OMINX_PROTON_REL);
+#ifdef OMINX_WINED_TEST
+    /* Test builds only: point the policy at fixture profiles and a fake sysfs. */
+    const char *test_games = getenv("OMINX_GAMES_DIR");
+    if (test_games && *test_games) snprintf(games_dir, sizeof games_dir, "%s", test_games);
+    const char *test_sysroot = getenv("OMINX_SYSROOT");
+    if (test_sysroot && *test_sysroot) snprintf(sysroot, sizeof sysroot, "%s", test_sysroot);
+#endif
     char log_dir[PATHBUF];
     join(log_path, sizeof log_path, home_dir, OMINX_WINE_LOG_REL);
     join(log_dir, sizeof log_dir, home_dir, ".local/share/ominx/wine/logs");

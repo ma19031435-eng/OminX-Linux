@@ -10,7 +10,7 @@ import struct
 import sys
 
 
-def archive(binary, files=None, control=None, graphics_probe=None, quick_probe=None, bus=None, qt_bus_probe=None, qt_bus_licenses=None, runtime=None, login=None, accounts=None, win=None, wine_runtime=None):
+def archive(binary, files=None, control=None, graphics_probe=None, quick_probe=None, bus=None, qt_bus_probe=None, qt_bus_licenses=None, runtime=None, login=None, accounts=None, win=None, wine_runtime=None, win_games=None):
     if qt_bus_probe is not None and (bus is None or not qt_bus_licenses):
         raise ValueError("Qt bus probe requires source bus bundle and Qt license texts")
     if (login is None) != (accounts is None):
@@ -97,6 +97,11 @@ def archive(binary, files=None, control=None, graphics_probe=None, quick_probe=N
         entry('sbin/ominx-winsetup', stat.S_IFREG | 0o755, win['ominx-winsetup'])
         entry('bin/ominx-win-binfmt', stat.S_IFLNK | 0o777, b'ominx-win')
         entry('etc/ominx/windows-compat', stat.S_IFREG | 0o444, b'1\n')
+        # Game profiles (compat/games): read-only policy data for `win game`.
+        entry('usr/share/ominx', stat.S_IFDIR | 0o755)
+        entry('usr/share/ominx/games', stat.S_IFDIR | 0o755)
+        for name, data in sorted((win_games or {}).items()):
+            entry('usr/share/ominx/games/' + name, stat.S_IFREG | 0o644, data)
         entry('usr/share/applications/ominx-windows.desktop', stat.S_IFREG | 0o644,
               WIN_DESKTOP_ENTRY)
         entry('usr/share/mime/packages/ominx-windows.xml', stat.S_IFREG | 0o644,
@@ -227,12 +232,20 @@ if __name__ == '__main__':
                     raise ValueError('Empty login component: ' + name)
             accounts = account_records(args.login_accounts)
         win = None
+        win_games = None
         if args.win_dir is not None:
             win = {name: static_elf(args.win_dir / name) for name in WIN_BINARIES}
             for name, data in win.items():
                 if not data:
                     raise ValueError('Empty windows component: ' + name)
-        packed = archive(static_elf(args.init), static_elf(args.files), static_elf(args.control), probe, quick, bus, qt_bus, qt_licenses, args.runtime_dir, login, accounts, win, args.wine_runtime_dir)
+            games_dir = args.win_dir / 'games'
+            win_games = {}
+            if games_dir.is_dir():
+                for profile in sorted(games_dir.glob('*.game')):
+                    win_games[profile.name] = profile.read_bytes()
+                    if not win_games[profile.name]:
+                        raise ValueError('Empty game profile: ' + profile.name)
+        packed = archive(static_elf(args.init), static_elf(args.files), static_elf(args.control), probe, quick, bus, qt_bus, qt_licenses, args.runtime_dir, login, accounts, win, args.wine_runtime_dir, win_games)
     except (ValueError, OSError) as error:
         raise SystemExit(str(error))
     Path(args.output).write_bytes(packed)
