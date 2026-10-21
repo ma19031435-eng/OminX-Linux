@@ -58,7 +58,9 @@ exit 0
 
 class ServiceCase(unittest.TestCase):
     def setUp(self):
-        self.temp = tempfile.TemporaryDirectory()
+        # A just-stopped setup worker may still be releasing files; that
+        # must not mask the test's own assertions as an ERROR.
+        self.temp = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
         self.root = Path(self.temp.name)
         self.home = self.root / 'home'
         self.home.mkdir()

@@ -275,6 +275,9 @@ static int start_setup(const char *target_prefix, int proton, const char *appid)
     pid_t pid = fork();
     if (pid == 0) {
         close(fds[0]);
+        /* Own process group: a shutdown during wineboot must be able to
+           stop the whole setup tree, not just the worker shell of it. */
+        if (setsid() < 0) _exit(1);
         setup_worker(fds[1], target_prefix, proton);
     }
     close(fds[1]);
@@ -727,6 +730,19 @@ int main(int argc, char **argv) {
         ssize_t count = recv(client, request, OMINX_WIN_MAX_REQUEST, MSG_TRUNC);
         if (count > 0) { request[count <= OMINX_WIN_MAX_REQUEST ? count : OMINX_WIN_MAX_REQUEST] = 0; handle(client, request, count); }
         close(client);
+    }
+    if (worker > 0) {
+        kill(-worker, SIGTERM);
+        int reaped = 0;
+        for (int waited = 0; waited < 20 && !reaped; waited++) {
+            if (waitpid(worker, NULL, WNOHANG) == worker) reaped = 1;
+            else usleep(100000);
+        }
+        if (!reaped) {
+            kill(-worker, SIGKILL);
+            while (waitpid(worker, NULL, 0) < 0 && errno == EINTR) {}
+        }
+        worker = -1;
     }
     if (wineserver_pid > 0) kill(wineserver_pid, SIGTERM);
     for (int i = 0; i < OMINX_WIN_MAX_RUNNING; i++)
