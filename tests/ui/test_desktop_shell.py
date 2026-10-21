@@ -141,10 +141,12 @@ greeter = Greeter()
 view = load(shell / 'GreeterRoot.qml',
             {'sddm': greeter, 'keyboard': Keyboard(), 'userModel': Users(), 'sessionModel': SessionList()})
 root = view.rootObject()
-assert root.property('passwordIsMasked'), 'password field is not masked'
+# The themed panel is nested inside the greeter host root.
+panel = child(root, 'ominxGreeter')
+assert panel.property('passwordIsMasked'), 'password field is not masked'
 assert child(root, 'username').property('text') == 'ominx', 'remembered username not prefilled'
 assert view.grabWindow().save(str(OUT / 'greeter-1440.png')), 'greeter did not render'
-QTest.keyClick(root, Qt.Key_End, Qt.ControlModifier | Qt.AltModifier)
+QTest.keyClick(view, Qt.Key_End, Qt.ControlModifier | Qt.AltModifier)
 QTest.qWait(120)
 assert greeter.power == 1, 'keyboard power action did not reach the login context'
 view.close()
@@ -154,16 +156,16 @@ view = load(ROOT / 'desktop/desktop-shell/Session.qml', {'session': session})
 root = view.rootObject()
 assert child(root, 'taskbar') is not None
 assert child(root, 'startMenu').property('opened') is False
-QTest.keyClick(root, Qt.Key_Esc)
+QTest.keyClick(view, Qt.Key_Esc)
 QTest.qWait(200)
 menu = child(root, 'startMenu')
 assert menu.property('opened') is True, 'start menu did not open'
 assert child(root, 'logoutButton').property('activeFocus') is True, 'logout is not the default action'
 assert view.grabWindow().save(str(OUT / 'session-1440.png')), 'session did not render'
-QTest.keyClick(root, Qt.Key_Return)
+QTest.keyClick(view, Qt.Key_Return)
 QTest.qWait(150)
 assert session.logouts == 1, 'focused logout action did not run'
-QTest.keyClick(root, Qt.Key_End, Qt.ControlModifier | Qt.AltModifier)
+QTest.keyClick(view, Qt.Key_End, Qt.ControlModifier | Qt.AltModifier)
 QTest.qWait(120)
 assert session.power == 1, 'keyboard power action did not reach the session context'
 QMetaObject.invokeMethod(child(root, 'informationButton'), 'clicked')
