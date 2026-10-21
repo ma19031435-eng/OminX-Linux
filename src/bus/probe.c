@@ -84,6 +84,8 @@ int main(int argc, char **argv) {
     if (!strcmp(argv[1], "--deny-other-uid") && getuid() == 0) {
         DBusConnection *live = await_bus(SYSTEM_ADDRESS);
         require(daemon_property(live, "GetConnectionUnixUser") == 81, "live system bus before denial");
+        dbus_uint32_t live_pid = daemon_property(live, "GetConnectionUnixProcessID");
+        close_bus(live); /* Never give the dropped child an authorized root connection. */
         pid_t child = fork(); require(child >= 0, "fork");
         if (!child) {
             require(!setgroups(0, NULL) && !setgid(1001) && !setuid(1001), "drop to other uid");
@@ -92,7 +94,8 @@ int main(int argc, char **argv) {
             _exit(0);
         }
         int status; require(waitpid(child, &status, 0) == child && WIFEXITED(status) && !WEXITSTATUS(status), "cross-uid refusal");
-        require(daemon_property(live, "GetConnectionUnixUser") == 81, "live system bus after denial");
+        live = await_bus(SYSTEM_ADDRESS);
+        require(daemon_property(live, "GetConnectionUnixProcessID") == live_pid, "same live system bus after denial");
         close_bus(live);
         puts("PASS bus cross-uid isolation"); return 0;
     }
