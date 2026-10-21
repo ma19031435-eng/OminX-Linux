@@ -69,6 +69,7 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
+          import re
           paths = [Path('build/qt-bus-build.log'), Path('build/desktop-bus-build.log'), Path('build/desktop-bus-userspace.log'), Path('build/desktop-bus-guest.log'), Path('build/acceptance/desktop-bus.json')]
           paths += sorted(Path('build/acceptance').glob('bus-*.txt'))
           for p in paths:
@@ -76,6 +77,14 @@ jobs:
                   text = '\n'.join(line[:150] for line in p.read_text(errors='replace').splitlines()[-25:])
                   text = text.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
                   print(f'::notice title={p.name}::{text}')
+          log = Path('build/qt-bus-build.log')
+          if log.exists():
+              lines = log.read_text(errors='replace').splitlines()
+              hits = [i for i, line in enumerate(lines) if re.search(r'error:|FAILED:|AutoMoc subprocess error|CMake Error|predefines generation failed', line, re.I)]
+              selected = sorted({j for i in hits[:4] for j in range(max(0, i-3), min(len(lines), i+24))})
+              text = '\n'.join(lines[i].replace(str(Path.cwd()), '<repo>') for i in selected)[:16000]
+              text = text.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
+              print(f'::notice title=qt-bus-first-errors::{text}')
           PY
       - uses: actions/upload-artifact@v4
         if: always()
