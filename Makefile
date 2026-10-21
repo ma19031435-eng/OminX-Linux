@@ -26,7 +26,7 @@ build/ominx-seat: src/login/seat.c src/lib/control.c src/lib/control.h src/lib/s
 build/ominx-passwd: src/login/passwd.c src/login/login.c src/login/login.h
 	mkdir -p build
 	$(CC) $(CFLAGS) -static -o $@ $(filter %.c,$^)
-build/ominx-login-probe: src/login/probe.c src/login/login.h
+build/ominx-login-probe: src/login/probe.c src/login/login.c src/login/login.h
 	mkdir -p build
 	$(CC) $(CFLAGS) -static -o $@ $(filter %.c,$^)
 # Same source, target toolchain, service checks bypassed: runs the real musl crypt.
