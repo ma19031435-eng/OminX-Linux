@@ -8,7 +8,9 @@ import struct
 import sys
 
 
-def archive(binary, files=None, control=None, graphics_probe=None, quick_probe=None, bus=None):
+def archive(binary, files=None, control=None, graphics_probe=None, quick_probe=None, bus=None, qt_bus_probe=None, qt_bus_licenses=None):
+    if qt_bus_probe is not None and (bus is None or not qt_bus_licenses):
+        raise ValueError("Qt bus probe requires source bus bundle and Qt license texts")
     output = bytearray()
     def entry(name, mode, data=b'', major=0, minor=0, uid=0, gid=0):
         encoded = name.encode() + b'\0'
@@ -55,6 +57,9 @@ def archive(binary, files=None, control=None, graphics_probe=None, quick_probe=N
         entry('var/lib/dbus/machine-id', stat.S_IFLNK | 0o777, b'/etc/machine-id')
         for name in BUS_LICENSES:
             entry('usr/share/licenses/ominx-desktop-bus/' + name, stat.S_IFREG | 0o644, bus[name])
+    if qt_bus_probe is not None:
+        entry('bin/ominx-qt-bus-probe', stat.S_IFREG | 0o755, qt_bus_probe)
+        entry('usr/share/licenses/ominx-qt-bus-LICENSES', stat.S_IFREG | 0o644, qt_bus_licenses)
     entry('etc/os-release' , stat.S_IFREG | 0o644,
           b'NAME=OminX\nID=ominx\nPRETTY_NAME="OminX source-built console"\n')
     entry('TRAILER!!!', 0)
@@ -88,6 +93,7 @@ if __name__ == '__main__':
     parser.add_argument('graphics_probe', nargs='?')
     parser.add_argument('quick_probe', nargs='?')
     parser.add_argument('--bus-dir', type=Path)
+    parser.add_argument('--qt-bus-probe', type=Path)
     args = parser.parse_args()
     try:
         probe = static_elf(args.graphics_probe) if args.graphics_probe else None
@@ -97,7 +103,9 @@ if __name__ == '__main__':
             bus = {name: static_elf(args.bus_dir / name) for name in
                    ('dbus-daemon', 'ominx-desktop-bus', 'ominx-bus-probe')}
             bus.update({name: (args.bus_dir / name).read_bytes() for name in BUS_LICENSES})
-        packed = archive(static_elf(args.init), static_elf(args.files), static_elf(args.control), probe, quick, bus)
+        qt_bus = static_elf(args.qt_bus_probe) if args.qt_bus_probe else None
+        qt_licenses = (args.qt_bus_probe.parent / 'QTBASE-LICENSES').read_bytes() if args.qt_bus_probe else None
+        packed = archive(static_elf(args.init), static_elf(args.files), static_elf(args.control), probe, quick, bus, qt_bus, qt_licenses)
     except (ValueError, OSError) as error:
         raise SystemExit(str(error))
     Path(args.output).write_bytes(packed)

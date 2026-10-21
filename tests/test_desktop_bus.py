@@ -64,3 +64,28 @@ class DesktopBusTests(unittest.TestCase):
                 result = subprocess.run([str(binary), *args], capture_output=True, text=True, timeout=3)
                 self.assertEqual(result.returncode, 2)
                 self.assertIn('requires root source boot context', result.stderr)
+
+    def test_qt_bus_packaging_requires_dependencies_and_notices(self):
+        binary = Path(os.environ['OMINX_TEST_BINARY']).read_bytes()
+        with self.assertRaises(ValueError):
+            m.archive(binary, qt_bus_probe=binary, qt_bus_licenses=b'license')
+        bus = {name: binary for name in ('dbus-daemon', 'ominx-desktop-bus', 'ominx-bus-probe')}
+        bus.update({name: b'upstream license' for name in m.BUS_LICENSES})
+        with self.assertRaises(ValueError):
+            m.archive(binary, bus=bus, qt_bus_probe=binary)
+        data = entries(m.archive(binary, bus=bus, qt_bus_probe=binary, qt_bus_licenses=b'Qt license'))
+        self.assertEqual(data['bin/ominx-qt-bus-probe'][1], binary)
+        self.assertEqual(data['usr/share/licenses/ominx-qt-bus-LICENSES'][1], b'Qt license')
+
+    def test_qt_bus_rejects_non_static_input(self):
+        binary = os.environ['OMINX_TEST_BINARY']
+        with tempfile.TemporaryDirectory() as directory:
+            fake = Path(directory) / 'not-elf'
+            fake.write_bytes(b'not an executable')
+            output = Path(directory) / 'image.gz'
+            result = subprocess.run(['python3', str(ROOT / 'scripts/make-initramfs.py'),
+                binary, str(output), binary, binary, '--qt-bus-probe', str(fake)],
+                capture_output=True, text=True)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn('ELF', result.stderr)
+            self.assertFalse(output.exists())

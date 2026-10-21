@@ -1,0 +1,8 @@
+cmake_minimum_required(VERSION 3.21)
+project(OminXQtBusProbe LANGUAGES CXX)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_AUTOMOC ON)
+find_package(Qt6 6.8 REQUIRED COMPONENTS Core DBus)
+add_executable(ominx-qt-bus-probe main.cpp)
+target_link_libraries(ominx-qt-bus-probe PRIVATE Qt6::Core Qt6::DBus)
+target_compile_options(ominx-qt-bus-probe PRIVATE -Wall -Wextra -Werror)

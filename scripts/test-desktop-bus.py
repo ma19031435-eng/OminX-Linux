@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Source-built D-Bus service checks in real boot media, never host bus tests."""
+import argparse
 import importlib.util
 import json
 from pathlib import Path
@@ -8,6 +9,9 @@ import subprocess
 spec = importlib.util.spec_from_file_location('platforms', Path(__file__).with_name('test-platforms.py'))
 p = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(p)
+parser = argparse.ArgumentParser()
+parser.add_argument('--qt', action='store_true', help='Also require the source-linked Qt DBus probe')
+args = parser.parse_args()
 results = []
 cases = [
     dict(name='bus-bios', machine='q35', ram=512, cpu='qemu64', disk='virtio'),
@@ -35,6 +39,8 @@ try:
                 vm.command('write /etc/machine-id denied', 'Permission denied')
                 vm.command('/sbin/ominx-desktop-bus', 'requires root source boot context')
                 vm.command('id', 'uid=1000 euid=1000 suid=1000')
+            if args.qt and not case.get('recovery'):
+                vm.command('/bin/ominx-qt-bus-probe --guest-test', 'PASS Qt bus: source-linked Qt DBus, policy and asynchronous object roundtrip')
             vm.command('control', 'OK service=ominx-control protocol=1')
             vm.shutdown()
         except Exception as error:
@@ -43,7 +49,7 @@ try:
         finally:
             vm.close()
         disk.unlink()
-        results.append(dict(name=case['name'], result='PASS'))
+        results.append(dict(name=case['name'], result='PASS', qt_dbus_tested=args.qt and not case.get('recovery', False)))
         print(f"PASS {case['name']}: source-linked IPC, fixed privilege policy, supervised service, controlled shutdown", flush=True)
 finally:
     (p.OUT / 'desktop-bus.json').write_text(json.dumps(results, indent=2) + '\n')
