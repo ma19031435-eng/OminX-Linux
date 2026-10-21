@@ -18,9 +18,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install build tools only
-        run: sudo apt-get update && sudo apt-get install -y build-essential python3 && mkdir -p build
+        run: sudo apt-get update && sudo apt-get install -y build-essential python3 libcrypt-dev && mkdir -p build
       - name: Host tests (Windows services, PE inspector, packaging, kernel config)
         run: make check 2>&1 | tee build/host-tests.log
+      - name: Surface host-test failures as annotations
+        if: failure()
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          log = Path('build/host-tests.log')
+          lines = log.read_text(errors='replace').splitlines()[-40:] if log.exists() else ['(no log produced)']
+          message = '%0A'.join(line.replace('%', '%25').replace('\r', '%0D') for line in lines)
+          print('::error title=make check failure tail::' + message)
+          PY
       - name: Legacy Debian track recipe checks (incl. first-boot Wine setup)
         run: ./scripts/check-config.sh
       - name: QML syntax for the desktop Windows panel
