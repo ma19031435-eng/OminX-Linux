@@ -18,17 +18,18 @@
 #include <cstdio>
 #include <cstring>
 
-namespace {
-const char *const kLoginSocket = "/run/ominx/login.sock";
-const char *const kPowerSocket = "/run/ominx/control.sock";
+/* File scope (not an unnamed namespace) so moc output matches the accepted
+   Qt Quick probe layout exactly. */
+static const char *const kLoginSocket = "/run/ominx/login.sock";
+static const char *const kPowerSocket = "/run/ominx/control.sock";
 
-void report(const char *text) {
+static void report(const char *text) {
     std::puts(text);
     std::fflush(stdout);
 }
-void report(const QByteArray &text) { report(text.constData()); }
+static void report(const QByteArray &text) { report(text.constData()); }
 
-bool datagram(const char *path, const QByteArray &request, QByteArray *reply, QString *error) {
+static bool datagram(const char *path, const QByteArray &request, QByteArray *reply, QString *error) {
     int fd = ::socket(AF_UNIX, SOCK_SEQPACKET | SOCK_CLOEXEC, 0);
     if (fd < 0) { *error = QStringLiteral("socket"); return false; }
     sockaddr_un address{};
@@ -67,7 +68,7 @@ public:
         beginResetModel();
         m_names.clear();
         const QStringList lines = QString::fromUtf8(reply).split('\n', Qt::SkipEmptyParts);
-        for (int index = 1; index < lines.size(); ++index) {
+        for (qsizetype index = 1; index < lines.size(); ++index) {
             const QStringList fields = lines.at(index).split('\t');
             if (fields.size() >= 3 && fields.at(2) == QLatin1String("0")) m_names << fields.at(0);
         }
@@ -203,8 +204,6 @@ private:
             QTimer::singleShot(300, qApp, [] { QGuiApplication::exit(0); });
     }
 };
-} // namespace
-
 int main(int argc, char **argv) {
     const bool greeter = argc == 2 && !std::strcmp(argv[1], "--greeter");
     const bool session = argc == 2 && !std::strcmp(argv[1], "--session");
