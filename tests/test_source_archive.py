@@ -66,3 +66,34 @@ class SourceArchiveTests(unittest.TestCase):
             (dest / 'injected').write_text('not upstream')
             with self.assertRaisesRegex(ValueError, 'Modified'):
                 m.unpack(path, digest, dest)
+
+    def test_opt_in_internal_file_aliases(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path, _ = self.fixture(directory)
+            with tarfile.open(path, 'a') as out:
+                for name, target, kind in [('upstream/alias', 'file', tarfile.SYMTYPE),
+                                            ('upstream/hard', 'upstream/alias', tarfile.LNKTYPE)]:
+                    info=tarfile.TarInfo(name);info.type=kind;info.linkname=target;out.addfile(info)
+            digest=hashlib.sha256(path.read_bytes()).hexdigest();dest=Path(directory)/'tree'
+            with self.assertRaises(ValueError):m.unpack(path,digest,dest)
+            m.unpack(path,digest,dest,allow_internal_links=True)
+            self.assertFalse((dest/'alias').is_symlink())
+            self.assertEqual((dest/'hard').read_bytes(),b'source')
+            m.unpack(path,digest,dest,allow_internal_links=True)
+            (dest/'alias').write_bytes(b'change')
+            with self.assertRaises(ValueError):m.unpack(path,digest,dest,allow_internal_links=True)
+
+    def test_internal_alias_restrictions(self):
+        for target in ('/etc/passwd','../../escape','missing','alias'):
+            with self.subTest(target=target),tempfile.TemporaryDirectory() as directory:
+                path,_=self.fixture(directory)
+                with tarfile.open(path,'a') as out:
+                    info=tarfile.TarInfo('upstream/alias');info.type=tarfile.SYMTYPE;info.linkname=target;out.addfile(info)
+                digest=hashlib.sha256(path.read_bytes()).hexdigest();dest=Path(directory)/'tree'
+                with self.assertRaises(ValueError):m.unpack(path,digest,dest,allow_internal_links=True)
+                self.assertFalse(dest.exists())
+
+    def test_expansion_limit(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path,digest=self.fixture(directory)
+            with self.assertRaises(ValueError):m.unpack(path,digest,Path(directory)/'tree',max_unpacked=5)

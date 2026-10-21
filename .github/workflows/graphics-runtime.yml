@@ -93,6 +93,7 @@ jobs:
           retention-days: 14
           path: |
             build/graphics-runtime
+            build/graphics-sources
             build/graphics-runtime-*.log
             build/provenance
             build/source-run.json

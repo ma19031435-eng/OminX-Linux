@@ -6,6 +6,9 @@
 #include <wayland-server.h>
 #include <xkbcommon/xkbcommon.h>
 #include <xkbcommon/xkbcommon-keysyms.h>
+#include <xf86drm.h>
+#include <xf86drmMode.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -62,6 +65,13 @@ int main(int argc,char **argv) {
     require(xkb_state_key_get_one_sym(state,38)==XKB_KEY_A,"shift key mapping");
     xkb_state_unref(state); xkb_keymap_unref(map); xkb_context_unref(x);
     puts("PASS XKB source keyboard data and modifiers");
+    int card=open("/dev/dri/card0",O_RDWR|O_CLOEXEC); require(card>=0,"unprivileged DRM device access");
+    drmVersionPtr version=drmGetVersion(card); require(version && version->name,"DRM driver query");
+    printf("DRM driver: %.*s\n",version->name_len,version->name);
+    drmModeRes *resources=drmModeGetResources(card);
+    require(resources && resources->count_connectors>0 && resources->count_crtcs>0,"DRM display resources");
+    drmModeFreeResources(resources); drmFreeVersion(version); close(card);
+    puts("PASS DRM shared-library device/resource query");
     setenv("LIBGL_ALWAYS_SOFTWARE","1",1); setenv("GALLIUM_DRIVER","softpipe",1);
     PFNEGLGETPLATFORMDISPLAYEXTPROC get_display=(PFNEGLGETPLATFORMDISPLAYEXTPROC)eglGetProcAddress("eglGetPlatformDisplayEXT");
     require(get_display!=NULL,"EGL platform extension");

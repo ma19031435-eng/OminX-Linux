@@ -68,9 +68,8 @@ for package, names in notices.items():
         files += sorted(p for p in (base/'licenses').rglob('*') if p.is_file())
     (licenses/package).write_bytes(b''.join(b'===== '+p.relative_to(base).as_posix().encode()+b' =====\n'+p.read_bytes()+b'\n' for p in files))
 # GCC runtime exception and musl copyright come from the exact toolchain sources.
-mcm = ROOT/'build/sources/musl-cross-make'
-# Cached toolchain jobs may not retain extracted sources: caller supplies notices
-# from pinned upstream source identities into this build directory.
+# Cached compiler jobs need not retain extracted source trees; these notices
+# are tracked with their upstream source identities.
 for name in ('MUSL-COPYRIGHT', 'GCC-COPYING3', 'GCC-RUNTIME-EXCEPTION'):
     shutil.copyfile(ROOT/'desktop/graphics/licenses'/name, licenses/name)
 for path in DEST.rglob('*'):
@@ -90,3 +89,14 @@ report = {name: dict(mode=oct(mode), sha256=hashlib.sha256(data).hexdigest(), el
           for name, (mode,data) in nodes.items()}
 (ROOT/'build/provenance/graphics-runtime.json').write_text(json.dumps(report,indent=2)+'\n')
 print(f'Audited {len(binaries)} source-linked ELF objects and {len(nodes)} runtime entries')
+
+archives=ROOT/'build/graphics-sources'
+archives.mkdir(exist_ok=True)
+for name, source in json.load(open(ROOT/'desktop/graphics/sources.json')).items():
+    archive=ROOT/'build/downloads'/(source['sha256']+'.tar')
+    if hashlib.sha256(archive.read_bytes()).hexdigest()!=source['sha256']:
+        raise ValueError('Source archive changed after build')
+    shutil.copyfile(archive,archives/(name+'-'+source['version']+'.tar'))
+for source in ('graphics-xkbcommon','expat'):
+    subprocess.run(['git','-C',str(ROOT/'build/sources'/source),'archive','--format=tar.gz',
+                    '--output='+str(archives/(source+'.tar.gz')),'HEAD'],check=True)
