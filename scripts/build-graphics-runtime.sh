@@ -108,7 +108,7 @@ mbuild libdrm -Dintel=disabled -Damdgpu=disabled -Dradeon=disabled -Dnouveau=dis
 mbuild mesa -Dgallium-drivers=softpipe -Dvulkan-drivers= -Dplatforms=wayland \
  -Dglx=disabled -Degl=enabled -Dgbm=enabled -Dgles1=disabled -Dgles2=enabled \
  -Dllvm=disabled -Dgallium-rusticl=false -Dglvnd=disabled -Dbuild-tests=false \
- -Dvideo-codecs= -Dgallium-va=disabled -Dgallium-vdpau=disabled \
+ -Dvideo-codecs= -Dgallium-va=disabled \
  -Dvalgrind=disabled -Dlibunwind=disabled -Dzstd=disabled -Dmicrosoft-clc=disabled
 "${CROSS}gcc" -O2 -Wall -Wextra -Werror src/graphics/probe.c \
  $(pkg-config --cflags --libs egl glesv2 wayland-client wayland-server xkbcommon libdrm) \

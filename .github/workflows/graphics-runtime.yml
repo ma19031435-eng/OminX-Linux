@@ -99,3 +99,14 @@ jobs:
             build/source-run.json
             build/acceptance/graphics-runtime.json
             build/acceptance/runtime-*.txt
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: OminX-source-graphics-sdk-${{ github.sha }}
+          retention-days: 14
+          path: |
+            build/graphics-sysroot
+            build/graphics-host
+            build/provenance/graphics-sdk.json
+            build/provenance/sources.json
+            build/provenance/source.env

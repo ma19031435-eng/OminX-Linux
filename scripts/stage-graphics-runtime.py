@@ -100,3 +100,10 @@ for name, source in json.load(open(ROOT/'desktop/graphics/sources.json')).items(
 for source in ('graphics-xkbcommon','expat'):
     subprocess.run(['git','-C',str(ROOT/'build/sources'/source),'archive','--format=tar.gz',
                     '--output='+str(archives/(source+'.tar.gz')),'HEAD'],check=True)
+sdk={}
+for p in sorted(SYS.rglob('*')):
+    if p.is_symlink():
+        sdk[p.relative_to(SYS).as_posix()]={'link':p.readlink().as_posix()}
+    elif p.is_file():
+        sdk[p.relative_to(SYS).as_posix()]={'sha256':hashlib.sha256(p.read_bytes()).hexdigest()}
+(ROOT/'build/provenance/graphics-sdk.json').write_text(json.dumps(sdk,indent=2)+'\n')
