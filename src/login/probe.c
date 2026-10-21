@@ -4,6 +4,7 @@
    packaged greeter account and root may ask. */
 #define _GNU_SOURCE
 #include "login.h"
+#include <string.h>
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
@@ -15,19 +16,23 @@ int main(int argc, char **argv) {
     if (argc == 2 && !strcmp(argv[1], "--help")) {
         puts("ominx-login-probe: send one fixed request to the login broker");
         puts("usage: ominx-login-probe LIST|SESSION|STATUS|POWERSTATE");
-        puts("       ominx-login-probe AUTH NAME <password-on-stdin>");
+        puts("       ominx-login-probe AUTH NAME [--password-file PATH]");
         return 0;
     }
-    if (argc != 2 && argc != 3) return 2;
+    if (argc != 2 && argc != 3 && argc != 5) return 2;
     const char *command = argv[1];
     char request[OMINX_LOGIN_MAX_REQUEST];
     if (argc == 2) {
         snprintf(request, sizeof request, "%s\n", command);
-    } else if (!strcmp(command, "AUTH")) {
-        /* The password arrives on standard input so it never enters argv. */
+    } else if (!strcmp(command, "AUTH") && (argc == 3 || (argc == 5 && !strcmp(argv[3], "--password-file")))) {
+        /* Never taken from argv: standard input or a caller-owned file. */
         char password[OMINX_LOGIN_MAX_PASSWORD + 2];
-        if (!fgets(password, sizeof password, stdin)) return 1;
-        password[strcspn(password, "\n")] = 0;
+        if (argc == 5) {
+            if (ominx_read_password_file(argv[4], password, sizeof password)) return 1;
+        } else {
+            if (!fgets(password, sizeof password, stdin)) return 1;
+            password[strcspn(password, "\n")] = 0;
+        }
         snprintf(request, sizeof request, "AUTH\t%s\t%s\n", argv[2], password);
         memset(password, 0, sizeof password);
     } else {

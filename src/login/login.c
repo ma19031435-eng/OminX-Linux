@@ -2,6 +2,9 @@
 #define _GNU_SOURCE
 #include "login.h"
 #include <ctype.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -90,5 +93,24 @@ int ominx_parse_account_line(const char *line, struct ominx_account *account) {
     account->uid = uid;
     account->gid = gid;
     account->locked = (int)locked;
+    return 0;
+}
+
+int ominx_read_password_file(const char *path, char *out, size_t capacity) {
+    if (!path || capacity < 2) return -1;
+    int fd = open(path, O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
+    if (fd < 0) return -1;
+    struct stat st;
+    uid_t caller = getuid();
+    if (fstat(fd, &st) || !S_ISREG(st.st_mode) || st.st_size < 1 ||
+        (size_t)st.st_size > capacity - 1 || (st.st_uid != caller && st.st_uid != 0)) {
+        close(fd);
+        return -1;
+    }
+    ssize_t length = read(fd, out, capacity - 1);
+    close(fd);
+    if (length <= 0) return -1;
+    out[length] = 0;
+    out[strcspn(out, "\n")] = 0;
     return 0;
 }

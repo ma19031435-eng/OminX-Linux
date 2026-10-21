@@ -1,5 +1,6 @@
 #ifndef OMINX_LOGIN_H
 #define OMINX_LOGIN_H
+#include <stddef.h>
 /* Fixed original login service layout. Nothing here is user configurable. */
 #define OMINX_LOGIN_SOCKET "/run/ominx/login.sock"
 #define OMINX_LOGIN_LOCK "/run/ominx/login-service.lock"
@@ -38,5 +39,8 @@ struct ominx_account {
 };
 /* Shared, allocation-free parsing so the tool and the service cannot disagree. */
 int ominx_parse_account_line(const char *line, struct ominx_account *account);
+/* The console has no pipes or redirection, so tools also accept a password file.
+   The file must be a regular, caller-or-root-owned file with one short line. */
+int ominx_read_password_file(const char *path, char *out, size_t capacity);
 int ominx_account_name_valid(const char *name);
 #endif

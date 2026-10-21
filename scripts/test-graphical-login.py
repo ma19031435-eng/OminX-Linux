@@ -84,9 +84,8 @@ try:
             wait_for(vm, '/run/ominx/login-service.log', 'login: denied name=ominx reason=credentials')
             assert 'session started' not in read_file(vm, '/run/ominx/seat.log'), 'session started after refusal'
             # The ordinary console identity may not use the login service at all.
-            vm.send('echo %s | /bin/ominx-login-probe AUTH ominx' % PASSWORD)
-            vm.expect('DENY')
-            vm.prompt()
+            vm.command('write /home/ominx/credential %s' % PASSWORD)
+            vm.command('/bin/ominx-login-probe AUTH ominx --password-file /home/ominx/credential', 'DENY')
             vm.command('/bin/ominx-login-probe SESSION', 'DENY')
             vm.command('/bin/ominx-login-probe LIST', 'DENY')
             # The correct password starts the real user session.
@@ -130,14 +129,22 @@ try:
     try:
         vm.expect('WARNING: explicit unauthenticated root recovery session.')
         vm.prompt()
+        vm.command('write /root/credential %s' % PASSWORD)
+        vm.command('write /root/changed recovery-changed')
+        vm.command('write /root/wrong not-the-password')
         vm.command('/bin/ominx-passwd --list', 'password-set')
-        vm.command('echo %s | /sbin/ominx-login --check ominx' % PASSWORD, 'OK\t1000')
-        vm.command('echo %s | /sbin/ominx-login --check ominx' % 'not-the-password', 'DENY')
-        vm.command('echo %s | /bin/ominx-passwd --set ominx' % 'recovery-changed', 'OK password-updated name=ominx')
-        vm.command('echo %s | /sbin/ominx-login --check ominx' % 'recovery-changed', 'OK\t1000')
-        vm.command('echo %s | /sbin/ominx-login --check ominx' % PASSWORD, 'DENY')
-        vm.command('echo x | /bin/ominx-passwd --set nobody', 'Refusing: no such packaged account')
-        vm.command('echo x | /bin/ominx-passwd --set root', 'Refusing: invalid account name')
+        vm.command('/sbin/ominx-login --check ominx --password-file /root/credential', 'OK\t1000')
+        vm.command('/sbin/ominx-login --check ominx --password-file /root/wrong', 'DENY')
+        vm.command('/sbin/ominx-login --check guest --password-file /root/credential', 'DENY')
+        vm.command('/bin/ominx-passwd --set ominx --password-file /root/changed', 'OK password-updated name=ominx')
+        vm.command('/sbin/ominx-login --check ominx --password-file /root/changed', 'OK\t1000')
+        vm.command('/sbin/ominx-login --check ominx --password-file /root/credential', 'DENY')
+        vm.command('/bin/ominx-passwd --set nobody --password-file /root/changed', 'Refusing: no such packaged account')
+        vm.command('/bin/ominx-passwd --set root --password-file /root/changed', 'Refusing: invalid account name')
+        # An oversized password file is refused rather than truncated.
+        vm.command('/sbin/ominx-login --check ominx --password-file /etc/ominx/accounts', 'Refusing')
+        vm.command('rm /root/credential')
+        vm.command('/sbin/ominx-login --check ominx --password-file /root/credential', 'Refusing')
         vm.shutdown()
     except Exception as error:
         results.append(dict(name=case['name'], result='FAIL', error=str(error)))

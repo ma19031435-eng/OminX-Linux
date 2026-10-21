@@ -40,7 +40,7 @@ static int salt(char *out, size_t capacity) {
 int main(int argc, char **argv) {
     if (argc == 2 && !strcmp(argv[1], "--help")) {
         puts("ominx-passwd: change a packaged account password from recovery");
-        puts("usage: ominx-passwd --set NAME <password-on-stdin>");
+        puts("usage: ominx-passwd --set NAME [--password-file PATH]");
         puts("       ominx-passwd --list");
         return 0;
     }
@@ -67,8 +67,9 @@ int main(int argc, char **argv) {
         }
         return 0;
     }
-    if (argc != 3 || strcmp(argv[1], "--set")) {
-        fputs("usage: ominx-passwd --set NAME <password-on-stdin>\n", stderr);
+    if ((argc != 3 && argc != 5) || strcmp(argv[1], "--set") ||
+        (argc == 5 && strcmp(argv[3], "--password-file"))) {
+        fputs("usage: ominx-passwd --set NAME [--password-file PATH]\n", stderr);
         return 2;
     }
     const char *name = argv[2];
@@ -77,11 +78,17 @@ int main(int argc, char **argv) {
         return 1;
     }
     char password[OMINX_LOGIN_MAX_PASSWORD + 2];
-    if (!fgets(password, sizeof password, stdin)) {
+    if (argc == 5) {
+        if (ominx_read_password_file(argv[4], password, sizeof password)) {
+            fputs("Refusing: unreadable password file\n", stderr);
+            return 1;
+        }
+    } else if (!fgets(password, sizeof password, stdin)) {
         fputs("Refusing: no password on standard input\n", stderr);
         return 1;
+    } else {
+        password[strcspn(password, "\n")] = 0;
     }
-    password[strcspn(password, "\n")] = 0;
     size_t length = strlen(password);
     if (!length || length > OMINX_LOGIN_MAX_PASSWORD || strchr(password, ':')) {
         fputs("Refusing: password must be 1-128 bytes without colons\n", stderr);

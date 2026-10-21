@@ -265,14 +265,25 @@ static void handle(int client, uid_t peer) {
 
 #ifndef OMINX_LOGIN_TEST
 /* Recovery/admin check: password arrives on stdin, never as an argument. */
-static int check_mode(const char *name) {
+static int check_mode(int argc, char **argv) {
+    const char *name = argv[2];
     if (getuid() != 0 || geteuid() != 0 || !source_boot()) {
         fputs("ominx-login --check requires the root source boot context\n", stderr);
         return 2;
     }
     char password[OMINX_LOGIN_MAX_PASSWORD + 2];
-    if (!fgets(password, sizeof password, stdin)) return 1;
-    password[strcspn(password, "\n")] = 0;
+    if (argc == 5 && !strcmp(argv[3], "--password-file")) {
+        if (ominx_read_password_file(argv[4], password, sizeof password)) {
+            fputs("Refusing: unreadable password file\n", stderr);
+            return 1;
+        }
+    } else if (argc == 3) {
+        if (!fgets(password, sizeof password, stdin)) return 1;
+        password[strcspn(password, "\n")] = 0;
+    } else {
+        fputs("usage: ominx-login --check NAME [--password-file PATH]\n", stderr);
+        return 2;
+    }
     struct ominx_account accounts[OMINX_LOGIN_MAX_ACCOUNTS];
     int count = 0;
     if (load_accounts(accounts, &count)) { puts("DENY\tunavailable"); return 1; }
@@ -303,10 +314,10 @@ int main(int argc, char **argv) {
     if (argc == 2 && !strcmp(argv[1], "--help")) {
         puts("ominx-login: fixed authentication broker for the OminX graphical login");
         puts("usage: ominx-login            (service, started by /init)");
-        puts("       ominx-login --check NAME  <password-on-stdin>");
+        puts("       ominx-login --check NAME [--password-file PATH]");
         return 0;
     }
-    if (argc == 3 && !strcmp(argv[1], "--check")) return check_mode(argv[2]);
+    if ((argc == 3 || argc == 5) && !strcmp(argv[1], "--check")) return check_mode(argc, argv);
     if (argc != 1 || getuid() != 0 || geteuid() != 0 || !source_boot()) {
         fputs("ominx-login requires the root source boot context\n", stderr);
         return 2;
