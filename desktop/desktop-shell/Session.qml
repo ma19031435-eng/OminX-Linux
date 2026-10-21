@@ -150,7 +150,7 @@ Rectangle {
         objectName: "taskbar"
         anchors.left: parent.left; anchors.right: parent.right; anchors.bottom: parent.bottom
         height: desktop.compact ? 40 : 48
-        color: "#ee0b1520"
+        color: "#0b1520"
         RowLayout {
             anchors.fill: parent; anchors.leftMargin: 8; anchors.rightMargin: 12; spacing: 10
             Button {

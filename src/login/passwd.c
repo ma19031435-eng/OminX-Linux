@@ -67,7 +67,7 @@ int main(int argc, char **argv) {
         }
         return 0;
     }
-    if (argc != 4 || strcmp(argv[1], "--set")) {
+    if (argc != 3 || strcmp(argv[1], "--set")) {
         fputs("usage: ominx-passwd --set NAME <password-on-stdin>\n", stderr);
         return 2;
     }

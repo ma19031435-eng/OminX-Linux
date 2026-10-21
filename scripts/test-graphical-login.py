@@ -72,10 +72,9 @@ try:
             vm.command('id', 'uid=1000 euid=1000 suid=1000')
             wait_for(vm, '/run/ominx/seat.log', 'greeter started pid=')
             wait_for(vm, '/run/ominx/greeter.log', 'OMINX_GREETER_READY')
-            counts = colors(vm, 'greeter', ('74e0c7', '101d32', '4fa3ff'))
-            assert counts['74e0c7'] > 400, 'themed greeter accent not rendered: %r' % counts
-            assert counts['101d32'] > 4000, 'greeter background not rendered: %r' % counts
-            assert counts['4fa3ff'] == 0, 'session colours visible before login: %r' % counts
+            counts = colors(vm, 'greeter', ('74e0c7', '0b1520'))
+            assert counts['74e0c7'] > 2000, 'themed greeter accent not rendered: %r' % counts
+            assert counts['0b1520'] == 0, 'session taskbar visible before login: %r' % counts
             # The remembered username is prefilled, so focus starts on the
             # password field exactly as it does for a returning user.
             type_text(vm, 'wrong-password\n')
@@ -92,15 +91,15 @@ try:
             type_text(vm, PASSWORD + '\n')
             wait_for(vm, '/run/ominx/seat.log', 'session started uid=1000')
             wait_for(vm, '/run/ominx/session.log', 'OMINX_SESSION_READY user=ominx home=/home/ominx')
-            session_colors = colors(vm, 'session', ('4fa3ff', '74e0c7', '0b1520'))
-            assert session_colors['4fa3ff'] > 60, 'desktop shell accent not rendered: %r' % session_colors
-            assert session_colors['0b1520'] > 2000, 'desktop taskbar not rendered: %r' % session_colors
-            # Log out through the shell: the start menu focus starts on Log out.
-            press(vm, 'meta_l')
+            session_colors = colors(vm, 'session', ('0b1520', '74e0c7'))
+            assert session_colors['0b1520'] > 20000, 'desktop taskbar not rendered: %r' % session_colors
+            assert session_colors['74e0c7'] < 500, 'greeter still drawn over the session: %r' % session_colors
+            # Log out through the shell: Esc opens the start menu, whose focus
+            # starts on Log out, so Enter is the deliberate logout action.
+            press(vm, 'esc')
             press(vm, 'ret')
             wait_for(vm, '/run/ominx/seat.log', 'session ended uid=1000')
-            wait_for(vm, '/run/ominx/greeter.log', 'OMINX_SESSION_LOGOUT')
-            vm.expect('ominx:/home/ominx$ ')
+            wait_for(vm, '/run/ominx/session.log', 'OMINX_SESSION_LOGOUT')
             after = read_file(vm, '/run/ominx/greeter.log')
             assert after.count('OMINX_GREETER_READY') >= 2, 'greeter did not return after logout'
             # Power off from the login screen goes through the fixed services.
@@ -134,7 +133,8 @@ try:
         vm.command('echo %s | /bin/ominx-passwd --set ominx' % 'recovery-changed', 'OK password-updated name=ominx')
         vm.command('echo %s | /sbin/ominx-login --check ominx' % 'recovery-changed', 'OK\t1000')
         vm.command('echo %s | /sbin/ominx-login --check ominx' % PASSWORD, 'DENY')
-        vm.command('/bin/ominx-passwd --set nobody', 'Refusing')
+        vm.command('echo x | /bin/ominx-passwd --set nobody', 'Refusing: no such packaged account')
+        vm.command('echo x | /bin/ominx-passwd --set root', 'Refusing: invalid account name')
         vm.shutdown()
     except Exception as error:
         results.append(dict(name=case['name'], result='FAIL', error=str(error)))

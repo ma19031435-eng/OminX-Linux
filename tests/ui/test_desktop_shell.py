@@ -106,10 +106,15 @@ class Session(QObject):
 app = QGuiApplication(sys.argv)
 
 
+alive = []
+
+
 def load(source, properties):
     view = QQuickView()
     view.setResizeMode(QQuickView.SizeRootObjectToView)
     for name, value in properties.items():
+        # QML holds an unowned pointer: Python must keep every context alive.
+        alive.append(value)
         view.rootContext().setContextProperty(name, value)
     view.setSource(QUrl.fromLocalFile(str(source)))
     if view.status() == QQuickView.Error:
@@ -149,7 +154,7 @@ view = load(ROOT / 'desktop/desktop-shell/Session.qml', {'session': session})
 root = view.rootObject()
 assert child(root, 'taskbar') is not None
 assert child(root, 'startMenu').property('opened') is False
-QTest.keyClick(root, Qt.Key_Meta)
+QTest.keyClick(root, Qt.Key_Esc)
 QTest.qWait(200)
 menu = child(root, 'startMenu')
 assert menu.property('opened') is True, 'start menu did not open'
