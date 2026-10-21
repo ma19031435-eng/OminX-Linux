@@ -77,6 +77,15 @@ cp "build/sources/dbus-$DBUS_VERSION/COPYING" build/desktop-bus/DBUS-COPYING
 cp "build/sources/dbus-$DBUS_VERSION/LICENSES/AFL-2.1.txt" build/desktop-bus/DBUS-AFL-2.1.txt
 cp "build/sources/dbus-$DBUS_VERSION/LICENSES/GPL-2.0-or-later.txt" build/desktop-bus/DBUS-GPL-2.0-or-later.txt
 cp build/sources/expat/expat/COPYING build/desktop-bus/EXPAT-COPYING
+python3 - <<'PYLICENSE'
+from pathlib import Path
+source = Path('build/sources/dbus-1.16.2/LICENSES')
+Path('build/desktop-bus/DBUS-LICENSES').write_bytes(b''.join(
+    b'===== ' + path.name.encode() + b' =====\n' + path.read_bytes() + b'\n'
+    for path in sorted(source.iterdir()) if path.is_file()))
+PYLICENSE
+cp "build/downloads/$DBUS_SHA256.tar" "build/provenance/dbus-$DBUS_VERSION.tar.xz"
+git -C build/sources/expat archive --format=tar.gz --output="$ROOT/build/provenance/expat-source.tar.gz" "$EXPAT_COMMIT"
 cp desktop/bus/source.env build/provenance/desktop-bus-source.env
 cp build/bus-cross.ini build/bus-toolchain.cmake build/provenance/
 python3 - <<'PY'

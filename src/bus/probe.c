@@ -73,6 +73,30 @@ static dbus_uint32_t daemon_property(DBusConnection *c, const char *method) {
     require(r && dbus_message_get_args(r, &error, DBUS_TYPE_UINT32, &value, DBUS_TYPE_INVALID), method);
     dbus_message_unref(r); dbus_error_free(&error); return value;
 }
+static void check_process(pid_t pid, unsigned int uid) {
+    require(pid > 1, "valid daemon pid");
+    char path[64], line[256];
+    snprintf(path, sizeof path, "/proc/%ld/status", (long)pid);
+    FILE *f = fopen(path, "r");
+    require(f != NULL, "daemon kernel status");
+    int ids = 0, caps = 0, nnp = 0, groups = 0;
+    while (fgets(line, sizeof line, f)) {
+        unsigned int a, b, c, d, value;
+        if (sscanf(line, "Uid: %u %u %u %u", &a, &b, &c, &d) == 4 ||
+            sscanf(line, "Gid: %u %u %u %u", &a, &b, &c, &d) == 4) {
+            require(a == uid && b == uid && c == uid && d == uid, "all daemon credential slots"); ids++;
+        }
+        if (!strncmp(line, "CapInh:", 7) || !strncmp(line, "CapPrm:", 7) ||
+            !strncmp(line, "CapEff:", 7) || !strncmp(line, "CapAmb:", 7)) {
+            unsigned long long bits;
+            require(sscanf(line + 7, "%llx", &bits) == 1 && bits == 0, "zero daemon capabilities"); caps++;
+        }
+        if (sscanf(line, "NoNewPrivs: %u", &value) == 1) nnp = value == 1;
+        if (!strncmp(line, "Groups:", 7)) groups = strspn(line + 7, " \t\r\n") == strlen(line + 7);
+    }
+    fclose(f);
+    require(ids == 2 && caps == 4 && nnp && groups, "daemon credential boundary");
+}
 static DBusMessage *wait_message(DBusConnection *c, int type, dbus_uint32_t serial) {
     for (int i = 0; i < 20; i++) {
         dbus_connection_read_write(c, 100);
@@ -169,7 +193,7 @@ int main(int argc, char **argv) {
     DBusConnection *system = await_bus(SYSTEM_ADDRESS), *peer = await_bus(SYSTEM_ADDRESS);
     require(daemon_property(system, "GetConnectionUnixUser") == 81, "system daemon uid");
     pid_t system_pid = (pid_t)daemon_property(system, "GetConnectionUnixProcessID");
-    require(system_pid > 1, "valid system daemon pid");
+    check_process(system_pid, 81);
     require(kill(system_pid, SIGTERM) < 0 && errno == EPERM, "system service signal protection");
     DBusError error = DBUS_ERROR_INIT;
     require(dbus_bus_request_name(system, "org.ominx.Control", DBUS_NAME_FLAG_DO_NOT_QUEUE, &error) == -1 && dbus_error_has_name(&error, DBUS_ERROR_ACCESS_DENIED), "protected system name refusal");
@@ -183,6 +207,7 @@ int main(int argc, char **argv) {
     require(daemon_property(a, "GetConnectionUnixUser") == 1000, "session daemon uid");
     roundtrip(a, b);
     pid_t previous = (pid_t)daemon_property(a, "GetConnectionUnixProcessID");
+    check_process(previous, 1000);
     close_bus(a); close_bus(b);
     require(previous > 1 && !kill(previous, SIGTERM), "session daemon termination");
     for (int i = 0; i < 100; i++) {
@@ -191,7 +216,7 @@ int main(int argc, char **argv) {
         if (!a) continue;
         pid_t current = (pid_t)daemon_property(a, "GetConnectionUnixProcessID");
         close_bus(a);
-        if (current != previous) { puts("PASS bus: external credentials, system policy, session roundtrip, supervised restart"); return 0; }
+        if (current != previous) { check_process(current, 1000); puts("PASS bus: external credentials, system policy, session roundtrip, supervised restart"); return 0; }
     }
     fail("session restart timeout"); return 1;
 }

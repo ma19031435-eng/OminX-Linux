@@ -76,7 +76,7 @@ def static_elf(path):
     return binary
 
 
-BUS_LICENSES = ('DBUS-COPYING', 'DBUS-AFL-2.1.txt', 'DBUS-GPL-2.0-or-later.txt', 'EXPAT-COPYING')
+BUS_LICENSES = ('DBUS-LICENSES', 'DBUS-COPYING', 'DBUS-AFL-2.1.txt', 'DBUS-GPL-2.0-or-later.txt', 'EXPAT-COPYING')
 
 
 if __name__ == '__main__':

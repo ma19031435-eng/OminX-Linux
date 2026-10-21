@@ -5,7 +5,10 @@ on:
     # Qt/greeter-only changes have dedicated source-build/guest workflows. Do not
     # rebuild the unchanged kernel for every desktop dependency recipe correction.
     paths:
-      - 'src/**'
+      - 'src/core/**'
+      - 'src/lib/**'
+      - 'src/control/**'
+      - 'src/files/**'
       - 'tests/test_*.py'
       - 'tests/fixtures/**'
       - 'toolchain/**'
