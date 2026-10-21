@@ -19,7 +19,12 @@ jobs:
       - name: Install build tools only
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential cmake ninja-build python3 python3-pil pkg-config autoconf automake libtool texinfo nasm mtools xorriso qemu-system-x86 ovmf e2fsprogs
+          sudo apt-get install -y build-essential cmake ninja-build python3 python3-pil python3-venv pkg-config autoconf automake libtool texinfo nasm mtools xorriso qemu-system-x86 ovmf e2fsprogs qt6-base-dev qt6-declarative-dev libgl1 libegl1 libxkbcommon0 libfontconfig1
+      - name: Validate login and session QML with host Qt 6 before the target build
+        run: |
+          python3 -m venv build/ui-venv
+          build/ui-venv/bin/pip install PySide6==6.8.3
+          build/ui-venv/bin/python tests/ui/test_desktop_shell.py 2>&1 | tee build/desktop-shell-ui.txt
       - uses: actions/cache/restore@v4
         id: compiler
         with:
@@ -104,7 +109,7 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           import re
-          paths = [Path('build/desktop-shell.log'), Path('build/login-userspace.log'), Path('build/login-guest.log'), Path('build/acceptance/graphical-login.json')]
+          paths = [Path('build/desktop-shell-ui.txt'), Path('build/desktop-shell.log'), Path('build/login-userspace.log'), Path('build/login-guest.log'), Path('build/acceptance/graphical-login.json')]
           paths += sorted(Path('build/acceptance').glob('login-*.txt'))
           for p in paths:
               if p.exists():
@@ -130,6 +135,8 @@ jobs:
           retention-days: 14
           path: |
             build/login
+            build/desktop-shell-ui
+            build/desktop-shell-ui.txt
             build/desktop-shell.log
             build/qt-target.log
             build/qt-quick-build.log

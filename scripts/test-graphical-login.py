@@ -76,8 +76,9 @@ try:
             assert counts['74e0c7'] > 400, 'themed greeter accent not rendered: %r' % counts
             assert counts['101d32'] > 4000, 'greeter background not rendered: %r' % counts
             assert counts['4fa3ff'] == 0, 'session colours visible before login: %r' % counts
-            # A wrong password must be refused and must not start a session.
-            type_text(vm, 'ominx\nwrong-password\n')
+            # The remembered username is prefilled, so focus starts on the
+            # password field exactly as it does for a returning user.
+            type_text(vm, 'wrong-password\n')
             wait_for(vm, '/run/ominx/greeter.log', 'OMINX_LOGIN_DENIED user=ominx reason=credentials')
             wait_for(vm, '/run/ominx/login-service.log', 'login: denied name=ominx reason=credentials')
             assert 'session started' not in read_file(vm, '/run/ominx/seat.log'), 'session started after refusal'
@@ -88,7 +89,7 @@ try:
             vm.command('/bin/ominx-login-probe SESSION', 'DENY')
             vm.command('/bin/ominx-login-probe LIST', 'DENY')
             # The correct password starts the real user session.
-            type_text(vm, 'ominx\n' + PASSWORD + '\n')
+            type_text(vm, PASSWORD + '\n')
             wait_for(vm, '/run/ominx/seat.log', 'session started uid=1000')
             wait_for(vm, '/run/ominx/session.log', 'OMINX_SESSION_READY user=ominx home=/home/ominx')
             session_colors = colors(vm, 'session', ('4fa3ff', '74e0c7', '0b1520'))

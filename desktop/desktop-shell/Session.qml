@@ -14,6 +14,20 @@ Rectangle {
     property date clock: new Date()
     readonly property bool compact: height < 760
 
+    component MenuButton: Button {
+        id: menuButton
+        implicitHeight: 38
+        contentItem: Text {
+            text: menuButton.text; color: "#e7f2fa"; font.pixelSize: 14
+            verticalAlignment: Text.AlignVCenter; leftPadding: 10
+        }
+        background: Rectangle {
+            radius: 8
+            color: menuButton.down ? "#24506f"
+                                   : (menuButton.hovered || menuButton.activeFocus ? "#1b3d56" : "transparent")
+        }
+    }
+
     Timer { interval: 1000; repeat: true; running: true; onTriggered: desktop.clock = new Date() }
 
     gradient: Gradient {
@@ -104,36 +118,27 @@ Rectangle {
                 }
             }
             Rectangle { Layout.fillWidth: true; height: 1; color: "#2b4a63" }
-            component MenuButton: Button {
-                id: menuButton
-                Layout.fillWidth: true; implicitHeight: 38
-                contentItem: Text {
-                    text: menuButton.text; color: "#e7f2fa"; font.pixelSize: 14
-                    verticalAlignment: Text.AlignVCenter; leftPadding: 10
-                }
-                background: Rectangle {
-                    radius: 8
-                    color: menuButton.down ? "#24506f"
-                                           : (menuButton.hovered || menuButton.activeFocus ? "#1b3d56" : "transparent")
-                }
-            }
             MenuButton {
                 id: logoutButton; objectName: "logoutButton"
+                Layout.fillWidth: true
                 text: qsTr("Log out")
                 onClicked: { startMenu.close(); session.logout() }
             }
             MenuButton {
                 objectName: "restartButton"
+                Layout.fillWidth: true
                 text: qsTr("Restart")
                 onClicked: { startMenu.close(); session.reboot() }
             }
             MenuButton {
                 objectName: "powerOffButton"
+                Layout.fillWidth: true
                 text: qsTr("Shut down")
                 onClicked: { startMenu.close(); session.powerOff() }
             }
             MenuButton {
                 objectName: "informationButton"
+                Layout.fillWidth: true
                 text: qsTr("Session information")
                 onClicked: { startMenu.close(); information.open() }
             }
