@@ -1,0 +1,2 @@
+PASS runtime-bios: source shared loader, Wayland sync, XKB, Mesa shader pixels, repeat launch, poweroff
+PASS runtime-uefi: source shared loader, Wayland sync, XKB, Mesa shader pixels, repeat launch, poweroff

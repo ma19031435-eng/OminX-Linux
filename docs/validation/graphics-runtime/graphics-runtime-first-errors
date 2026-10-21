@@ -1,0 +1,27 @@
+Program symbols-check.py found: YES (<repo>/build/meson-env/bin/python3 <repo>/build/sources/graphics-mesa/bin/symbols-check.py)
+Program install_megadrivers.py found: YES (<repo>/build/meson-env/bin/python3 <repo>/build/sources/graphics-mesa/bin/install_megadrivers.py)
+Checking for size of "void *" : 8 
+Compiler for C supports arguments -Wno-error: YES 
+Dependency wayland-protocols found: YES 1.48 (cached)
+Dependency wayland-client found: YES 1.24.0 (cached)
+Found pkg-config: YES (pkg-config) 1.8.1
+Build-time dependency wayland-scanner found: YES 1.24.0
+Program <repo>/build/graphics-host/bin/wayland-scanner found: YES (<repo>/build/graphics-host/bin/wayland-scanner)
+Compiler for C supports arguments -Wno-misleading-indentation: YES 
+Program decode.py found: YES (<repo>/build/sources/graphics-mesa/src/compiler/isaspec/decode.py)
+Program encode.py found: YES (<repo>/build/sources/graphics-mesa/src/compiler/isaspec/encode.py)
+Compiler for C supports link arguments -Wl,--default-symver: YES 
+Configuring dri.sym using configuration
+Checking for function "mincore" : YES 
+Program sphinx-build skipped: feature html-docs disabled
+Build targets in project: 132
+NOTICE: Future-deprecated features used:
+ * 1.8.0: {'module wayland has been stabilized'}
+
+mesa 26.1.8
+
+  Directories
+    prefix         : /usr
+    libdir         : lib
+    includedir     : include
+

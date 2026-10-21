@@ -26,8 +26,11 @@ context and an empty session model—not a fabricated Plasma login.
 
 A separate [source-built desktop IPC stage](desktop-bus.md) now provides tested
 system/session buses and fixed privilege-separated supervision in optional media.
-An isolated [target Qt Core/DBus bootstrap](validation/target-qt-dbus.md) also
-passes actual guest object-call tests. These stages do not yet connect the theme
+An isolated [target Qt Core/DBus bootstrap](validation/target-qt-dbus.md) passes
+actual guest object-call tests, and a source-built [shared graphics runtime](validation/graphics-runtime.md)
+(Mesa softpipe EGL/GLES, Wayland, libxkbcommon, libdrm) passes real shader and
+protocol checks as an unprivileged user. These are the graphics and IPC
+foundations required before a login manager can be integrated. These stages do not yet connect the theme
 to authentication or a KDE session.
 
 ## Controlled system service

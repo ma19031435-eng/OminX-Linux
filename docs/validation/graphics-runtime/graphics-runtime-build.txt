@@ -1,0 +1,25 @@
+Installing /home/runner/work/OminX-Linux/OminX-Linux/build/sources/graphics-mesa/include/GLES3/gl3ext.h to /home/runner/work/OminX-Linux/OminX-Linux/b
+Installing /home/runner/work/OminX-Linux/OminX-Linux/build/sources/graphics-mesa/include/GLES3/gl3platform.h to /home/runner/work/OminX-Linux/OminX-Li
+Installing /home/runner/work/OminX-Linux/OminX-Linux/build/sources/graphics-mesa/include/GL/gl.h to /home/runner/work/OminX-Linux/OminX-Linux/build/gr
+Installing /home/runner/work/OminX-Linux/OminX-Linux/build/sources/graphics-mesa/include/GL/glcorearb.h to /home/runner/work/OminX-Linux/OminX-Linux/b
+Installing /home/runner/work/OminX-Linux/OminX-Linux/build/sources/graphics-mesa/include/GL/glext.h to /home/runner/work/OminX-Linux/OminX-Linux/build
+Installing /home/runner/work/OminX-Linux/OminX-Linux/build/sources/graphics-mesa/include/EGL/egl.h to /home/runner/work/OminX-Linux/OminX-Linux/build/
+Installing /home/runner/work/OminX-Linux/OminX-Linux/build/sources/graphics-mesa/include/EGL/eglext.h to /home/runner/work/OminX-Linux/OminX-Linux/bui
+Installing /home/runner/work/OminX-Linux/OminX-Linux/build/sources/graphics-mesa/include/EGL/eglplatform.h to /home/runner/work/OminX-Linux/OminX-Linu
+Installing /home/runner/work/OminX-Linux/OminX-Linux/build/sources/graphics-mesa/include/EGL/eglext_angle.h to /home/runner/work/OminX-Linux/OminX-Lin
+Installing /home/runner/work/OminX-Linux/OminX-Linux/build/sources/graphics-mesa/include/EGL/eglmesaext.h to /home/runner/work/OminX-Linux/OminX-Linux
+Installing /home/runner/work/OminX-Linux/OminX-Linux/build/sources/graphics-mesa/include/GL/internal/dri_interface.h to /home/runner/work/OminX-Linux/
+Installing /home/runner/work/OminX-Linux/OminX-Linux/build/sources/graphics-mesa/src/gbm/main/gbm.h to /home/runner/work/OminX-Linux/OminX-Linux/build
+Installing /home/runner/work/OminX-Linux/OminX-Linux/build/sources/graphics-mesa/src/gbm/main/gbm_backend_abi.h to /home/runner/work/OminX-Linux/OminX
+Installing /home/runner/work/OminX-Linux/OminX-Linux/build/sources/graphics-mesa/src/util/00-mesa-defaults.conf to /home/runner/work/OminX-Linux/OminX
+Installing /home/runner/work/OminX-Linux/OminX-Linux/build/graphics-mesa-target/meson-private/dri.pc to /home/runner/work/OminX-Linux/OminX-Linux/buil
+Installing /home/runner/work/OminX-Linux/OminX-Linux/build/graphics-mesa-target/meson-private/glesv2.pc to /home/runner/work/OminX-Linux/OminX-Linux/b
+Installing /home/runner/work/OminX-Linux/OminX-Linux/build/graphics-mesa-target/meson-private/gbm.pc to /home/runner/work/OminX-Linux/OminX-Linux/buil
+Installing /home/runner/work/OminX-Linux/OminX-Linux/build/graphics-mesa-target/meson-private/egl.pc to /home/runner/work/OminX-Linux/OminX-Linux/buil
+Installing symlink pointing to libGLESv2.so.2.0.0 to /home/runner/work/OminX-Linux/OminX-Linux/build/graphics-sysroot/usr/lib/libGLESv2.so.2
+Installing symlink pointing to libGLESv2.so.2 to /home/runner/work/OminX-Linux/OminX-Linux/build/graphics-sysroot/usr/lib/libGLESv2.so
+Installing symlink pointing to libgbm.so.1.0.0 to /home/runner/work/OminX-Linux/OminX-Linux/build/graphics-sysroot/usr/lib/libgbm.so.1
+Installing symlink pointing to libgbm.so.1 to /home/runner/work/OminX-Linux/OminX-Linux/build/graphics-sysroot/usr/lib/libgbm.so
+Installing symlink pointing to libEGL.so.1.0.0 to /home/runner/work/OminX-Linux/OminX-Linux/build/graphics-sysroot/usr/lib/libEGL.so.1
+Installing symlink pointing to libEGL.so.1 to /home/runner/work/OminX-Linux/OminX-Linux/build/graphics-sysroot/usr/lib/libEGL.so
+Audited 18 source-linked ELF objects and 378 runtime entries
