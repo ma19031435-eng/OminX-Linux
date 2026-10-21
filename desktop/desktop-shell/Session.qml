@@ -17,6 +17,9 @@ Rectangle {
     component MenuButton: Button {
         id: menuButton
         implicitHeight: 38
+        // Qt activates buttons on Space; Enter must work too, as on Windows.
+        Keys.onReturnPressed: menuButton.click()
+        Keys.onEnterPressed: menuButton.click()
         contentItem: Text {
             text: menuButton.text; color: "#e7f2fa"; font.pixelSize: 14
             verticalAlignment: Text.AlignVCenter; leftPadding: 10
@@ -81,9 +84,11 @@ Rectangle {
                 }
             }
             Button {
+                id: informationClose
                 objectName: "informationClose"
                 Layout.alignment: Qt.AlignRight
                 text: qsTr("Close")
+                Keys.onReturnPressed: informationClose.click()
                 onClicked: information.close()
             }
         }
