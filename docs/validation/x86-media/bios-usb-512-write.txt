@@ -1,0 +1,65 @@
+[    1.764535] usb 2-1: new SuperSpeed USB device number 2 using xhci_hcd
+[    1.765091] Write protecting the kernel read-only data: 26624k
+[    1.766451] Freeing unused kernel image (rodata/data gap) memory: 1000K
+[    1.943523] x86/mm: Checked W+X mappings: passed, no W+X pages found.
+[    1.946538] usb 2-1: New USB device found, idVendor=46f4, idProduct=0001, bcdDevice= 0.00
+[    1.946724] usb 2-1: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+[    1.946876] usb 2-1: Product: QEMU USB HARDDRIVE
+[    1.946963] usb 2-1: Manufacturer: QEMU
+[    1.947036] usb 2-1: SerialNumber: 1-0000:00:02.0-1
+[    1.948564] input: ImExPS/2 Generic Explorer Mouse as /devices/platform/i8042/serio1/input/input3
+[    1.951900] usb-storage 2-1:1.0: USB Mass Storage device detected
+[    1.953782] scsi host6: usb-storage 2-1:1.0
+[    1.954870] Run /init as init process
+OminX console ready. Type help. No disk is mounted automatically.
+ominx:/root# uname
+Linux 6.12.60 x86_64
+ominx:/root# cat /etc/os-release
+NAME=OminX
+ID=ominx
+PRETTY_NAME="OminX source-built console"
+ominx:/root# nonsense
+Unknown command or wrong argument count. Type help.
+ominx:/root# cat /missing-ominx-test
+/missing-ominx-test: No such file or directory
+ominx:/root# attach /etc/os-release
+Refusing: device is not a block device.
+ominx:/root# write /root/probe ramdata
+ominx:/root# cp /root/probe /root/copy
+ominx:/root# mv /root/copy /root/moved
+ominx:/root# cat /root/moved
+ramdata
+ominx:/root# rm /root/moved
+ominx:/root# exit
+[    2.029807] init (74) used greatest stack depth: 14456 bytes left
+[    2.080546] tsc: Refined TSC clocksource calibration: 2596.133 MHz
+[    2.081303] clocksource: tsc: mask: 0xffffffffffffffff max_cycles: 0x256bf71ffb4, max_idle_ns: 440795280837 ns
+[    2.081614] clocksource: Switched to clocksource tsc
+[    2.979633] scsi 6:0:0:0: Direct-Access     QEMU     QEMU HARDDISK    2.5+ PQ: 0 ANSI: 5
+[    2.981534] sd 6:0:0:0: Attached scsi generic sg1 type 0
+[    2.984798] sd 6:0:0:0: [sda] 34456 512-byte logical blocks: (17.6 MB/16.8 MiB)
+[    2.985325] sd 6:0:0:0: [sda] Write Protect is on
+[    2.985826] sd 6:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+[    2.995686]  sda: sda1 sda2 sda3
+[    2.996855] sd 6:0:0:0: [sda] Attached SCSI disk
+OminX console ready. Type help. No disk is mounted automatically.
+ominx:/root# cat /root/probe
+ramdata
+ominx:/root# [    4.518627] random: crng init done
+cat /root/keyboard
+keyboardok
+ominx:/root# attach /dev/vda
+[    5.004502] EXT4-fs (vda): mounted filesystem 299938d6-b701-4b58-92f6-7987b60a5293 r/w with ordered data mode. Quota mode: none.
+Data attached at /mnt/data.
+ominx:/root# attach /dev/vda
+Data already attached; detach first.
+ominx:/root# write /mnt/data/probe persistentdata
+ominx:/root# cat /mnt/data/probe
+persistentdata
+ominx:/root# detach
+[    5.037499] EXT4-fs (vda): unmounting filesystem 299938d6-b701-4b58-92f6-7987b60a5293.
+[    5.039139] jbd2/vda-8 (76) used greatest stack depth: 14120 bytes left
+Data detached.
+ominx:/root# poweroff
+[    5.123878] ACPI: PM: Preparing to enter system sleep state S5
+[    5.124581] reboot: Power down

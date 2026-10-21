@@ -1,0 +1,65 @@
+[    1.390818] serio: i8042 KBD port at 0x60,0x64 irq 1
+[    1.391131] serio: i8042 AUX port at 0x60,0x64 irq 12
+[    1.394684] rtc_cmos 00:05: RTC can wake from S4
+[    1.399866] rtc_cmos 00:05: registered as rtc0
+[    1.400570] rtc_cmos 00:05: alarms up to one day, y3k, 242 bytes nvram
+[    1.403605] device-mapper: ioctl: 4.48.0-ioctl (2023-03-01) initialised: dm-devel@lists.linux.dev
+[    1.404049] amd_pstate: the _CPC object is not present in SBIOS or ACPI disabled
+[    1.417717] [drm] Initialized simpledrm 1.0.0 for simple-framebuffer.0 on minor 0
+[    1.419333] hid: raw HID events driver (C) Jiri Kosina
+[    1.424072] usbcore: registered new interface driver usbhid
+[    1.424231] usbhid: USB HID core driver
+[    1.436518] Initializing XFRM netlink socket
+[    1.436957] NET: Registered PF_INET6 protocol family
+[    1.447796] Segment Routing with IPv6
+[    1.449140] In-situ OAM (IOAM) with IPv6
+[    1.451056] sit: IPv6, IPv4 and MPLS over IPv4 tunneling driver
+[    1.456287] NET: Registered PF_PACKET protocol family
+[    1.457455] 9pnet: Installing 9P2000 support
+[    1.460231] Key type dns_resolver registered
+[    1.463609] IPI shorthand broadcast: enabled
+[    1.505765] sched_clock: Marking stable (1474026814, 30993298)->(1508237284, -3217172)
+[    1.509723] registered taskstats version 1
+[    1.509880] Loading compiled-in X.509 certificates
+[    1.527394] ata2: found unknown device (class 0)
+[    1.531481] Demotion targets for Node 0: null
+[    1.534279] ata2.00: ATAPI: QEMU DVD-ROM, 2.5+, max UDMA/100
+[    1.539574] PM:   Magic number: 14:699:639
+[    1.540285] printk: legacy console [netcon0] enabled
+[    1.540449] netconsole: network logging started
+[    1.542730] cfg80211: Loading compiled-in X.509 certificates for regulatory database
+[    1.553815] kworker/u4:4 (54) used greatest stack depth: 15048 bytes left
+[    1.569494] Loaded X.509 cert 'sforshee: 00b28ddf47aef9cea7'
+[    1.571232] Loaded X.509 cert 'wens: 61c038651aabdcf94bd0ac7ff06c7248db18c600'
+[    1.572119] ALSA device list:
+[    1.574096]   No soundcards found.
+[    1.580915] platform regulatory.0: Direct firmware load for regulatory.db failed with error -2
+[    1.581386] cfg80211: failed to load regulatory.db
+[    1.587941] input: AT Translated Set 2 keyboard as /devices/platform/i8042/serio0/input/input1
+[    1.588825] ACPI: \_SB_.LNKC: Enabled at IRQ 11
+[    1.612411] nvme nvme0: 1/0/0 default/read/poll queues
+[    1.618817] nvme nvme0: Ignoring bogus Namespace Identifiers
+[    1.636673] scsi 1:0:0:0: CD-ROM            QEMU     QEMU DVD-ROM     2.5+ PQ: 0 ANSI: 5
+[    1.645486] sr 1:0:0:0: [sr0] scsi3-mmc drive: 4x/4x cd/rw xa/form2 tray
+[    1.645791] cdrom: Uniform CD-ROM driver Revision: 3.20
+[    1.653082] sr 1:0:0:0: Attached scsi generic sg0 type 5
+[    1.716860] Freeing unused kernel image (initmem) memory: 2740K
+[    1.717479] Write protecting the kernel read-only data: 26624k
+[    1.718914] Freeing unused kernel image (rodata/data gap) memory: 1000K
+[    1.895528] x86/mm: Checked W+X mappings: passed, no W+X pages found.
+[    1.896496] Run /init as init process
+OminX console ready. Type help. No disk is mounted automatically.
+ominx:/root# attach /dev/nvme0n1
+[    1.964293] EXT4-fs (nvme0n1): mounted filesystem 16ac104e-037c-45c7-98cd-02303f1509cf r/w with ordered data mode. Quota mode: none.
+Data attached at /mnt/data.
+ominx:/root# cat /mnt/data/probe
+persistentdata
+ominx:/root# poweroff
+[    1.984635] EXT4-fs (nvme0n1): unmounting filesystem 16ac104e-037c-45c7-98cd-02303f1509cf.
+[    1.985940] jbd2/nvme0n1-8 (61) used greatest stack depth: 14376 bytes left
+[    2.038405] tsc: Refined TSC clocksource calibration: 2596.135 MHz
+[    2.038877] clocksource: tsc: mask: 0xffffffffffffffff max_cycles: 0x256bf8d59a4, max_idle_ns: 440795204888 ns
+[    2.039250] clocksource: Switched to clocksource tsc
+[    2.103426] input: ImExPS/2 Generic Explorer Mouse as /devices/platform/i8042/serio1/input/input3
+[    2.211680] ACPI: PM: Preparing to enter system sleep state S5
+[    2.212371] reboot: Power down

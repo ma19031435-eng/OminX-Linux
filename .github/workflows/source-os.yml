@@ -1,0 +1,112 @@
+name: Source-built OminX x86 acceptance
+on:
+  push:
+    branches: [arena/11b46bb0-ominx-linux]
+    # Qt/greeter-only changes have dedicated source-build/guest workflows. Do not
+    # rebuild the unchanged kernel for every desktop dependency recipe correction.
+    paths:
+      - 'src/core/**'
+      - 'src/lib/**'
+      - 'src/control/**'
+      - 'src/files/**'
+      - 'tests/test_*.py'
+      - 'tests/fixtures/**'
+      - 'toolchain/**'
+      - 'boot/**'
+      - 'build.sh'
+      - 'Makefile'
+      - 'scripts/build-toolchain.sh'
+      - 'scripts/build-media.sh'
+      - 'scripts/check-kernel-graphics.py'
+      - 'scripts/fetch-source.sh'
+      - 'scripts/fetch-archive.py'
+      - 'desktop/bus/*.conf'
+      - 'scripts/make-initramfs.py'
+      - 'scripts/smoke-boot.py'
+      - 'scripts/test-platforms.py'
+      - 'scripts/test-sessions.py'
+      - 'scripts/test-windows-filesystems.py'
+      - 'scripts/test-graphics.py'
+      - '.github/workflows/source-os.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+defaults:
+  run:
+    shell: bash
+jobs:
+  boot:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build-host tools (not target packages)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential flex bison libelf-dev libssl-dev bc qemu-system-x86 \
+            python3 autoconf automake libtool texinfo nasm mtools xorriso ovmf e2fsprogs curl wget dosfstools exfatprogs ntfs-3g
+      - uses: actions/cache/restore@v4
+        id: compiler
+        with:
+          path: |
+            build/toolchain
+            build/provenance
+          key: source-toolchain-${{ runner.os }}-${{ hashFiles('toolchain/**', 'scripts/build-toolchain.sh') }}
+      - name: Build upstream cross toolchain and libc
+        if: steps.compiler.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p build
+          JOBS=4 make toolchain 2>&1 | tee build/toolchain.log
+      - name: Save completed source toolchain independently of later boot tests
+        if: steps.compiler.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            build/toolchain
+            build/provenance
+          key: ${{ steps.compiler.outputs.cache-primary-key }}
+      - name: Build source-based kernel, userspace and BIOS/UEFI ISO
+        run: JOBS=4 ./build.sh 2>&1 | tee build/kernel-build.log
+      - name: Test musl-linked original userspace
+        run: make target-check CC="$PWD/build/toolchain/bin/x86_64-linux-musl-gcc" 2>&1 | tee build/userspace.log
+      - name: Verify default unprivileged sessions on real media
+        run: python3 scripts/test-sessions.py 2>&1 | tee build/sessions.log
+      - name: Boot recovery media and verify x86 storage matrix
+        run: python3 scripts/test-platforms.py 2>&1 | tee build/platforms.log
+      - name: Verify read-only Windows filesystems and file import
+        run: python3 scripts/test-windows-filesystems.py 2>&1 | tee build/windows-filesystems.log
+      - name: Verify kernel graphics and framebuffer consoles
+        run: python3 scripts/test-graphics.py 2>&1 | tee build/graphics.log
+      - name: Publish evidence and failure diagnostics
+        if: always()
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          # GitHub caps notices per step; publish summaries first, then a few diagnostics.
+          paths = [Path('build') / name for name in ('sessions.log', 'platforms.log', 'windows-filesystems.log', 'graphics.log', 'userspace.log')]
+          paths += sorted(Path('build/acceptance').glob('graphics-*.txt'))[-1:]
+          paths += sorted(Path('build/acceptance').glob('*.json'))
+          paths += [Path('build/kernel-build.log')]
+          paths = paths[:10]
+          for path in paths:
+              if path.exists():
+                  text = '\n'.join(path.read_text(errors='replace').splitlines()[-65:])
+                  text = text.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
+                  print(f'::notice title={path.name}::{text}')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: OminX-x86-${{ github.sha }}
+          path: |
+            build/ominx-x86_64.iso
+            build/ominx-recovery-x86_64.iso
+            build/bzImage
+            build/initramfs.cpio.gz
+            build/SHA256SUMS
+            build/provenance
+            build/acceptance/*.txt
+            build/acceptance/*.json
+            build/acceptance/*.ppm
+            build/*.log
+          retention-days: 14

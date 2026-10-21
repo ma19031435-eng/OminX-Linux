@@ -1,92 +1,200 @@
-# OminX
+# OminX — source-built x86-64 operating system
 
-**OminX** is an installable Debian 13 desktop image for 64-bit PCs, with an original visual identity built on KDE Plasma 6. OminX Aurora is not a Windows theme: it pairs deep midnight surfaces, sea-glass highlights, luminous sky blue, and restrained violet with original OminX artwork and Linux components. LightDM starts Plasma's X11 session; OminX customizes its native launcher, panel, colors, desktop theme, wallpaper, and defaults.
+OminX is an independent Linux-based project. The new target is built from upstream
+Linux, a source-built GCC/binutils/musl cross toolchain, a source-built Limine
+bootloader, and original OminX init and console utilities. **No existing Linux
+distribution, distribution root filesystem, package database, or host libc is used
+as the new target's base.** The old Debian desktop build is preserved separately.
 
-This repository contains a **legacy live-build recipe** and source assets, not a prebuilt ISO. Build it on a Debian-compatible amd64 machine to produce an installable live image.
+## Build from source
 
-## Desktop features and core apps
-
-The shell is built from Plasma around a slim, floating translucent panel: OminX Kickoff, a virtual-desktop pager, running apps, the system tray, clock, and Show Desktop control. Kickoff carries the original OminX Launcher icon and favorites, plus Plasma's native application search and session controls. The custom Aurora Look-and-Feel package sets the panel layout, wallpaper, color scheme, Breeze icon and widget styling, and a softly blurred dark Plasma theme. Store, Settings, Welcome, and Setup keep the original OminX design language. The desktop also provides workspaces, file search, notifications, software installation and updates, networking, Bluetooth, printing/scanning, backups, firewall controls, accessibility tools, and remote desktop access.
-
-Dolphin is the native file manager, configured for double-click navigation, a details/list view sorted by name with folders first, a Places sidebar, breadcrumb navigation, search, and a status bar. KIO extras add common archive and network-location integration; attached volumes appear in Places. Plasma keeps its native desktop and file workflows rather than copying another operating system's interface.
-
-**OminX Store** is an original storefront with a navigation rail, search, app/game categories, featured app cards, Library, and Updates. It routes catalog searches and installed-app, update, and source-management actions to KDE Discover and its Debian and Flatpak backends, so package operations are real rather than a mock catalog. **OminX Settings** uses the Aurora design system to organize Plasma and native Linux controls into Workspace, Devices, Connectivity, Appearance, Applications, Accounts, Time & input, Gaming, Accessibility, Privacy & security, and Updates. **OminX Setup** guides new users through connection status, software and browser preferences, and gaming tools; each step is optional, settings can be revisited later, and optional software is never installed without a user action.
-
-On a standard PC keyboard, **Meta** (often labeled with the Windows logo) opens the OminX Launcher; **Alt+Space** opens KRunner for app and command search. Other Plasma shortcuts can be reviewed or changed in KDE System Settings.
-
-OminX keeps useful Linux workflows while giving the shell, launcher, artwork, and app hubs their own visual language. It does not copy Microsoft code, protected artwork, or Windows binaries.
-
-Included applications cover everyday work and system care:
-
-- **Software centers:** OminX Store provides the discovery home and forwards full-catalog searches, installed-app views, updates, and source management to KDE Discover. Debian package and Flatpak installation use Discover's native backends; Flathub is configured. Synaptic is included as an advanced package manager.
-- **Work:** Firefox ESR, LibreOffice, Thunderbird, PDF viewing, calculator, and file/archive tools.
-- **Media and creativity:** VLC, GIMP, Inkscape, and standard image/audio utilities.
-- **System:** KDE Plasma System Settings, Dolphin file manager, disks and partitions, Plasma System Monitor, backup utility, firewall UI, remote desktop client, printer/scanner tools, and Orca screen reader.
-- **Devices:** NetworkManager, Bluetooth, PipeWire audio, common Intel/AMD/Wi-Fi firmware, CPU microcode, Mesa/Vulkan, and firmware update support.
-
-## Gaming and Windows app compatibility
-
-Steam, Steam device rules, Valve Proton support, Wine 64/32-bit, Winetricks, Lutris, and 32-bit graphics/audio libraries are included in the ISO. Wine and the OminX `.exe`/`.msi` double-click handler are installed while building the image, so they are ready at first boot without downloading Wine then. OminX registers those files to open with **OminX Windows App Support**; its per-user Wine environment is initialized on first use. See `/usr/share/doc/ominx/compatibility.md` for details and compatibility limits. Protontricks is available through an optional first-use helper. The exact Proton runtime is downloaded by Steam after sign-in; it is not bundled in this image.
-
-OminX is Linux, not Windows, and no compatibility layer can run every `.exe`. Windows kernel drivers, Windows Store/UWP apps, some DRM, and games whose anti-cheat blocks Linux generally will not work. Check a specific title on [ProtonDB](https://www.protondb.com/) or [Wine AppDB](https://appdb.winehq.org/) before relying on it. The welcome app and `/usr/share/doc/ominx/compatibility.md` explain setup and limitations.
-
-## Memory optimization without pausing apps
-
-OminX enables **zstd-compressed zram** for less-active memory pages. When RAM is under pressure, the kernel can compress pages into RAM and restore them on demand. It does not freeze, hibernate, close, or intentionally pause whole apps. This is page-level memory compression—not compression of installed app files—and it still uses CPU time. Very large workloads can remain slow or exhaust available memory. Details are in `/usr/share/doc/ominx/performance.md`.
-
-## Per-game Game Mode
-
-Feral GameMode is included. For a Steam game, add `/usr/games/gamemoderun %command%` to **Properties → General → Launch Options**. Lutris can enable GameMode per game. The tuning is requested only while a game uses it; supported systems may adjust performance policy and process scheduling. It cannot improve every bottleneck, and **OminX cannot promise latency will be cut in half**. Results depend on hardware, drivers, thermals, the game, display, and network. The OminX Game Mode Setup entry explains how to test it on your machine.
-
-## Build the installable image
-
-Build on a Debian 13 amd64 host with internet access, at least **8 GB RAM** and **40 GB free disk space**. Image size varies with Debian package updates.
+Use an x86-64 Linux build host with approximately 20 GB free disk space, internet
+access and a C/C++ bootstrap compiler. The host distribution supplies build tools,
+not target OS packages. On a Debian/Ubuntu **build host**, prerequisites are:
 
 ```sh
-sudo apt update
-sudo apt install python3 live-build debootstrap xorriso squashfs-tools dosfstools mtools \
-  grub-pc-bin grub-efi-amd64-bin isolinux syslinux-common syslinux-utils \
-  debian-archive-keyring
-./build.sh
+sudo apt-get install build-essential python3 git curl wget flex bison bc \
+  libelf-dev libssl-dev autoconf automake libtool texinfo nasm mtools xorriso \
+  qemu-system-x86 ovmf e2fsprogs dosfstools exfatprogs ntfs-3g
+JOBS=4 make toolchain       # upstream GCC + binutils + musl, built into build/toolchain
+JOBS=4 make build           # upstream Linux, original userspace, source bootloader, ISO
+make target-check          # tests run against the actual musl-linked target executable
+python3 scripts/test-sessions.py  # default unprivileged sessions
+make boot-check            # recovery-mode firmware/storage regressions
+python3 scripts/test-windows-filesystems.py  # FAT32/exFAT/NTFS read-only import tests
 ```
 
-`build.sh` uses `sudo` when needed, generates original OminX Aurora splash art, configures the image via `auto/config`, runs `lb build`, verifies the generated GRUB menu and both graphical/text Debian Installer payloads, then writes `SHA256SUMS`. If an ISOLINUX loader is enabled by a future build configuration, its OminX menu is validated too. The custom GRUB menu is authored to offer a live session, graphical install, and safe/advanced modes; the build fails rather than publishing if the menu or installer payloads are missing. The expected output is:
+Exact upstream revisions and versions live in `toolchain/sources.env`. The pinned
+musl-cross-make build recipe fetches and checks upstream source archive hashes;
+Linux and Limine checkouts are validated against fixed commits. It is a toolchain
+build utility, not a distribution. The build records source hashes, configuration,
+compiler details and target libc identity under `build/provenance/`.
+
+`make check` runs fast host-side tests in `build/host/`; it does **not** package host
+libraries or replace target output. Target builds fail if the cross toolchain is
+missing or its libc resolves outside `build/toolchain/`. Output is ignored by Git.
+
+## Boot to the terminal
+
+The build produces the normal `build/ominx-x86_64.iso` and the explicitly privileged
+`build/ominx-recovery-x86_64.iso`, both with BIOS and x86-64 UEFI boot paths, plus
+`bzImage`, `initramfs.cpio.gz`, and `SHA256SUMS`. Use the **normal ISO** by default.
+
+```sh
+(cd build && sha256sum -c SHA256SUMS)
+make run
+```
+
+`make run` opens the VM display for its local keyboard terminal and exposes the
+independent serial terminal on standard input/output. Firmware loads the actual
+ISO bootloader; it does not bypass boot with QEMU's `-kernel` option.
+Secure Boot must be disabled: these development images are not signed.
+
+Normal boots automatically enter `ominx` (UID/GID 1000) at `ominx:/home/ominx$`:
 
 ```text
-live-image-amd64.hybrid.iso
-SHA256SUMS
+help
+uname
+cat /etc/os-release
+write note Hello from OminX
+cp note backup
+cat backup
+mv backup renamed
+rm renamed
+id
 ```
 
-The build uses Debian Trixie repositories, including `contrib`, `non-free`, and `non-free-firmware`. It enables i386 multiarch, then installs Steam, Wine, and 32-bit Mesa/Vulkan/audio libraries. Flathub is added as an optional app source; apps from Flathub are not preinstalled. Internet access to Debian mirrors and Flathub is required. Run `make check` for static Plasma/theme, desktop-default, app, setup-wizard, splash-image, and boot-menu checks. The GitHub Actions ISO workflow resolves the selected packages against Debian 13, syntax-checks the Plasma layout, and launches OminX Store, Settings, Welcome, and Setup under Xvfb in a Debian 13 GTK environment. Its smoke checks cover search/navigation, first-run views, and OminX Store's Discover commands before building the image; it then validates the generated GRUB menu, any active ISOLINUX menu, and installer files before publishing. A full local ISO build needs the Linux build host above.
+The default session has a private home/runtime directory, drops all saved root
+identity and enables `no_new_privs`. Administrative mount commands are restricted to the explicitly selected recovery
+menu entry. Power actions are delegated to the dedicated service. Normal-mode `control`, `reboot` and `poweroff` now use the bounded root power
+broker; mount administration remains recovery-only.
+[Session and device policy](docs/sessions.md).
 
-A GitHub Actions workflow automatically builds the installable ISO when this branch is updated. After a successful run, download the `OminX-installable-ISO-<commit>` artifact from the repository's **Actions** page; it contains the ISO and `SHA256SUMS` and is kept for 30 days. The ISO also contains `/usr/share/doc/ominx/build-info.txt` with its exact source commit, workflow run ID, and UTC build time, so you can verify which revision is installed. Legacy images now start a mandatory update prompt on login that opens this repository so users can fetch the latest ISO.
+Original commands also include `ls`, `pwd`, `cd`, `mkdir`, `echo`, `sync`, `exit`,
+and `reboot`. `exit` restarts that console without exiting PID 1. Arguments support single/double quotes and backslash escapes; pipelines and shell
+expansion are not implemented.
+Absolute-path execution is supported for compatible executables added to the image.
 
-### Test and install
+### Original file-management backend
 
-1. Verify the image with `sha256sum -c SHA256SUMS`.
-2. Test it in a UEFI or BIOS virtual machine before installing on real hardware. A VM with 4 GB RAM and a 30 GB virtual disk is a reasonable starting point.
-3. Write the ISO to a USB drive using a disk-image writer. **Writing an image erases the selected USB drive.**
-4. On a verified refreshed ISO, choose **Try OminX Aurora** to use the live desktop or **Install OminX (graphical)** to start Debian Installer.
+`files list PATH`, `files info PATH`, `files copy SOURCE DEST`, and `files move
+SOURCE DEST` provide the new OminX Files backend. Copy and move refuse overwrites;
+filenames with spaces and UTF-8 names work with quoting. JSON metadata is intended
+for the future graphical frontend. `files remove --confirm FILE` is nonrecursive.
+See [file operations and safety semantics](docs/files-and-storage.md).
 
-Back up important files before installation. Hardware support, proprietary graphics drivers, and Secure Boot behavior vary by machine. The image includes open-source graphics drivers and common (including non-free) firmware, but not every vendor driver.
+In **root recovery mode**, read-only Windows-volume access is explicit: `attach DEVICE ro vfat`, `attach
+DEVICE ro exfat`, or `attach DEVICE ro ntfs3`; then use `files` to inspect/import
+files and `detach` when done. This does not run Windows programs.
 
-## Repository layout
+### Optional persistent data
+
+These administrative commands require **root recovery mode**. No disk is formatted
+or mounted automatically. The root filesystem is RAM-backed;
+explicitly attach an **already formatted ext4 data device** to persist files:
 
 ```text
-legacy-build/auto/config            Reproducible live-build configuration
-legacy-build/build.sh               Root-aware ISO build entry point
-legacy-build/config/package-lists/  Desktop package selection
-legacy-build/config/bootloaders/    OminX GRUB and ISOLINUX menu templates
-legacy-build/config/hooks/normal/   Multiarch, Steam, Wine, and Flathub setup
-legacy-build/config/includes.chroot/ OminX branding, defaults, apps, and documentation
-legacy-build/config/includes.binary/ Boot splash assets included on the ISO
-legacy-build/scripts/check-config.sh Static recipe and asset checks
-legacy-build/scripts/generate-boot-splash.py Dependency-free Aurora boot artwork generator
-legacy-build/scripts/verify-boot-menu.sh Post-build menu and installer verification
+attach /dev/vda
+write /mnt/data/note This survives reboot
+cat /mnt/data/note
+detach
 ```
 
-To change packages, edit `legacy-build/config/package-lists/ominx.list.chroot`. Build options live in `legacy-build/auto/config`. Compatibility symlinks keep the original top-level paths available. Build outputs and ISO artifacts are ignored by Git.
+Choose the correct device for your VM; `/dev/vda` is an example, not an instruction
+to modify an arbitrary disk. `attach DEVICE ro` mounts without journal replay and
+refuses writes. Data mounts prohibit executable files, device nodes, and setuid.
+A busy data mount prevents shutdown rather than silently forcing its removal.
+This is not an installer; use disposable virtual data disks for development.
 
-## Licensing and third-party software
+## Graphics, controlled services and graphical login
 
-The OminX project files and original artwork in this repository are covered by the repository's **GNU AGPLv3** license. The image combines Debian packages and third-party software that retain their own licenses and trademarks. Steam is proprietary software from Valve; non-free firmware is subject to its respective terms. OminX is an independent project and is not affiliated with or endorsed by Microsoft, Valve, or Debian.
+The image builds a narrow local power broker, additional kernel graphics drivers,
+and an **original graphical login**: a root authentication broker
+(`/sbin/ominx-login`), a seat supervisor (`/sbin/ominx-seat`), and one source-built
+static Qt Quick program (`/bin/ominx-desktop`) that is both the login screen and
+the desktop session. Passwords are sha512crypt records in a root-only file,
+verified by musl `crypt`; no PAM, SDDM, X11 or Wayland server is used.
+
+[Graphical login acceptance](docs/validation/graphical-login.md) covers BIOS and
+UEFI guests: themed login screen, refused password, login service unreachable by
+the signed-in user, authenticated session as UID 1000, logout back to the login
+screen, login-screen shutdown, and recovery password changes.
+
+**The default image still boots its live console.** The login stack ships in media
+packaged with `--login-dir`, and it is a framebuffer login rather than a
+compositor session: there is still no KDE Plasma, no window manager and no display
+server. Host theme rendering remains a separate, clearly labelled check.
+
+Also guest-verified: [source-built Qt Quick/theme checks](docs/validation/target-qt-quick.md),
+a [source-built shared graphics runtime](docs/validation/graphics-runtime.md) with
+real Mesa shader, Wayland, XKB and DRM results,
+[source-built desktop IPC services](docs/desktop-bus.md) with authorization and
+supervision checks, and an isolated
+[target Qt DBus integration test](docs/validation/target-qt-dbus.md).
+See [implementation details, test boundaries and remaining integration](docs/graphics-login.md).
+
+## Earlier verified session build
+
+**19 automated checks, five normal-user configurations, five recovery regressions,
+and all three Windows-filesystem cases passed.**
+[Download the current images](https://github.com/ma19031435-eng/OminX-Linux/actions/runs/39468027444/artifacts/12285774394)
+and review [the session validation report](docs/validation/sessions.md).
+Use `ominx-x86_64.iso` for normal operation; `ominx-recovery-x86_64.iso` deliberately
+starts root recovery. This remains automatic live login, not authenticated login.
+
+## Earlier verified file/storage build
+
+**17 target tests, five boot configurations, and FAT32/exFAT/NTFS read-only import
+checks passed.** [Download the newer ISO](https://github.com/ma19031435-eng/OminX-Linux/actions/runs/39455615377/artifacts/12280299360)
+and review [the recorded file/storage validation](docs/validation/files-and-storage.md).
+The file-management layer is an original C backend with a console/JSON interface;
+its graphical frontend and KDE integration are later steps.
+
+## Original verified boot milestone
+
+**Segment one passed all five x86-64 firmware/device cases and eight target tests.**
+[Download the tested ISO and evidence](https://github.com/ma19031435-eng/OminX-Linux/actions/runs/39448085192/artifacts/12277394973)
+or review the [successful run](https://github.com/ma19031435-eng/OminX-Linux/actions/runs/39448085192).
+
+## Acceptance and scope
+
+`scripts/test-platforms.py` tests real BIOS/UEFI ISO boot, USB-media boot, two QEMU
+chipsets/CPU models, 256–1024 MiB RAM, PS/2 keyboard input into the local display
+terminal, independent serial control, files, invalid-input handling, console
+restart, virtio/SATA/NVMe data access, persistence across cold boots, read-only
+mounts, reboot, shutdown and post-shutdown filesystem integrity. It saves serial
+transcripts, framebuffer screenshots and machine-readable results.
+
+[Recorded segment-one results and artifact instructions](docs/validation/segment-one.md).
+Tests establish only the configurations actually run, not all physical PCs. The
+initial x86 target is **x86-64**; a 32-bit-only i686 image is not included.
+
+## Layout and next layers
+
+```text
+toolchain/                  Pinned upstream identities
+boot/                       Independent bootloader configuration
+src/core/                   Original init, console and data-mount operations
+src/files/, src/lib/         Original file backend, safe copy/move and argument parser
+scripts/build-toolchain.sh  Source cross-toolchain build
+scripts/build-media.sh      Source bootloader and hybrid ISO creation
+scripts/test-platforms.py   Firmware/media/terminal/storage acceptance matrix
+tests/                      Host and target executable unit tests
+config/, auto/              Preserved old desktop assets and Debian recipes
+docs/legacy-debian.md        Historical desktop build documentation
+```
+
+The existing desktop is retained via `make legacy-build` and `make legacy-check`.
+It remains a separate Debian-based track and is **not** the independent OS image.
+KDE integration, original graphical applications/file manager, network services,
+authentication, installation, updates and Windows-file workflows are later layers.
+Normal mode is an unprivileged automatic live login, not authenticated login.
+Root recovery remains explicitly selectable; use these images for isolated development.
+
+## Licensing
+
+This checkout retains its existing AGPLv3 license; it has not been relicensed.
+Linux, musl, GCC, Limine and their dependencies retain upstream licenses. Original
+proprietary components require confirmed ownership and compatible dependency use.
+Source manifests are reproducibility aids, not a substitute for distribution
+license obligations. See [architecture and boundaries](docs/source-os.md).

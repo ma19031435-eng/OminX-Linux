@@ -1,0 +1,3 @@
+PASS vfat: list/read/import spaced filename, write/delete refusal, unchanged image SHA256
+PASS exfat: list/read/import spaced filename, write/delete refusal, unchanged image SHA256
+PASS ntfs3: list/read/import spaced filename, write/delete refusal, unchanged image SHA256

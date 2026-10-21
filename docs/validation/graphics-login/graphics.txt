@@ -1,0 +1,3 @@
+PASS graphics-bochs: native framebuffer, unprivileged device policy, displayed console, keyboard, broker poweroff
+PASS graphics-virtio: native framebuffer, unprivileged device policy, displayed console, keyboard, broker poweroff
+PASS graphics-qxl: native framebuffer, unprivileged device policy, displayed console, keyboard, broker poweroff

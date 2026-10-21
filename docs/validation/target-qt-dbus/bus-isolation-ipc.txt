@@ -1,0 +1,25 @@
+OminX console ready. Type help. No disk is mounted automatically.
+ominx:/root# /bin/ominx-bus-probe --deny-other-uid
+[    3.379102] random: crng init done
+OminX bus service: system pid=76
+OminX bus service: session pid=77
+[    3.529666] ominx-bus-probe (78) used greatest stack depth: 14448 bytes left
+PASS bus cross-uid isolation
+[    3.544730] ominx-bus-probe (75) used greatest stack depth: 14112 bytes left
+ominx:/root# /sbin/ominx-desktop-bus
+bus supervisor already running or unsafe lock
+ominx:/root# /bin/ominx-bus-probe --restart-service
+[    3.568278] ominx-desktop-b (72) used greatest stack depth: 13656 bytes left
+[    3.572342] dbus-daemon (76) used greatest stack depth: 13144 bytes left
+OminX bus service: system pid=82
+OminX bus service: session pid=83
+dbus-daemon[82]: [system] Rejected send message, 1 matched rules; type="method_call", sender=":1.1" (uid=1000 pid=84 comm="ominx-bus-probe --guest-tes
+OminX bus service: session pid=85
+PASS bus: external credentials, system policy, session roundtrip, supervised restart
+PASS bus supervisor restart and child cleanup
+ominx:/root# control
+OK service=ominx-control protocol=1
+ominx:/root# poweroff
+OK poweroff-requested
+ominx:/root# [    5.657064] ACPI: PM: Preparing to enter system sleep state S5
+[    5.663708] reboot: Power down

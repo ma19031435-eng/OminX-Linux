@@ -1,0 +1,3 @@
+PASS login-bios: themed greeter, refused password, greeter-only authorization, authenticated session, logout, login-screen poweroff
+PASS login-uefi: themed greeter, refused password, greeter-only authorization, authenticated session, logout, login-screen poweroff
+PASS login-recovery: explicit root console, musl crypt verification, password change, no account creation

@@ -1,0 +1,25 @@
+groups=44,104,107
+HOME=/home/ominx XDG_RUNTIME_DIR=/run/user/1000
+ominx:/home/ominx$ /usr/bin/ominx-render-probe --guest-test
+[    3.369323] ominx-render-pr (75) used greatest stack depth: 14384 bytes left
+PASS Wayland shared-library protocol roundtrip
+PASS XKB source keyboard data and modifiers
+DRM driver: bochs-drm
+PASS DRM shared-library device/resource query
+[    3.706657] random: crng init done
+Renderer: softpipe; GL: OpenGL ES 3.1 Mesa 26.1.8
+PASS source shared graphics: Wayland, XKB, EGL and shader pixels
+[    4.389134] ominx-render-pr (74) used greatest stack depth: 13088 bytes left
+ominx:/home/ominx$ /usr/bin/ominx-render-probe --guest-test
+PASS Wayland shared-library protocol roundtrip
+PASS XKB source keyboard data and modifiers
+DRM driver: bochs-drm
+PASS DRM shared-library device/resource query
+Renderer: softpipe; GL: OpenGL ES 3.1 Mesa 26.1.8
+PASS source shared graphics: Wayland, XKB, EGL and shader pixels
+ominx:/home/ominx$ control
+OK service=ominx-control protocol=1
+ominx:/home/ominx$ poweroff
+OK poweroff-requested
+ominx:/home/ominx$ [    5.203730] ACPI: PM: Preparing to enter system sleep state S5
+[    5.210550] reboot: Power down

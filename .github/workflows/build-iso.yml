@@ -39,7 +39,7 @@ jobs:
 
       - name: Validate OminX configuration
         run: |
-          make check
+          make legacy-check
           node --check config/includes.chroot/usr/share/plasma/look-and-feel/com.ominx.aurora/contents/layouts/org.kde.plasma.desktop-layout.js
 
       - name: Resolve the Debian 13 package selection
@@ -141,7 +141,7 @@ jobs:
                 python3 live-build debootstrap xorriso squashfs-tools dosfstools mtools \
                 grub-pc-bin grub-efi-amd64-bin isolinux syslinux-common \
                 syslinux-utils debian-archive-keyring
-              ./build.sh
+              ./scripts/build-debian-legacy.sh
             ' 2>&1 | tee live-build.log
 
       - name: Summarize image build failure

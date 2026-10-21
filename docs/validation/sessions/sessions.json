@@ -1,0 +1,22 @@
+[
+  {
+    "name": "bios-pc-256",
+    "result": "PASS"
+  },
+  {
+    "name": "bios-q35-512",
+    "result": "PASS"
+  },
+  {
+    "name": "uefi-q35-512",
+    "result": "PASS"
+  },
+  {
+    "name": "uefi-pc-1024",
+    "result": "PASS"
+  },
+  {
+    "name": "bios-usb-512",
+    "result": "PASS"
+  }
+]

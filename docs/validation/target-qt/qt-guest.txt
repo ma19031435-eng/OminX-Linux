@@ -1,0 +1,3 @@
+PASS qt-bochs: source-built musl Qt, UID1000 raster display, real keyboard, return to console
+PASS qt-virtio: source-built musl Qt, UID1000 raster display, real keyboard, return to console
+PASS qt-qxl: source-built musl Qt, UID1000 raster display, real keyboard, return to console

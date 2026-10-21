@@ -1,0 +1,14 @@
+[
+  {
+    "name": "login-bios",
+    "result": "PASS"
+  },
+  {
+    "name": "login-uefi",
+    "result": "PASS"
+  },
+  {
+    "name": "login-recovery",
+    "result": "PASS"
+  }
+]

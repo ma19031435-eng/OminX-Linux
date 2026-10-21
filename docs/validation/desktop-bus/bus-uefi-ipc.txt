@@ -1,0 +1,25 @@
+HOME=/home/ominx XDG_RUNTIME_DIR=/run/user/1000
+ominx:/home/ominx$ /bin/ominx-bus-probe --guest-test
+[    3.247936] random: crng init done
+OminX bus service: system pid=75
+OminX bus service: session pid=76
+dbus-daemon[75]: [system] Rejected send message, 1 matched rules; type="method_call", sender=":1.0" (uid=1000 pid=74 comm="/bin/ominx-bus-probe --gues
+[    3.454911] dbus-daemon (76) used greatest stack depth: 13144 bytes left
+OminX bus service: session pid=77
+PASS bus: external credentials, system policy, session roundtrip, supervised restart
+ominx:/home/ominx$ files info /etc/machine-id
+{"type":"file","size":33,"mode":292,"uid":0,"gid":0}
+ominx:/home/ominx$ write /etc/machine-id denied
+/etc/machine-id: Permission denied
+ominx:/home/ominx$ /sbin/ominx-desktop-bus
+ominx-desktop-bus requires root source boot context
+ominx:/home/ominx$ id
+uid=1000 euid=1000 suid=1000 gid=1000 egid=1000 sgid=1000 no_new_privs=1
+groups=44,104,107
+HOME=/home/ominx XDG_RUNTIME_DIR=/run/user/1000
+ominx:/home/ominx$ control
+OK service=ominx-control protocol=1
+ominx:/home/ominx$ poweroff
+OK poweroff-requested
+ominx:/home/ominx$ [    4.390130] ACPI: PM: Preparing to enter system sleep state S5
+[    4.396893] reboot: Power down

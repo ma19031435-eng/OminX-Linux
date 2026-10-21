@@ -1,0 +1,65 @@
+[    1.420818] sched_clock: Marking stable (1392027342, 27863685)->(1422971711, -3080684)
+[    1.422616] registered taskstats version 1
+[    1.422799] Loading compiled-in X.509 certificates
+[    1.431068] Demotion targets for Node 0: null
+[    1.433432] PM:   Magic number: 14:699:639
+[    1.434217] printk: legacy console [netcon0] enabled
+[    1.434433] netconsole: network logging started
+[    1.435410] cfg80211: Loading compiled-in X.509 certificates for regulatory database
+[    1.441525] kworker/u4:6 (65) used greatest stack depth: 15048 bytes left
+[    1.449409] Loaded X.509 cert 'sforshee: 00b28ddf47aef9cea7'
+[    1.450157] Loaded X.509 cert 'wens: 61c038651aabdcf94bd0ac7ff06c7248db18c600'
+[    1.451101] ALSA device list:
+[    1.452267]   No soundcards found.
+[    1.453300] platform regulatory.0: Direct firmware load for regulatory.db failed with error -2
+[    1.453792] cfg80211: failed to load regulatory.db
+[    1.658574] ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[    1.660567] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[    1.661436] ata1.00: LPM support broken, forcing max_power
+[    1.661998] ata1.00: ATA-7: QEMU HARDDISK, 2.5+, max UDMA/100
+[    1.662295] ata1.00: 131072 sectors, multi 16: LBA48 NCQ (depth 32)
+[    1.662650] ata1.00: applying bridge limits
+[    1.663385] ata5: SATA link down (SStatus 0 SControl 300)
+[    1.664261] ata6: SATA link down (SStatus 0 SControl 300)
+[    1.664461] ata2: SATA link down (SStatus 0 SControl 300)
+[    1.664662] ata4: SATA link down (SStatus 0 SControl 300)
+[    1.665045] ata3.00: LPM support broken, forcing max_power
+[    1.665289] ata3.00: ATAPI: QEMU DVD-ROM, 2.5+, max UDMA/100
+[    1.665471] ata3.00: applying bridge limits
+[    1.666028] ata3.00: LPM support broken, forcing max_power
+[    1.666299] ata3.00: configured for UDMA/100
+[    1.666654] ata1.00: LPM support broken, forcing max_power
+[    1.666861] ata1.00: configured for UDMA/100
+[    1.672854] scsi 0:0:0:0: Direct-Access     ATA      QEMU HARDDISK    2.5+ PQ: 0 ANSI: 5
+[    1.677565] sd 0:0:0:0: Attached scsi generic sg0 type 0
+[    1.678637] sd 0:0:0:0: [sda] 131072 512-byte logical blocks: (67.1 MB/64.0 MiB)
+[    1.680330] scsi 2:0:0:0: CD-ROM            QEMU     QEMU DVD-ROM     2.5+ PQ: 0 ANSI: 5
+[    1.681248] sd 0:0:0:0: [sda] Write Protect is off
+[    1.681709] sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[    1.684061] sd 0:0:0:0: [sda] Preferred minimum I/O size 512 bytes
+[    1.688762] sr 2:0:0:0: [sr0] scsi3-mmc drive: 4x/4x cd/rw xa/form2 tray
+[    1.689165] cdrom: Uniform CD-ROM driver Revision: 3.20
+[    1.700349] sr 2:0:0:0: Attached scsi generic sg1 type 5
+[    1.701137] sd 0:0:0:0: [sda] Attached SCSI disk
+[    1.764525] Freeing unused kernel image (initmem) memory: 2740K
+[    1.767407] Write protecting the kernel read-only data: 26624k
+[    1.768778] Freeing unused kernel image (rodata/data gap) memory: 1000K
+[    1.942120] x86/mm: Checked W+X mappings: passed, no W+X pages found.
+[    1.943596] input: ImExPS/2 Generic Explorer Mouse as /devices/platform/i8042/serio1/input/input3
+[    1.945206] Run /init as init process
+OminX console ready. Type help. No disk is mounted automatically.
+ominx:/root# attach /dev/sda
+[    2.013425] EXT4-fs (sda): mounted filesystem 17eb684f-612a-45bf-a0f4-1e8acbdbd870 r/w with ordered data mode. Quota mode: none.
+Data attached at /mnt/data.
+ominx:/root# cat /mnt/data/probe
+persistentdata
+ominx:/root# poweroff
+[    2.025434] tsc: Refined TSC clocksource calibration: 2596.134 MHz
+[    2.025979] clocksource: tsc: mask: 0xffffffffffffffff max_cycles: 0x256bf8268dd, max_idle_ns: 440795235267 ns
+[    2.026372] clocksource: Switched to clocksource tsc
+[    2.036638] EXT4-fs (sda): unmounting filesystem 17eb684f-612a-45bf-a0f4-1e8acbdbd870.
+[    2.038332] jbd2/sda-8 (71) used greatest stack depth: 14264 bytes left
+[    2.044402] sd 0:0:0:0: [sda] Synchronizing SCSI cache
+[    2.044826] sd 0:0:0:0: [sda] Stopping disk
+[    2.046729] ACPI: PM: Preparing to enter system sleep state S5
+[    2.047352] reboot:

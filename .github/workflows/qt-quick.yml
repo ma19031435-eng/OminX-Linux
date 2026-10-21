@@ -1,0 +1,144 @@
+name: Source-built target Qt Quick
+on:
+  push:
+    branches: [arena/11b46bb0-ominx-linux]
+    paths: ['desktop/qt/quick.env', 'desktop/quick-probe/**', 'desktop/sddm/ominx/**', 'scripts/build-qt-quick-target.sh', 'scripts/test-qt-quick.py', 'scripts/export-quick-preview.py', '.github/workflows/qt-quick.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+defaults:
+  run:
+    shell: bash
+jobs:
+  target-qt:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build tools only
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake ninja-build python3 python3-pil pkg-config autoconf automake libtool texinfo nasm mtools xorriso qemu-system-x86 ovmf e2fsprogs
+      - uses: actions/cache/restore@v4
+        id: compiler
+        with:
+          path: |
+            build/toolchain
+            build/provenance
+          key: source-toolchain-${{ runner.os }}-${{ hashFiles('toolchain/**', 'scripts/build-toolchain.sh') }}
+      - name: Build source toolchain when absent
+        if: steps.compiler.outputs.cache-hit != 'true'
+        run: JOBS=4 make toolchain
+      - uses: actions/cache/restore@v4
+        id: qt-cache
+        with:
+          path: |
+            build/sources/qtbase
+            build/qt-host
+            build/qt-target
+            build/qt-prefix
+            build/graphics-probe
+          key: target-qt-${{ runner.os }}-${{ hashFiles('desktop/qt/source.env', 'desktop/probe/**', 'scripts/build-qt-target.sh', 'toolchain/**') }}
+      - name: Cross-build target Qt and original probe
+        run: JOBS=4 scripts/build-qt-target.sh 2>&1 | tee build/qt-target.log
+      - uses: actions/cache/save@v4
+        if: steps.qt-cache.outputs.cache-hit != 'true'
+        with:
+          path: |
+            build/sources/qtbase
+            build/qt-host
+            build/qt-target
+            build/qt-prefix
+            build/graphics-probe
+          key: ${{ steps.qt-cache.outputs.cache-primary-key }}
+      - uses: actions/cache/restore@v4
+        id: quick-cache
+        with:
+          path: |
+            build/qt-quick-host
+            build/qt-prefix
+            build/sources/qtshadertools
+            build/sources/qtdeclarative
+            build/qtshadertools-host
+            build/qtshadertools-target
+            build/qtdeclarative-host-full
+            build/qtdeclarative-target
+          key: target-quick-${{ runner.os }}-${{ hashFiles('desktop/qt/**', 'toolchain/**') }}-${{ hashFiles('scripts/build-qt-target.sh', 'scripts/build-qt-quick-target.sh') }}
+          restore-keys: |
+            target-quick-${{ runner.os }}-${{ hashFiles('desktop/qt/**', 'toolchain/**') }}-
+      - name: Source-build target Qt Quick dependencies
+        run: JOBS=4 scripts/build-qt-quick-target.sh --dependencies-only 2>&1 | tee build/qt-quick-build.log
+      - uses: actions/cache/save@v4
+        if: always() && steps.quick-cache.outputs.cache-hit != 'true'
+        with:
+          path: |
+            build/qt-quick-host
+            build/qt-prefix
+            build/sources/qtshadertools
+            build/sources/qtdeclarative
+            build/qtshadertools-host
+            build/qtshadertools-target
+            build/qtdeclarative-host-full
+            build/qtdeclarative-target
+          key: ${{ steps.quick-cache.outputs.cache-primary-key }}
+      - name: Build the original theme validation application
+        run: JOBS=4 scripts/build-qt-quick-target.sh --probe-only 2>&1 | tee build/qt-quick-probe.log
+      - name: Require accepted source-built kernel provenance
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh run watch 39482457386 --interval 60 --exit-status
+          gh api repos/${{ github.repository }}/actions/runs/39482457386 > build/source-run.json
+          python3 - <<'PY'
+          import json
+          r = json.load(open('build/source-run.json'))
+          assert r['conclusion'] == 'success', 'Source kernel acceptance must pass before Qt guest tests'
+          assert r['head_sha'] == '35514119f11e775ab696d6c3c67be5c221366848'
+          PY
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 39482457386
+          name: OminX-x86-35514119f11e775ab696d6c3c67be5c221366848
+          path: build/source-core
+          github-token: ${{ github.token }}
+      - name: Package independent target graphics test media
+        run: |
+          (cd build/source-core && sha256sum -c SHA256SUMS)
+          cp build/source-core/bzImage build/bzImage
+          cp build/source-core/provenance/kernel.config build/provenance/kernel.config
+          make initramfs
+          python3 scripts/make-initramfs.py build/ominx build/initramfs.cpio.gz build/ominx-files build/ominx-control build/graphics-probe/ominx-graphics-probe build/quick-probe/ominx-quick-probe
+          JOBS=4 scripts/build-media.sh
+      - name: Verify Qt on real BIOS and UEFI media
+        run: python3 scripts/test-qt-quick.py 2>&1 | tee build/qt-quick-guest.log
+      - name: Export actual guest-rendered preview
+        run: python3 scripts/export-quick-preview.py
+      - name: Publish bounded diagnostics
+        if: always()
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          paths = [Path('build/qt-target.log'), Path('build/qt-quick-build.log'), Path('build/qt-quick-probe.log'), Path('build/qt-quick-guest.log'), Path('build/acceptance/qt-quick.json')]
+          paths += sorted(Path('build/acceptance').glob('quick-*.txt'))
+          for p in paths:
+              if p.exists():
+                  text = '\n'.join(line[:150] for line in p.read_text(errors='replace').splitlines()[-25:])
+                  text = text.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
+                  print(f'::notice title={p.name}::{text}')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: OminX-target-QtQuick-development-${{ github.sha }}
+          retention-days: 14
+          path: |
+            build/qt-target.log
+            build/qt-quick-build.log
+            build/qt-quick-probe.log
+            build/qt-quick-guest.log
+            build/provenance
+            build/source-run.json
+            build/acceptance/qt-quick.json
+            build/acceptance/quick-*
+            build/quick-probe/ominx-quick-probe

@@ -1,0 +1,14 @@
+[
+  {
+    "filesystem": "vfat",
+    "result": "PASS"
+  },
+  {
+    "filesystem": "exfat",
+    "result": "PASS"
+  },
+  {
+    "filesystem": "ntfs3",
+    "result": "PASS"
+  }
+]

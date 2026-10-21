@@ -1,0 +1,3 @@
+PASS bus-bios: source-linked IPC, fixed privilege policy, supervised service, controlled shutdown
+PASS bus-uefi: source-linked IPC, fixed privilege policy, supervised service, controlled shutdown
+PASS bus-isolation: source-linked IPC, fixed privilege policy, supervised service, controlled shutdown

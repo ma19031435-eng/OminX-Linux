@@ -1,8 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=OminX legacy update required
-Comment=Open the OminX repository and install the latest ISO
-Exec=ominx-force-update
-Icon=software-update-available
-Terminal=false
-X-GNOME-Autostart-enabled=true

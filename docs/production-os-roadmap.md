@@ -1,5 +1,9 @@
 # OminX production OS: architecture and acceptance roadmap
 
+> Historical Debian/Plasma planning document. For the independent source-built
+> target and current verified milestone, see [source-os.md](source-os.md) and
+> [segment-one.md](validation/segment-one.md).
+
 **Status:** planning baseline, not a statement that the current ISO is production-ready.
 
 ## Architecture boundary

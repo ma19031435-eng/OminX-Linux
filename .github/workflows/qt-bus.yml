@@ -1,0 +1,103 @@
+name: Source-built Qt DBus integration
+on:
+  push:
+    branches: [arena/11b46bb0-ominx-linux]
+    paths: ['desktop/qt-bus-probe/**', 'desktop/qt/source.env', 'scripts/build-qt-bus-target.sh', 'desktop/bus/**', 'src/bus/**', 'src/core/**', 'src/lib/session.*', 'scripts/build-desktop-bus.sh', 'scripts/test-desktop-bus.py', 'scripts/fetch-archive.py', 'scripts/make-initramfs.py', 'tests/test_desktop_bus.py', 'tests/test_source_archive.py', '.github/workflows/qt-bus.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+defaults:
+  run:
+    shell: bash
+jobs:
+  bus:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build tools only
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake ninja-build python3 python3-venv pkg-config autoconf automake libtool texinfo nasm mtools xorriso qemu-system-x86 ovmf e2fsprogs
+          mkdir -p build
+          python3 -m venv build/meson-env
+          build/meson-env/bin/pip install meson==1.7.2
+      - uses: actions/cache/restore@v4
+        id: compiler
+        with:
+          path: |
+            build/toolchain
+            build/provenance
+          key: source-toolchain-${{ runner.os }}-${{ hashFiles('toolchain/**', 'scripts/build-toolchain.sh') }}
+      - name: Build source toolchain if missing
+        if: steps.compiler.outputs.cache-hit != 'true'
+        run: JOBS=4 make toolchain
+      - name: Build source IPC dependencies and original components
+        run: MESON="$PWD/build/meson-env/bin/meson" JOBS=4 scripts/build-desktop-bus.sh 2>&1 | tee build/desktop-bus-build.log
+      - name: Build isolated source Qt Core and directly linked DBus
+        run: JOBS=4 scripts/build-qt-bus-target.sh 2>&1 | tee build/qt-bus-build.log
+      - name: Require accepted source kernel provenance
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api repos/${{ github.repository }}/actions/runs/39482457386 > build/source-run.json
+          python3 - <<'PY'
+          import json
+          r = json.load(open('build/source-run.json'))
+          assert r['conclusion'] == 'success'
+          assert r['head_sha'] == '35514119f11e775ab696d6c3c67be5c221366848'
+          PY
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: 39482457386
+          name: OminX-x86-35514119f11e775ab696d6c3c67be5c221366848
+          path: build/source-core
+          github-token: ${{ github.token }}
+      - name: Package source-built service media and run target regressions
+        run: |
+          (cd build/source-core && sha256sum -c SHA256SUMS)
+          cp build/source-core/bzImage build/bzImage
+          cp build/source-core/provenance/kernel.config build/provenance/kernel.config
+          make target-check 2>&1 | tee build/desktop-bus-userspace.log
+          python3 scripts/make-initramfs.py build/ominx build/initramfs.cpio.gz build/ominx-files build/ominx-control --bus-dir build/desktop-bus --qt-bus-probe build/qt-bus-probe/ominx-qt-bus-probe
+          JOBS=4 scripts/build-media.sh
+      - name: Verify guest IPC, authorization and service restart
+        run: python3 scripts/test-desktop-bus.py --qt 2>&1 | tee build/desktop-bus-guest.log
+      - name: Publish bounded diagnostics
+        if: always()
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          paths = [Path('build/qt-bus-build.log'), Path('build/desktop-bus-build.log'), Path('build/desktop-bus-userspace.log'), Path('build/desktop-bus-guest.log'), Path('build/acceptance/desktop-bus.json')]
+          paths += sorted(Path('build/acceptance').glob('bus-*.txt'))
+          for p in paths:
+              if p.exists():
+                  text = '\n'.join(line[:150] for line in p.read_text(errors='replace').splitlines()[-25:])
+                  text = text.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
+                  print(f'::notice title={p.name}::{text}')
+          log = Path('build/qt-bus-build.log')
+          if log.exists():
+              lines = log.read_text(errors='replace').splitlines()
+              hits = [i for i, line in enumerate(lines) if re.search(r'error:|FAILED:|AutoMoc subprocess error|CMake Error|predefines generation failed', line, re.I)]
+              selected = sorted({j for i in hits[:4] for j in range(max(0, i-3), min(len(lines), i+24))})
+              text = '\n'.join(lines[i].replace(str(Path.cwd()), '<repo>') for i in selected)[:16000]
+              text = text.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
+              print(f'::notice title=qt-bus-first-errors::{text}')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: OminX-qt-bus-development-${{ github.sha }}
+          retention-days: 14
+          path: |
+            build/qt-bus-probe/ominx-qt-bus-probe
+            build/qt-bus-probe/QTBASE-LICENSES
+            build/qt-bus-build.log
+            build/desktop-bus
+            build/desktop-bus-*.log
+            build/provenance
+            build/source-run.json
+            build/acceptance/desktop-bus.json
+            build/acceptance/bus-*.txt

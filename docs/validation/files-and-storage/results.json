@@ -1,0 +1,50 @@
+[
+  {
+    "name": "bios-pc-256",
+    "machine": "pc",
+    "ram": 256,
+    "cpu": "qemu64",
+    "disk": "virtio",
+    "result": "PASS",
+    "seconds": 28.1
+  },
+  {
+    "name": "bios-q35-512",
+    "machine": "q35",
+    "ram": 512,
+    "cpu": "max",
+    "disk": "sata",
+    "result": "PASS",
+    "seconds": 27.1
+  },
+  {
+    "name": "uefi-q35-512",
+    "machine": "q35",
+    "ram": 512,
+    "cpu": "qemu64",
+    "disk": "virtio",
+    "uefi": true,
+    "result": "PASS",
+    "seconds": 33.9
+  },
+  {
+    "name": "uefi-pc-1024",
+    "machine": "pc",
+    "ram": 1024,
+    "cpu": "max",
+    "disk": "nvme",
+    "uefi": true,
+    "result": "PASS",
+    "seconds": 35.2
+  },
+  {
+    "name": "bios-usb-512",
+    "machine": "q35",
+    "ram": 512,
+    "cpu": "qemu64",
+    "disk": "virtio",
+    "usb": true,
+    "result": "PASS",
+    "seconds": 30.4
+  }
+]

@@ -1,0 +1,25 @@
+  {
+    "name": "quick-bochs",
+    "result": "PASS",
+    "colors": [
+      16907,
+      9887
+    ]
+  },
+  {
+    "name": "quick-virtio",
+    "result": "PASS",
+    "colors": [
+      16907,
+      9823
+    ]
+  },
+  {
+    "name": "quick-qxl",
+    "result": "PASS",
+    "colors": [
+      16907,
+      9887
+    ]
+  }
+]

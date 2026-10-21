@@ -1,0 +1,5 @@
+PASS bios-pc-256: firmware/media boot, terminal, keyboard/display, file operations, console restart, persistent storage, read-only refusal, reboot, clean poweroff
+PASS bios-q35-512: firmware/media boot, terminal, keyboard/display, file operations, console restart, persistent storage, read-only refusal, reboot, clean poweroff
+PASS uefi-q35-512: firmware/media boot, terminal, keyboard/display, file operations, console restart, persistent storage, read-only refusal, reboot, clean poweroff
+PASS uefi-pc-1024: firmware/media boot, terminal, keyboard/display, file operations, console restart, persistent storage, read-only refusal, reboot, clean poweroff
+PASS bios-usb-512: firmware/media boot, terminal, keyboard/display, file operations, console restart, persistent storage, read-only refusal, reboot, clean poweroff

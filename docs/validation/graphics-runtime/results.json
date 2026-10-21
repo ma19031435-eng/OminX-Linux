@@ -1,0 +1,10 @@
+[
+  {
+    "name": "runtime-bios",
+    "result": "PASS"
+  },
+  {
+    "name": "runtime-uefi",
+    "result": "PASS"
+  }
+]

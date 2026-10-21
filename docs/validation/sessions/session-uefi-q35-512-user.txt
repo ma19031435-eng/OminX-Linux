@@ -1,0 +1,65 @@
+Seccomp:	0
+Seccomp_filters:	0
+Speculation_Store_Bypass:	not vulnerable
+SpeculationIndirectBranch:	always enabled
+Cpus_allowed:	1
+Cpus_allowed_list:	0
+Mems_allowed:	00000000,00000001
+Mems_allowed_list:	0
+voluntary_ctxt_switches:	2
+nonvoluntary_ctxt_switches:	4
+ominx:/home/ominx$ files info /run/user/1000
+{"type":"directory","size":40,"mode":448,"uid":1000,"gid":1000}
+[    1.607143] ominx-files (71) used greatest stack depth: 14112 bytes left
+ominx:/home/ominx$ files info /home/ominx
+{"type":"directory","size":40,"mode":448,"uid":1000,"gid":1000}
+ominx:/home/ominx$ write "my notes.txt" "unprivileged document"
+ominx:/home/ominx$ files copy "my notes.txt" "copy.txt"
+{"ok":true}
+ominx:/home/ominx$ files info copy.txt
+{"type":"file","size":22,"mode":384,"uid":1000,"gid":1000}
+ominx:/home/ominx$ cat copy.txt
+unprivileged document
+ominx:/home/ominx$ write /etc/forbidden denied
+/etc/forbidden: Permission denied
+ominx:/home/ominx$ cat /etc/shadow
+/etc/shadow: Permission denied
+ominx:/home/ominx$ ls /root
+ls: Permission denied
+ominx:/home/ominx$ cat /dev/vda
+/dev/vda: Permission denied
+ominx:/home/ominx$ attach /dev/vda
+Recovery mode required for disk attachment.
+ominx:/home/ominx$ detach
+Recovery mode required for disk attachment.
+ominx:/home/ominx$ poweroff
+Recovery mode required for power controls.
+ominx:/home/ominx$ reboot
+Recovery mode required for power controls.
+ominx:/home/ominx$ files info /dev/dri/card0
+{"type":"other","size":0,"mode":432,"uid":0,"gid":44}
+ominx:/home/ominx$ files info /dev/input/event0
+{"type":"other","size":0,"mode":432,"uid":0,"gid":104}
+ominx:/home/ominx$ [    1.934369] tsc: Refined TSC clocksource calibration: 2596.062 MHz
+[    1.934816] clocksource: tsc: mask: 0xffffffffffffffff max_cycles: 0x256bb3c631e, max_idle_ns: 440795207649 ns
+[    1.935080] clocksource: Switched to clocksource tsc
+[    3.206573] random: crng init done
+cat /home/ominx/keyboard
+keyboardok
+ominx:/home/ominx$ /init --shell
+OminX console ready. Type help. No disk is mounted automatically.
+ominx:/home/ominx$ id
+uid=1000 euid=1000 suid=1000 gid=1000 egid=1000 sgid=1000 no_new_privs=1
+groups=44,104,107
+HOME=/home/ominx XDG_RUNTIME_DIR=/run/user/1000
+ominx:/home/ominx$ exit
+ominx:/home/ominx$ exit
+OminX live session: unprivileged user ominx (automatic login).
+OminX console ready. Type help. No disk is mounted automatically.
+ominx:/home/ominx$ id
+uid=1000 euid=1000 suid=1000 gid=1000 egid=1000 sgid=1000 no_new_privs=1
+groups=44,104,107
+HOME=/home/ominx XDG_RUNTIME_DIR=/run/user/1000
+ominx:/home/ominx$ cat "my notes.txt"
+unprivileged document
+ominx:/home/ominx$ 

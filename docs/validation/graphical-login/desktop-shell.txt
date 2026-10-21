@@ -1,0 +1,25 @@
+Warning: qquickitemviewtransition_p.h:153: Multiple C++ types called QQuickViewTransitionAttached found!
+ (other occurrence in : qquickitemviewtransition_p.h : 153 )
+ This violates the One Definition Rule!
+Warning: qquickwindowattached_p.h:27: Multiple C++ types called QQuickWindowAttached found!
+ (other occurrence in : qquickwindowattached_p.h : 27 )
+ This violates the One Definition Rule!
+Warning: qquickwindowattached_p.h:27: Multiple C++ types called QQuickWindowAttached found!
+ (other occurrence in : qquickwindowattached_p.h : 27 )
+ This violates the One Definition Rule!
+[10/16] Building CXX object CMakeFiles/ominx-desktop.dir/ominx-desktop_autogen/mocs_compilation.cpp.o
+[11/16] Building CXX object CMakeFiles/ominx-desktop.dir/.qt/rcc/qrc_qmake_OminX_Shell.cpp.o
+[12/16] Building CXX object CMakeFiles/ominx-desktop.dir/.qt/rcc/qrc_ominx-desktop_raw_qml_0.cpp.o
+[13/16] Building CXX object CMakeFiles/ominx-desktop.dir/ominx-desktop_qmltyperegistrations.cpp.o
+[14/16] Building CXX object CMakeFiles/ominx-desktop.dir/.qt/rcc/qrc_font.cpp.o
+[15/16] Building CXX object CMakeFiles/ominx-desktop.dir/main.cpp.o
+[16/16] Linking CXX executable ominx-desktop
+mkdir -p build
+/home/runner/work/OminX-Linux/OminX-Linux/build/toolchain/bin/x86_64-linux-musl-gcc -O2 -Wall -Wextra -Werror -static -o build/ominx-login src/login/b
+mkdir -p build
+/home/runner/work/OminX-Linux/OminX-Linux/build/toolchain/bin/x86_64-linux-musl-gcc -O2 -Wall -Wextra -Werror -static -o build/ominx-seat src/login/se
+mkdir -p build
+/home/runner/work/OminX-Linux/OminX-Linux/build/toolchain/bin/x86_64-linux-musl-gcc -O2 -Wall -Wextra -Werror -static -o build/ominx-passwd src/login/
+mkdir -p build
+/home/runner/work/OminX-Linux/OminX-Linux/build/toolchain/bin/x86_64-linux-musl-gcc -O2 -Wall -Wextra -Werror -static -o build/ominx-login-probe src/l
+login bundle ready: accounts ominx-desktop ominx-login ominx-login-probe ominx-passwd ominx-seat

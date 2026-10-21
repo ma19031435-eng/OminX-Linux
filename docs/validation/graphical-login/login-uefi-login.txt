@@ -1,0 +1,25 @@
+seat: greeter exited status=0
+seat: session started uid=1000 pid=80
+seat: session ended uid=1000 status=0
+seat: greeter started pid=83
+ominx:/home/ominx$ cat /run/ominx/session.log
+Failed to open tty (Permission denied)
+QFontDatabase: Cannot find font directory /home/runner/work/OminX-Linux/OminX-Linux/build/qt-prefix/lib/fonts.
+Note that Qt no longer ships fonts. Deploy some (from https://dejavu-fonts.github.io/ for example) or switch to fontconfig.
+OMINX_SESSION_READY user=ominx home=/home/ominx
+OMINX_SESSION_LOGOUT
+ominx:/home/ominx$ cat /run/ominx/greeter.log
+Failed to open tty (Permission denied)
+greeter: listed 1 unlocked accounts
+QFontDatabase: Cannot find font directory /home/runner/work/OminX-Linux/OminX-Linux/build/qt-prefix/lib/fonts.
+Note that Qt no longer ships fonts. Deploy some (from https://dejavu-fonts.github.io/ for example) or switch to fontconfig.
+OMINX_GREETER_READY
+OMINX_LOGIN_DENIED user=ominx reason=credentials
+OMINX_LOGIN_ACCEPTED user=ominx uid=1000
+Failed to open tty (Permission denied)
+greeter: listed 1 unlocked accounts
+QFontDatabase: Cannot find font directory /home/runner/work/OminX-Linux/OminX-Linux/build/qt-prefix/lib/fonts.
+Note that Qt no longer ships fonts. Deploy some (from https://dejavu-fonts.github.io/ for example) or switch to fontconfig.
+OMINX_GREETER_READY
+ominx:/home/ominx$ [   18.772071] ACPI: PM: Preparing to enter system sleep state S5
+[   18.773968] reboot: Power down

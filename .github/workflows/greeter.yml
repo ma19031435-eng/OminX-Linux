@@ -1,0 +1,75 @@
+name: OminX SDDM Qt6 theme verification
+on:
+  push:
+    branches: [arena/11b46bb0-ominx-linux]
+    paths: ['desktop/**', 'tests/ui/**', 'scripts/build-greeter-host.sh', '.github/workflows/greeter.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+defaults:
+  run:
+    shell: bash
+jobs:
+  theme:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build-host UI test dependencies (not target packages)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake pkg-config qt6-base-dev qt6-declarative-dev \
+            qt6-tools-dev qt6-tools-dev-tools qt6-l10n-tools libpam0g-dev libxcb1-dev libxcb-xkb-dev \
+            libxkbcommon-dev libxkbcommon-x11-dev libxau-dev xauth xvfb imagemagick python3-venv \
+            fonts-dejavu-core qml6-module-qtquick qml6-module-qtquick-controls qml6-module-qtquick-layouts \
+            qml6-module-qtqml-workerscript qml6-module-qtquick-window qml6-module-qtquick-templates
+      - name: Test theme behavior with Qt6 and mock SDDM context
+        run: |
+          python3 -m venv build/ui-venv
+          build/ui-venv/bin/pip install PySide6==6.8.3 Pillow==11.1.0
+          mkdir -p build/greeter
+          build/ui-venv/bin/python tests/ui/test_greeter.py 2>&1 | tee build/greeter/theme-tests.txt
+      - name: Build pinned upstream SDDM greeter using host Qt6
+        run: JOBS=4 scripts/build-greeter-host.sh 2>&1 | tee build/greeter/sddm-build.txt
+      - name: Render in actual SDDM test mode
+        run: xvfb-run -a -s '-screen 0 1440x900x24' python3 tests/ui/test_real_greeter.py 2>&1 | tee build/greeter/sddm-test.txt
+      - name: Export a small actual-render preview for review
+        if: always()
+        run: |
+          if [ -x build/ui-venv/bin/python ]; then
+            build/ui-venv/bin/python - <<'PY'
+          import base64, io
+          from pathlib import Path
+          from PIL import Image
+          path = Path('build/greeter/ominx-login-1440.png')
+          if path.exists():
+              image = Image.open(path).convert('RGB')
+              image.thumbnail((800, 500))
+              image = image.quantize(colors=128)
+              buffer = io.BytesIO()
+              image.save(buffer, format='PNG', optimize=True)
+              encoded = base64.b64encode(buffer.getvalue()).decode()
+              chunks = [encoded[i:i+3000] for i in range(0, len(encoded), 3000)]
+              assert len(chunks) <= 10
+              for index, chunk in enumerate(chunks):
+                  print(f'::notice title=preview-{index}-{len(chunks)}::{chunk}')
+          PY
+          fi
+      - name: Report UI test evidence
+        if: always()
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          for path in Path('build/greeter').glob('*.txt'):
+              text = '\n'.join(path.read_text(errors='replace').splitlines()[-50:])
+              text = text.replace('%','%25').replace('\r','%0D').replace('\n','%0A')
+              print(f'::notice title={path.name}::{text}')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: OminX-login-theme-${{ github.sha }}
+          path: |
+            build/greeter
+            desktop/sddm/ominx
+          retention-days: 14

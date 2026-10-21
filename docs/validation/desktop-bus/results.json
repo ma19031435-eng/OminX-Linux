@@ -1,0 +1,14 @@
+[
+  {
+    "name": "bus-bios",
+    "result": "PASS"
+  },
+  {
+    "name": "bus-uefi",
+    "result": "PASS"
+  },
+  {
+    "name": "bus-isolation",
+    "result": "PASS"
+  }
+]

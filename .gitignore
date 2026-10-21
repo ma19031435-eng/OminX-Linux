@@ -8,3 +8,6 @@
 *.log
 __pycache__/
 *.py[cod]
+
+# Source-built standalone artifacts
+/build/
