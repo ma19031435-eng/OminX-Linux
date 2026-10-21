@@ -17,7 +17,7 @@ mkdir -p "$SYS/usr" "$HOST" build/provenance build/sources
 python3 - <<'PY'
 import json, subprocess
 for name, source in json.load(open('desktop/graphics/sources.json')).items():
-    subprocess.run(['python3','scripts/fetch-archive.py',source['url'],source['sha256'],'build/sources/graphics-'+name, '--allow-internal-file-links', '--max-unpacked-mib=512'],check=True)
+    subprocess.run(['python3','scripts/fetch-archive.py',source['url'],source['sha256'],'build/sources/graphics-'+name, '--allow-internal-file-links', '--max-unpacked-mib=512', '--max-download-mib=128'],check=True)
 PY
 scripts/fetch-source.sh https://github.com/libexpat/libexpat.git "$EXPAT_TAG" "$EXPAT_COMMIT" "$ROOT/build/sources/expat"
 scripts/fetch-source.sh https://github.com/xkbcommon/libxkbcommon.git "$XKBCOMMON_TAG" "$XKBCOMMON_COMMIT" "$ROOT/build/sources/graphics-xkbcommon"

@@ -102,6 +102,7 @@ if __name__ == '__main__':
     parser.add_argument('sha256')
     parser.add_argument('destination', type=Path)
     parser.add_argument('--allow-internal-file-links', action='store_true')
+    parser.add_argument('--max-download-mib', type=int, choices=(64,128), default=64)
     parser.add_argument('--max-unpacked-mib', type=int, choices=(256,512), default=256)
     args = parser.parse_args()
     build = ROOT / 'build'
@@ -115,8 +116,10 @@ if __name__ == '__main__':
     cached = downloads / (args.sha256 + '.tar')
     if not cached.exists():
         with urllib.request.urlopen(args.url, timeout=60) as response:
-            payload = response.read(64 * 1024 * 1024 + 1)
-        if len(payload) > 64 * 1024 * 1024 or hashlib.sha256(payload).hexdigest() != args.sha256:
-            raise SystemExit('Invalid downloaded source archive')
+            payload = response.read(args.max_download_mib * 1024 * 1024 + 1)
+            content_type = response.headers.get("Content-Type", "unknown")
+        actual = hashlib.sha256(payload).hexdigest()
+        if len(payload) > args.max_download_mib * 1024 * 1024 or actual != args.sha256:
+            raise SystemExit(f'Invalid downloaded source archive: bytes={len(payload)}, sha256={actual}, content-type={content_type}, prefix={payload[:32].hex()}')
         cached.write_bytes(payload)
     unpack(cached, args.sha256, dest, allow_internal_links=args.allow_internal_file_links, max_unpacked=args.max_unpacked_mib*1024*1024)
