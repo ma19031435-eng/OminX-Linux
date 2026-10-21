@@ -73,8 +73,8 @@ def archive(binary, files=None, control=None, graphics_probe=None, quick_probe=N
     if login is not None:
         entry('etc/ominx', stat.S_IFDIR | 0o755)
         entry('home/guest', stat.S_IFDIR | 0o700, uid=1002, gid=1002)
-        for name in ('sbin/ominx-login', 'sbin/ominx-seat', 'bin/ominx-passwd', 'bin/ominx-desktop'):
-            entry(name, stat.S_IFREG | 0o755, login[name.split('/')[1]])
+        for name, path in LOGIN_PATHS.items():
+            entry(path, stat.S_IFREG | 0o755, login[name])
         # Root-only credentials plus the marker that makes /init start the seat.
         entry('etc/ominx/accounts', stat.S_IFREG | 0o400, accounts)
         entry('etc/ominx/graphical-login', stat.S_IFREG | 0o444, b'1\n')
@@ -112,7 +112,10 @@ def static_elf(path):
 
 
 BUS_LICENSES = ('DBUS-LICENSES', 'DBUS-COPYING', 'DBUS-AFL-2.1.txt', 'DBUS-GPL-2.0-or-later.txt', 'EXPAT-COPYING')
-LOGIN_BINARIES = ('ominx-login', 'ominx-seat', 'ominx-passwd', 'ominx-desktop')
+LOGIN_BINARIES = ('ominx-login', 'ominx-seat', 'ominx-passwd', 'ominx-desktop', 'ominx-login-probe')
+LOGIN_PATHS = {'ominx-login': 'sbin/ominx-login', 'ominx-seat': 'sbin/ominx-seat',
+               'ominx-passwd': 'bin/ominx-passwd', 'ominx-desktop': 'bin/ominx-desktop',
+               'ominx-login-probe': 'bin/ominx-login-probe'}
 LOGIN_LICENSES = ('LICENSE', 'QTBASE-LICENSES')
 # Mirrors src/login/login.c so packaging cannot ship records the service rejects.
 ACCOUNT_LINE = re.compile(

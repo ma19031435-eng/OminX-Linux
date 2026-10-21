@@ -70,8 +70,8 @@ class GraphicalLoginPackagingTests(unittest.TestCase):
         blob = packaging.archive(INIT.read_bytes(), FILES.read_bytes(), CONTROL.read_bytes(),
                                  login=self.login_bundle(), accounts=packaging.account_records(self.accounts))
         image = entries(blob)
-        for name in ('sbin/ominx-login', 'sbin/ominx-seat', 'bin/ominx-passwd', 'bin/ominx-desktop'):
-            self.assertEqual(stat.S_IMODE(image[name][0]), 0o755, name)
+        for path in packaging.LOGIN_PATHS.values():
+            self.assertEqual(stat.S_IMODE(image[path][0]), 0o755, path)
         mode, uid, gid, data = image['etc/ominx/accounts']
         self.assertEqual((stat.S_IMODE(mode), uid, gid), (0o400, 0, 0))
         self.assertEqual(data, self.accounts.read_bytes())
