@@ -1,0 +1,25 @@
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+test_core_override_and_special_files (test_runtime_elf.RuntimeTests.test_core_override_and_special_files) ... ok
+test_host_interpreter_rejected (test_runtime_elf.RuntimeTests.test_host_interpreter_rejected) ... ok
+test_links_and_privileged_modes (test_runtime_elf.RuntimeTests.test_links_and_privileged_modes) ... ok
+test_missing_dependency (test_runtime_elf.RuntimeTests.test_missing_dependency) ... ok
+test_non_elf_dependency (test_runtime_elf.RuntimeTests.test_non_elf_dependency) ... ok
+test_rpath_rejected (test_runtime_elf.RuntimeTests.test_rpath_rejected) ... ok
+test_shared_library_and_relative_alias (test_runtime_elf.RuntimeTests.test_shared_library_and_relative_alias) ... ok
+test_truncated_elf (test_runtime_elf.RuntimeTests.test_truncated_elf) ... ok
+test_exact_recovery_flag (test_session.SessionPolicyTests.test_exact_recovery_flag) ... ok
+test_host_shell_does_not_change_identity (test_session.SessionPolicyTests.test_host_shell_does_not_change_identity) ... ok
+test_added_file_rejected (test_source_archive.SourceArchiveTests.test_added_file_rejected) ... ok
+test_bounded_directory_alias (test_source_archive.SourceArchiveTests.test_bounded_directory_alias) ... ok
+test_digest (test_source_archive.SourceArchiveTests.test_digest) ... ok
+test_directory_alias_cycle (test_source_archive.SourceArchiveTests.test_directory_alias_cycle) ... ok
+test_expansion_limit (test_source_archive.SourceArchiveTests.test_expansion_limit) ... ok
+test_internal_alias_restrictions (test_source_archive.SourceArchiveTests.test_internal_alias_restrictions) ... ok
+test_opt_in_internal_file_aliases (test_source_archive.SourceArchiveTests.test_opt_in_internal_file_aliases) ... ok
+test_unsafe_members (test_source_archive.SourceArchiveTests.test_unsafe_members) ... ok
+test_verified_reuse_and_mutation (test_source_archive.SourceArchiveTests.test_verified_reuse_and_mutation) ... ok
+
+----------------------------------------------------------------------
+Ran 67 tests in 6.061s
+
+OK

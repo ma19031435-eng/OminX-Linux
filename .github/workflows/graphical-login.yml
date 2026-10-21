@@ -103,6 +103,28 @@ jobs:
           JOBS=4 scripts/build-media.sh
       - name: Verify graphical login in real BIOS, UEFI and recovery guests
         run: python3 scripts/test-graphical-login.py 2>&1 | tee build/login-guest.log
+      - name: Export actual guest-rendered login and session previews
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import base64, io
+          from pathlib import Path
+          from PIL import Image
+          for name in ('login-bios-login-greeter', 'login-bios-login-session',
+                       'login-uefi-login-greeter', 'login-uefi-login-session'):
+              path = Path('build/acceptance') / (name + '.ppm')
+              if not path.exists():
+                  print('missing ' + str(path))
+                  continue
+              image = Image.open(path).convert('RGB')
+              image.thumbnail((720, 450))
+              image = image.quantize(colors=128)
+              buffer = io.BytesIO()
+              image.save(buffer, format='PNG', optimize=True)
+              (Path('build/acceptance') / (name + '.png')).write_bytes(buffer.getvalue())
+              data = base64.b64encode(buffer.getvalue()).decode()
+              print(f'::notice title=preview-{name}::{data}')
+          PY
       - name: Publish bounded diagnostics
         if: always()
         run: |

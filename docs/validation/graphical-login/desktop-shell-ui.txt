@@ -1,0 +1,1 @@
+desktop shell QML: greeter host, keyboard power, start menu focus, logout and facts all wired

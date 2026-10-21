@@ -1,0 +1,25 @@
+OK	1000
+ominx:/root# /sbin/ominx-login --check ominx --password-file /root/wrong
+DENY	credentials
+ominx:/root# /sbin/ominx-login --check guest --password-file /root/credential
+DENY	locked
+ominx:/root# /bin/ominx-passwd --set ominx --password-file /root/changed
+[    2.353064] random: crng init done
+OK password-updated name=ominx
+ominx:/root# /sbin/ominx-login --check ominx --password-file /root/changed
+OK	1000
+ominx:/root# /sbin/ominx-login --check ominx --password-file /root/credential
+DENY	credentials
+ominx:/root# /bin/ominx-passwd --set nobody --password-file /root/changed
+Refusing: no such packaged account
+ominx:/root# /bin/ominx-passwd --set root --password-file /root/changed
+Refusing: invalid account name
+ominx:/root# /sbin/ominx-login --check ominx --password-file /etc/ominx/accounts
+Refusing: unreadable password file
+ominx:/root# rm /root/credential
+ominx:/root# /sbin/ominx-login --check ominx --password-file /root/credential
+Refusing: unreadable password file
+ominx:/root# poweroff
+OK poweroff-requested
+ominx:/root# [    2.409255] ACPI: PM: Preparing to enter system sleep state S5
+[    2.412665] reboot: Power down
