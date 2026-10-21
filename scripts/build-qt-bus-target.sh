@@ -17,6 +17,22 @@ case $(readlink -f "$("${PREFIX}gcc" -print-file-name=libc.a)") in
 esac
 [ -f "$BUS/lib/libdbus-1.a" ] || { echo 'Build source IPC dependencies first' >&2; exit 1; }
 mkdir -p build/provenance
+# Upstream's pkg-config-based CMake metadata treats -pthread as a macro,
+# producing the invalid compiler option -D-pthread. Fix installed metadata only;
+# preserve the complete verified upstream source tree and record the adjustment.
+python3 - <<'PYMETADATA'
+from pathlib import Path
+import re
+path = Path('build/bus-prefix/lib/cmake/DBus1/DBus1Config.cmake')
+text = path.read_text()
+fixed, count = re.subn(r'INTERFACE_COMPILE_DEFINITIONS(?=\s+"?\$\{DBus1_DEFINITIONS\})',
+                       'INTERFACE_COMPILE_OPTIONS', text)
+if count == 1:
+    path.write_text(fixed)
+elif count or 'INTERFACE_COMPILE_OPTIONS ${DBus1_DEFINITIONS}' not in text:
+    raise SystemExit('Unexpected upstream DBus CMake metadata: review before patching')
+Path('build/provenance/DBus1Config-for-Qt.cmake').write_text(fixed)
+PYMETADATA
 scripts/fetch-source.sh https://github.com/qt/qtbase.git "$QT_TAG" "$QTBASE_COMMIT" "$SRC"
 cmake -S "$SRC" -B "$HOST" -G Ninja -DCMAKE_BUILD_TYPE=Release \
     -DQT_BUILD_EXAMPLES=OFF -DQT_BUILD_TESTS=OFF -DFEATURE_developer_build=ON \

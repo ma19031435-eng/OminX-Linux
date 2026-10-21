@@ -36,6 +36,15 @@ unreadable across UIDs; the revised source-boot guard uses the root bootstrap
 lock and read-accessible image/process identity instead. Earlier failed runs
 are not acceptance evidence.
 
+## Default-image regression
+
+The full source core run at the same accepted commit also succeeded:
+https://github.com/ma19031435-eng/OminX-Linux/actions/runs/39562172951
+It passed 38 userspace checks, five normal-session cases, five recovery/platform
+cases, read-only VFAT/exFAT/NTFS3 cases and bochs/virtio/qxl graphics cases.
+This checks that adding the optional supervisor did not make the default image
+depend on the optional bus bundle.
+
 ## Scope
 
 This is actual source-linked IPC and supervised service behavior inside the
