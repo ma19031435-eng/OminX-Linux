@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
@@ -15,9 +16,31 @@
 static void fail(const char *text) { fprintf(stderr, "BUS FAIL: %s\n", text); exit(1); }
 static void require(int condition, const char *text) { if (!condition) fail(text); }
 static int source_boot(void) {
-    char path[128]; ssize_t n = readlink("/proc/1/exe", path, sizeof path - 1);
-    if (n < 0) return 0;
-    path[n] = 0; return !strcmp(path, "/init");
+    if (getuid() == 0) {
+        char path[128]; ssize_t n = readlink("/proc/1/exe", path, sizeof path - 1);
+        if (n < 0) return 0;
+        path[n] = 0; return !strcmp(path, "/init");
+    }
+    /* Linux correctly denies UID1000 readlink(/proc/1/exe) for root PID1.
+       Require the root-only bootstrap lock (created only after the supervisor's
+       strict /proc/1/exe guard), the init comm, and this source image identity. */
+    FILE *f = fopen("/proc/1/comm", "r");
+    char text[128];
+    int init = f && fgets(text, sizeof text, f) && !strcmp(text, "init\n");
+    if (f) fclose(f);
+    if (!init) return 0;
+    f = fopen("/etc/os-release", "r");
+    int source = 0;
+    while (f && fgets(text, sizeof text, f)) if (!strcmp(text, "ID=ominx\n")) source = 1;
+    if (f) fclose(f);
+    if (!source) return 0;
+    for (int i = 0; i < 50; i++) {
+        struct stat st;
+        if (!lstat("/run/ominx/bus-service.lock", &st) && S_ISREG(st.st_mode) &&
+            st.st_uid == 0 && st.st_nlink == 1 && (st.st_mode & 0777) == 0600) return 1;
+        usleep(100000);
+    }
+    return 0;
 }
 static DBusConnection *connect_bus(const char *address) {
     DBusError error = DBUS_ERROR_INIT;
