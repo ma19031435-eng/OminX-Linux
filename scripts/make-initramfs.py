@@ -2,17 +2,24 @@
 """Deterministic Linux newc initramfs, without root privileges or host cpio."""
 import argparse
 import gzip
+import importlib.util
 from pathlib import Path
 import stat
 import struct
 import sys
 
 
-def archive(binary, files=None, control=None, graphics_probe=None, quick_probe=None, bus=None, qt_bus_probe=None, qt_bus_licenses=None):
+def archive(binary, files=None, control=None, graphics_probe=None, quick_probe=None, bus=None, qt_bus_probe=None, qt_bus_licenses=None, runtime=None):
     if qt_bus_probe is not None and (bus is None or not qt_bus_licenses):
         raise ValueError("Qt bus probe requires source bus bundle and Qt license texts")
     output = bytearray()
+    installed = {}
     def entry(name, mode, data=b'', major=0, minor=0, uid=0, gid=0):
+        if name in installed:
+            if stat.S_ISDIR(mode) and installed[name] == mode:
+                return
+            raise ValueError('Duplicate image path: ' + name)
+        installed[name] = mode
         encoded = name.encode() + b'\0'
         values = [1, mode, uid, gid, 1, 0, len(data), 0, 0, major, minor, len(encoded), 0]
         output.extend(b'070701' + b''.join(f'{v:08x}'.encode() for v in values))
@@ -62,6 +69,13 @@ def archive(binary, files=None, control=None, graphics_probe=None, quick_probe=N
         entry('usr/share/licenses/ominx-qt-bus-LICENSES', stat.S_IFREG | 0o644, qt_bus_licenses)
     entry('etc/os-release' , stat.S_IFREG | 0o644,
           b'NAME=OminX\nID=ominx\nPRETTY_NAME="OminX source-built console"\n')
+    if runtime is not None:
+        spec = importlib.util.spec_from_file_location('runtime_elf', Path(__file__).with_name('runtime-elf.py'))
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        nodes, _ = module.audit(runtime)
+        for name, (mode, data) in sorted(nodes.items()):
+            entry(name, mode, data)
     entry('TRAILER!!!', 0)
     return gzip.compress(bytes(output), mtime=0)
 
@@ -94,6 +108,7 @@ if __name__ == '__main__':
     parser.add_argument('quick_probe', nargs='?')
     parser.add_argument('--bus-dir', type=Path)
     parser.add_argument('--qt-bus-probe', type=Path)
+    parser.add_argument('--runtime-dir', type=Path)
     args = parser.parse_args()
     try:
         probe = static_elf(args.graphics_probe) if args.graphics_probe else None
@@ -105,7 +120,7 @@ if __name__ == '__main__':
             bus.update({name: (args.bus_dir / name).read_bytes() for name in BUS_LICENSES})
         qt_bus = static_elf(args.qt_bus_probe) if args.qt_bus_probe else None
         qt_licenses = (args.qt_bus_probe.parent / 'QTBASE-LICENSES').read_bytes() if args.qt_bus_probe else None
-        packed = archive(static_elf(args.init), static_elf(args.files), static_elf(args.control), probe, quick, bus, qt_bus, qt_licenses)
+        packed = archive(static_elf(args.init), static_elf(args.files), static_elf(args.control), probe, quick, bus, qt_bus, qt_licenses, args.runtime_dir)
     except (ValueError, OSError) as error:
         raise SystemExit(str(error))
     Path(args.output).write_bytes(packed)
