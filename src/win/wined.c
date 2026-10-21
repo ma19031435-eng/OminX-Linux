@@ -176,7 +176,7 @@ static void wine_env(const char *target_prefix, int quiet) {
         /* esync spends one eventfd per synchronization object. */
         rlim_t wanted = 1048576;
         limit.rlim_cur = limit.rlim_max < wanted ? limit.rlim_max : wanted;
-        (void)setrlimit(RLIMIT_NOFILE, &limit);
+        if (setrlimit(RLIMIT_NOFILE, &limit)) { /* wine still runs with the inherited limit */ }
     }
 }
 /* Runs one runtime command to completion in this (worker) process context. */
@@ -227,7 +227,8 @@ static void setup_worker(int pipe_fd, const char *target_prefix, int proton) {
         /* ~/.wine compatibility link for traditional Wine tooling. */
         join(path, sizeof path, home_dir, ".wine");
         struct stat st;
-        if (lstat(path, &st) && errno == ENOENT) (void)symlink(target_prefix, path);
+        if (lstat(path, &st) && errno == ENOENT && symlink(target_prefix, path) && errno != EEXIST)
+            record("ominx-wined: ~/.wine link failed (%s)", strerror(errno));
     }
     progress(pipe_fd, 20, "wineboot");
     char *boot[] = {runtime.wine, "wineboot", "--init", NULL};
@@ -284,7 +285,7 @@ static int start_setup(const char *target_prefix, int proton, const char *appid)
     snprintf(worker_prefix, sizeof worker_prefix, "%s", target_prefix);
     snprintf(worker_appid, sizeof worker_appid, "%s", appid ? appid : "");
     int flags = fcntl(worker_pipe, F_GETFL);
-    if (flags >= 0) (void)fcntl(worker_pipe, F_SETFL, flags | O_NONBLOCK);
+    if (flags >= 0 && fcntl(worker_pipe, F_SETFL, flags | O_NONBLOCK)) { /* progress read would block */ }
     if (proton) snprintf(proton_setup, sizeof proton_setup, "%s", "running");
     else { state = ST_SETTING_UP; step_percent = 0; snprintf(step_name, sizeof step_name, "%s", "starting"); }
     return 0;
@@ -406,7 +407,7 @@ static pid_t launch(const char *target_prefix, const char *file, char *const arg
     char *slash = strrchr(directory, '/');
     if (slash && slash != directory) *slash = 0;
     else snprintf(directory, sizeof directory, "%s", "/");
-    (void)chdir(directory);
+    if (chdir(directory)) _exit(126); /* Installers expect their own folder. */
     int log = open(log_path, O_WRONLY | O_CREAT | O_APPEND, 0600);
     if (log >= 0) { dup2(log, 1); dup2(log, 2); if (log > 2) close(log); }
     wine_env(target_prefix, 0);
