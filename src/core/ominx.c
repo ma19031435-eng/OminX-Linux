@@ -23,6 +23,7 @@
 
 static int is_init;
 static int recovery_mode;
+static int graphical_login;
 static void error(const char *s) { fprintf(stderr, "%s: %s\n", s, strerror(errno)); }
 static void filesystem(const char *type, const char *path) {
     if (mkdir(path, 0755) && errno != EEXIST) error(path);
@@ -200,6 +201,27 @@ static pid_t start_desktop_bus(void) {
     }
     return child;
 }
+/* Optional themed graphical login: only present in media that packages it. */
+static pid_t start_login(void) {
+    if (access("/sbin/ominx-login", X_OK)) return 0;
+    pid_t child = fork();
+    if (child == 0) {
+        if (chdir("/") || clearenv()) _exit(1);
+        execl("/sbin/ominx-login", "ominx-login", (char *)NULL);
+        error("login service exec"); _exit(1);
+    }
+    return child;
+}
+static pid_t start_seat(void) {
+    if (access("/sbin/ominx-seat", X_OK)) return 0;
+    pid_t child = fork();
+    if (child == 0) {
+        if (chdir("/") || clearenv()) _exit(1);
+        execl("/sbin/ominx-seat", "ominx-seat", (char *)NULL);
+        error("seat service exec"); _exit(1);
+    }
+    return child;
+}
 int main(int argc, char **argv) {
     is_init = getpid() == 1;
     if (!is_init && (argc != 2 || strcmp(argv[1], "--shell"))) {
@@ -235,19 +257,26 @@ int main(int argc, char **argv) {
         for (;;) pause(); /* Fail closed: never open a root fallback console. */
     }
     ominx_device_policy();
+    graphical_login = !access("/etc/ominx/graphical-login", F_OK) && !recovery_mode;
     if (chdir("/root")) error("/root");
     signal(SIGINT, SIG_IGN);
-    /* Independent local-keyboard and serial sessions; PID 1 reaps all children. */
-    const char *devices[] = {"/dev/tty1", "/dev/ttyS0"};
+    /* Independent local-keyboard and serial sessions; PID 1 reaps all children.
+       With the graphical login packaged, tty1 belongs to the greeter/session. */
+    const char *devices[2];
+    int count = 2;
+    if (graphical_login) { devices[0] = "/dev/ttyS0"; count = 1; }
+    else { devices[0] = "/dev/tty1"; devices[1] = "/dev/ttyS0"; }
     pid_t control = start_control();
     pid_t desktop_bus = start_desktop_bus();
-    pid_t consoles[2];
-    for (int i = 0; i < 2; i++) consoles[i] = start_console(devices[i]);
+    pid_t login = graphical_login ? start_login() : 0;
+    pid_t seat = graphical_login ? start_seat() : 0;
+    pid_t consoles[2] = {-1, -1};
+    for (int i = 0; i < count; i++) consoles[i] = start_console(devices[i]);
     for (;;) {
         int status;
         pid_t ended = waitpid(-1, &status, WNOHANG);
         if (ended < 0 && errno == EINTR) continue;
-        for (int i = 0; i < 2; i++) {
+        for (int i = 0; i < count; i++) {
             if (consoles[i] < 0 || consoles[i] == ended) {
                 sleep(1); /* Rate-limit failed console devices. */
                 consoles[i] = start_console(devices[i]);
@@ -260,6 +289,14 @@ int main(int argc, char **argv) {
         if (desktop_bus < 0 || (desktop_bus > 0 && ended == desktop_bus)) {
             sleep(1);
             desktop_bus = start_desktop_bus();
+        }
+        if (login > 0 && ended == login) {
+            sleep(1);
+            login = start_login();
+        }
+        if (seat > 0 && ended == seat) {
+            sleep(1);
+            seat = start_seat();
         }
         ominx_device_policy();
         usleep(250000);
