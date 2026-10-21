@@ -114,6 +114,8 @@ drivers. An original SDDM/Qt6 login theme is available under `desktop/sddm/ominx
 login.** Host theme rendering must not be confused with target authentication.
 Optional development media now pass [source-built Qt Quick/theme guest checks](docs/validation/target-qt-quick.md),
 with authentication explicitly disabled and no installed desktop session.
+Optional [source-built desktop IPC services](docs/desktop-bus.md) also pass guest
+authorization and supervision checks; this is not password or desktop login.
 See [implementation details, test boundaries and remaining integration](docs/graphics-login.md).
 
 ## Earlier verified session build

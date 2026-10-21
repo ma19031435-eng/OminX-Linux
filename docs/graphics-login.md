@@ -24,6 +24,10 @@ display manager and does not enable graphical login in the default image.
 on those three emulated adapters, using an explicitly disabled authentication
 context and an empty session model—not a fabricated Plasma login.
 
+A separate [source-built desktop IPC stage](desktop-bus.md) now provides tested
+system/session buses and fixed privilege-separated supervision in optional media.
+It does not yet connect the theme to authentication or a KDE session.
+
 ## Controlled system service
 
 `/sbin/ominx-control` is original C code, built statically with the source toolchain.
