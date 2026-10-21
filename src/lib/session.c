@@ -47,6 +47,10 @@ int ominx_enter_session(int recovery) {
         setenv("LOGNAME", user, 1) || setenv("PATH", "/bin", 1) ||
         setenv("SHELL", "/init", 1) || setenv("LANG", "C.UTF-8", 1) ||
         setenv("TERM", "linux", 1)) return -1;
+    if (!access("/sbin/ominx-desktop-bus", X_OK)) {
+        if (setenv("DBUS_SYSTEM_BUS_ADDRESS", "unix:path=/run/dbus/system_bus_socket", 1)) return -1;
+        if (!recovery && setenv("DBUS_SESSION_BUS_ADDRESS", "unix:path=/run/user/1000/bus", 1)) return -1;
+    }
     if (!recovery) {
         gid_t groups[] = {OMINX_VIDEO, OMINX_INPUT, OMINX_RENDER};
         if (setenv("XDG_RUNTIME_DIR", "/run/user/1000", 1) ||

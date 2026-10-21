@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Deterministic Linux newc initramfs, without root privileges or host cpio."""
+import argparse
 import gzip
 from pathlib import Path
 import stat
@@ -7,7 +8,7 @@ import struct
 import sys
 
 
-def archive(binary, files=None, control=None, graphics_probe=None, quick_probe=None):
+def archive(binary, files=None, control=None, graphics_probe=None, quick_probe=None, bus=None):
     output = bytearray()
     def entry(name, mode, data=b'', major=0, minor=0, uid=0, gid=0):
         encoded = name.encode() + b'\0'
@@ -23,11 +24,14 @@ def archive(binary, files=None, control=None, graphics_probe=None, quick_probe=N
     entry('home', stat.S_IFDIR | 0o755)
     entry('home/ominx', stat.S_IFDIR | 0o700, uid=1000, gid=1000)
     entry('etc/passwd', stat.S_IFREG | 0o644,
-          b'root:x:0:0:Recovery:/root:/init\nominx:x:1000:1000:OminX live user:/home/ominx:/init\n')
+          b'root:x:0:0:Recovery:/root:/init\nominx:x:1000:1000:OminX live user:/home/ominx:/init\n' +
+          (b'messagebus:x:81:81:System bus:/run/dbus:/bin/false\n' if bus is not None else b''))
     entry('etc/group', stat.S_IFREG | 0o644,
-          b'root:x:0:\ntty:x:5:\nvideo:x:44:ominx\ninput:x:104:ominx\nrender:x:107:ominx\nominx:x:1000:\n')
+          b'root:x:0:\ntty:x:5:\nvideo:x:44:ominx\ninput:x:104:ominx\nrender:x:107:ominx\nominx:x:1000:\n' +
+          (b'messagebus:x:81:\n' if bus is not None else b''))
     entry('etc/shadow', stat.S_IFREG | 0o600,
-          b'root:!:0:0:99999:7:::\nominx:!:0:0:99999:7:::\n')
+          b'root:!:0:0:99999:7:::\nominx:!:0:0:99999:7:::\n' +
+          (b'messagebus:!:0:0:99999:7:::\n' if bus is not None else b''))
     entry('dev/console' , stat.S_IFCHR | 0o600, major=5, minor=1)
     entry('init', stat.S_IFREG | 0o755, binary)
     if files is not None:
@@ -38,7 +42,20 @@ def archive(binary, files=None, control=None, graphics_probe=None, quick_probe=N
         entry('bin/ominx-graphics-probe', stat.S_IFREG | 0o755, graphics_probe)
     if quick_probe is not None:
         entry('bin/ominx-quick-probe', stat.S_IFREG | 0o755, quick_probe)
-    entry('etc/os-release', stat.S_IFREG | 0o644,
+    if bus is not None:
+        for name in ('etc/dbus-1', 'var', 'var/lib', 'var/lib/dbus', 'usr', 'usr/share',
+                     'usr/share/licenses', 'usr/share/licenses/ominx-desktop-bus'):
+            entry(name, stat.S_IFDIR | 0o755)
+        for name in ('dbus-daemon', 'ominx-desktop-bus'):
+            entry('sbin/' + name, stat.S_IFREG | 0o755, bus[name])
+        entry('bin/ominx-bus-probe', stat.S_IFREG | 0o755, bus['ominx-bus-probe'])
+        for name in ('system', 'session'):
+            policy = Path(__file__).resolve().parents[1] / 'desktop/bus' / (name + '.conf')
+            entry('etc/dbus-1/ominx-' + name + '.conf', stat.S_IFREG | 0o644, policy.read_bytes())
+        entry('var/lib/dbus/machine-id', stat.S_IFLNK | 0o777, b'/etc/machine-id')
+        for name in BUS_LICENSES:
+            entry('usr/share/licenses/ominx-desktop-bus/' + name, stat.S_IFREG | 0o644, bus[name])
+    entry('etc/os-release' , stat.S_IFREG | 0o644,
           b'NAME=OminX\nID=ominx\nPRETTY_NAME="OminX source-built console"\n')
     entry('TRAILER!!!', 0)
     return gzip.compress(bytes(output), mtime=0)
@@ -59,13 +76,28 @@ def static_elf(path):
     return binary
 
 
+BUS_LICENSES = ('DBUS-COPYING', 'DBUS-AFL-2.1.txt', 'DBUS-GPL-2.0-or-later.txt', 'EXPAT-COPYING')
+
+
 if __name__ == '__main__':
-    if len(sys.argv) not in (5, 6, 7):
-        raise SystemExit('Usage: make-initramfs.py INIT OUTPUT FILES_EXECUTABLE CONTROL_EXECUTABLE [GRAPHICS_PROBE [QUICK_PROBE]]')
+    parser = argparse.ArgumentParser()
+    parser.add_argument('init')
+    parser.add_argument('output')
+    parser.add_argument('files')
+    parser.add_argument('control')
+    parser.add_argument('graphics_probe', nargs='?')
+    parser.add_argument('quick_probe', nargs='?')
+    parser.add_argument('--bus-dir', type=Path)
+    args = parser.parse_args()
     try:
-        probe = static_elf(sys.argv[5]) if len(sys.argv) >= 6 else None
-        quick = static_elf(sys.argv[6]) if len(sys.argv) == 7 else None
-        packed = archive(static_elf(sys.argv[1]), static_elf(sys.argv[3]), static_elf(sys.argv[4]), probe, quick)
-    except ValueError as error:
+        probe = static_elf(args.graphics_probe) if args.graphics_probe else None
+        quick = static_elf(args.quick_probe) if args.quick_probe else None
+        bus = None
+        if args.bus_dir is not None:
+            bus = {name: static_elf(args.bus_dir / name) for name in
+                   ('dbus-daemon', 'ominx-desktop-bus', 'ominx-bus-probe')}
+            bus.update({name: (args.bus_dir / name).read_bytes() for name in BUS_LICENSES})
+        packed = archive(static_elf(args.init), static_elf(args.files), static_elf(args.control), probe, quick, bus)
+    except (ValueError, OSError) as error:
         raise SystemExit(str(error))
-    Path(sys.argv[2]).write_bytes(packed)
+    Path(args.output).write_bytes(packed)

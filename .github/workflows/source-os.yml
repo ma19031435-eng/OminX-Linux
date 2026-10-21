@@ -16,6 +16,8 @@ on:
       - 'scripts/build-media.sh'
       - 'scripts/check-kernel-graphics.py'
       - 'scripts/fetch-source.sh'
+      - 'scripts/fetch-archive.py'
+      - 'desktop/bus/*.conf'
       - 'scripts/make-initramfs.py'
       - 'scripts/smoke-boot.py'
       - 'scripts/test-platforms.py'

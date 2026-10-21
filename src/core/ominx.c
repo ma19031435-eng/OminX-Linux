@@ -190,6 +190,16 @@ static pid_t start_control(void) {
     }
     return child;
 }
+static pid_t start_desktop_bus(void) {
+    if (access("/sbin/ominx-desktop-bus", X_OK)) return 0;
+    pid_t child = fork();
+    if (child == 0) {
+        if (chdir("/") || clearenv()) _exit(1);
+        execl("/sbin/ominx-desktop-bus", "ominx-desktop-bus", (char *)NULL);
+        error("desktop bus service exec"); _exit(1);
+    }
+    return child;
+}
 int main(int argc, char **argv) {
     is_init = getpid() == 1;
     if (!is_init && (argc != 2 || strcmp(argv[1], "--shell"))) {
@@ -230,6 +240,7 @@ int main(int argc, char **argv) {
     /* Independent local-keyboard and serial sessions; PID 1 reaps all children. */
     const char *devices[] = {"/dev/tty1", "/dev/ttyS0"};
     pid_t control = start_control();
+    pid_t desktop_bus = start_desktop_bus();
     pid_t consoles[2];
     for (int i = 0; i < 2; i++) consoles[i] = start_console(devices[i]);
     for (;;) {
@@ -245,6 +256,10 @@ int main(int argc, char **argv) {
         if (control < 0 || ended == control) {
             sleep(1);
             control = start_control();
+        }
+        if (desktop_bus < 0 || (desktop_bus > 0 && ended == desktop_bus)) {
+            sleep(1);
+            desktop_bus = start_desktop_bus();
         }
         ominx_device_policy();
         usleep(250000);
