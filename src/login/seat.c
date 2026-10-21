@@ -112,9 +112,12 @@ static pid_t start_child(uid_t uid, gid_t gid, const char *home, const char *run
     if (clearenv() || chdir(home)) _exit(1);
     static const gid_t groups[] = {OMINX_VIDEO, OMINX_INPUT, OMINX_RENDER};
     char buffer[64];
+    /* The identity comes from the validated home path, never from a guess. */
+    const char *name = uid == OMINX_GREETER_UID ? "greeter" : strrchr(home, '/');
+    name = name && name[1] ? name + 1 : "ominx";
     if (setenv("HOME", home, 1) ||
-        setenv("USER", uid == OMINX_GREETER_UID ? "greeter" : "ominx", 1) ||
-        setenv("LOGNAME", uid == OMINX_GREETER_UID ? "greeter" : "ominx", 1) ||
+        setenv("USER", name, 1) ||
+        setenv("LOGNAME", name, 1) ||
         setenv("PATH", "/bin", 1) || setenv("SHELL", "/init", 1) ||
         setenv("LANG", "C.UTF-8", 1) || setenv("TERM", "linux", 1) ||
         setenv("XDG_RUNTIME_DIR", runtime, 1) ||
@@ -156,9 +159,7 @@ int main(int argc, char **argv) {
     setvbuf(stdout, NULL, _IOLBF, 0);
     int dbus = !access("/sbin/ominx-desktop-bus", X_OK);
     handle_stop();
-    struct sigaction children = {.sa_handler = stop, .sa_flags = 0};
-    sigemptyset(&children.sa_mask);
-    sigaction(SIGCHLD, &children, NULL);
+    /* SIGCHLD stays default: a child exiting is normal work, not a shutdown. */
     /* Wait for the authentication broker; never start a greeter without it. */
     char reply[512];
     for (int attempt = 0; attempt < 60; attempt++) {
