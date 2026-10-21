@@ -257,7 +257,10 @@ int main(int argc, char **argv) {
         for (;;) pause(); /* Fail closed: never open a root fallback console. */
     }
     ominx_device_policy();
-    graphical_login = !access("/etc/ominx/graphical-login", F_OK) && !recovery_mode;
+    /* Require the marker, a normal boot, and the seat itself: media that marks
+       a graphical login but lacks the service keeps the ordinary consoles. */
+    graphical_login = !access("/etc/ominx/graphical-login", F_OK) && !recovery_mode &&
+                      !access("/sbin/ominx-seat", X_OK);
     if (chdir("/root")) error("/root");
     signal(SIGINT, SIG_IGN);
     /* Independent local-keyboard and serial sessions; PID 1 reaps all children.
