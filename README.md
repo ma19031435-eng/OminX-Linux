@@ -2,7 +2,7 @@
 
 **OminX** is an installable Debian 13 desktop image for 64-bit PCs, with an original visual identity built on KDE Plasma 6. OminX Aurora is not a Windows theme: it pairs deep midnight surfaces, sea-glass highlights, luminous sky blue, and restrained violet with original OminX artwork and Linux components. LightDM starts Plasma's X11 session; OminX customizes its native launcher, panel, colors, desktop theme, wallpaper, and defaults.
 
-This repository contains the **live-build recipe** and source assets, not a prebuilt ISO. Build it on a Debian-compatible amd64 machine to produce an installable live image.
+This repository contains a **legacy live-build recipe** and source assets, not a prebuilt ISO. Build it on a Debian-compatible amd64 machine to produce an installable live image.
 
 ## Desktop features and core apps
 
@@ -59,7 +59,7 @@ SHA256SUMS
 
 The build uses Debian Trixie repositories, including `contrib`, `non-free`, and `non-free-firmware`. It enables i386 multiarch, then installs Steam, Wine, and 32-bit Mesa/Vulkan/audio libraries. Flathub is added as an optional app source; apps from Flathub are not preinstalled. Internet access to Debian mirrors and Flathub is required. Run `make check` for static Plasma/theme, desktop-default, app, setup-wizard, splash-image, and boot-menu checks. The GitHub Actions ISO workflow resolves the selected packages against Debian 13, syntax-checks the Plasma layout, and launches OminX Store, Settings, Welcome, and Setup under Xvfb in a Debian 13 GTK environment. Its smoke checks cover search/navigation, first-run views, and OminX Store's Discover commands before building the image; it then validates the generated GRUB menu, any active ISOLINUX menu, and installer files before publishing. A full local ISO build needs the Linux build host above.
 
-A GitHub Actions workflow automatically builds the installable ISO when this branch is updated. After a successful run, download the `OminX-installable-ISO-<commit>` artifact from the repository's **Actions** page; it contains the ISO and `SHA256SUMS` and is kept for 30 days. The ISO also contains `/usr/share/doc/ominx/build-info.txt` with its exact source commit, workflow run ID, and UTC build time, so you can verify which revision is installed. Local ISO building remains available with `./build.sh`.
+A GitHub Actions workflow automatically builds the installable ISO when this branch is updated. After a successful run, download the `OminX-installable-ISO-<commit>` artifact from the repository's **Actions** page; it contains the ISO and `SHA256SUMS` and is kept for 30 days. The ISO also contains `/usr/share/doc/ominx/build-info.txt` with its exact source commit, workflow run ID, and UTC build time, so you can verify which revision is installed. Legacy images now start a mandatory update prompt on login that opens this repository so users can fetch the latest ISO.
 
 ### Test and install
 
@@ -73,19 +73,19 @@ Back up important files before installation. Hardware support, proprietary graph
 ## Repository layout
 
 ```text
-auto/config                         Reproducible live-build configuration
-build.sh                            Root-aware ISO build entry point
-config/package-lists/               Desktop package selection
-config/bootloaders/                 OminX GRUB and ISOLINUX menu templates
-config/hooks/normal/                Multiarch, Steam, Wine, and Flathub setup
-config/includes.chroot/             OminX branding, defaults, apps, and documentation
-config/includes.binary/             Boot splash assets included on the ISO
-scripts/check-config.sh             Static recipe and asset checks
-scripts/generate-boot-splash.py     Dependency-free Aurora boot artwork generator
-scripts/verify-boot-menu.sh         Post-build menu and installer verification
+legacy-build/auto/config            Reproducible live-build configuration
+legacy-build/build.sh               Root-aware ISO build entry point
+legacy-build/config/package-lists/  Desktop package selection
+legacy-build/config/bootloaders/    OminX GRUB and ISOLINUX menu templates
+legacy-build/config/hooks/normal/   Multiarch, Steam, Wine, and Flathub setup
+legacy-build/config/includes.chroot/ OminX branding, defaults, apps, and documentation
+legacy-build/config/includes.binary/ Boot splash assets included on the ISO
+legacy-build/scripts/check-config.sh Static recipe and asset checks
+legacy-build/scripts/generate-boot-splash.py Dependency-free Aurora boot artwork generator
+legacy-build/scripts/verify-boot-menu.sh Post-build menu and installer verification
 ```
 
-To change packages, edit `config/package-lists/ominx.list.chroot`. Build options live in `auto/config`. Build outputs and ISO artifacts are ignored by Git.
+To change packages, edit `legacy-build/config/package-lists/ominx.list.chroot`. Build options live in `legacy-build/auto/config`. Compatibility symlinks keep the original top-level paths available. Build outputs and ISO artifacts are ignored by Git.
 
 ## Licensing and third-party software
 

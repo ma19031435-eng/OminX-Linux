@@ -29,6 +29,9 @@ are in compatibility.md and performance.md. Full build instructions are in the
 project README at:
 https://github.com/ma19031435-eng/OminX-Linux
 
+Legacy images now start a mandatory update prompt at login. It opens the
+repository URL above so you can download the latest installable ISO.
+
 Automated ISO builds include build-info.txt in this directory. It records the
 source commit, GitHub Actions run ID, branch, and UTC build time for that image.
 
