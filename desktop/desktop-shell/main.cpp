@@ -55,7 +55,8 @@ class UserModel final : public QAbstractListModel {
     Q_OBJECT
     Q_PROPERTY(QString lastUser READ lastUser CONSTANT)
 public:
-    explicit UserModel(QObject *parent = nullptr) : QAbstractListModel(parent) { reload(); }
+    explicit UserModel(QObject *parent = nullptr) : QAbstractListModel(parent) {}
+    /* Called only in greeter mode, once the login broker is reachable. */
     void reload() {
         QByteArray reply;
         QString error;
@@ -217,20 +218,22 @@ int main(int argc, char **argv) {
     const int font = QFontDatabase::addApplicationFont(":/fonts/DejaVuSans.ttf");
     if (font < 0) return 1;
     app.setFont(QFont(QFontDatabase::applicationFontFamilies(font).at(0)));
+    /* QML keeps unowned pointers to these, so they must outlive app.exec(). */
+    UserModel users;
+    SessionModel sessions;
+    CapsLock caps;
+    LoginContext login(&users);
+    SessionContext context;
     QQuickView view;
     view.setResizeMode(QQuickView::SizeRootObjectToView);
     if (greeter) {
-        UserModel users;
-        SessionModel sessions;
-        CapsLock caps;
-        LoginContext login(&users);
+        users.reload();
         view.rootContext()->setContextProperty("sddm", &login);
         view.rootContext()->setContextProperty("keyboard", &caps);
         view.rootContext()->setContextProperty("userModel", &users);
         view.rootContext()->setContextProperty("sessionModel", &sessions);
         view.setSource(QUrl("qrc:/qt/qml/OminX/Shell/GreeterRoot.qml"));
     } else {
-        SessionContext context;
         view.rootContext()->setContextProperty("session", &context);
         view.setSource(QUrl("qrc:/qt/qml/OminX/Shell/Session.qml"));
     }

@@ -66,6 +66,8 @@ try:
             stream.truncate(64 * 1024 * 1024)
         subprocess.run(['mkfs.ext4', '-q', '-F', str(disk)], check=True)
         vm = VM(case, disk, 'login')
+        # A full login, logout and power cycle legitimately exceeds the default window.
+        vm.deadline = time.monotonic() + 1500
         try:
             vm.expect('OminX console ready.')
             vm.prompt()
@@ -124,6 +126,7 @@ try:
         stream.truncate(64 * 1024 * 1024)
     subprocess.run(['mkfs.ext4', '-q', '-F', str(disk)], check=True)
     vm = VM(case, disk, 'recovery')
+    vm.deadline = time.monotonic() + 900
     try:
         vm.expect('WARNING: explicit unauthenticated root recovery session.')
         vm.prompt()
