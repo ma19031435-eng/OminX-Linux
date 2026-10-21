@@ -4,11 +4,11 @@
    packaged greeter account and root may ask. */
 #define _GNU_SOURCE
 #include "login.h"
-#include <string.h>
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <sys/time.h>
 #include <sys/un.h>
 #include <unistd.h>
 
