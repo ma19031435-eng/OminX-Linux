@@ -84,6 +84,9 @@ int main(int argc, char **argv) {
     struct stat st;
     if (lock < 0 || fstat(lock, &st) || !S_ISREG(st.st_mode) || st.st_uid || st.st_nlink != 1 ||
         flock(lock, LOCK_EX | LOCK_NB)) { fputs("bus supervisor already running or unsafe lock\n", stderr); return 1; }
+    char pid_text[32];
+    int pid_length = snprintf(pid_text, sizeof pid_text, "%ld\n", (long)getpid());
+    if (ftruncate(lock, 0) || pwrite(lock, pid_text, (size_t)pid_length, 0) != pid_length) return 1;
     if (machine_id() || directory("/run/dbus", 81, 0755)) return 1;
     signal(SIGTERM, stop); signal(SIGINT, stop);
     pid_t children[2] = {-1, -1};

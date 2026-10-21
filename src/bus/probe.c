@@ -3,6 +3,7 @@
 #include <dbus/dbus.h>
 #include <errno.h>
 #include <grp.h>
+#include <limits.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -102,8 +103,50 @@ static void roundtrip(DBusConnection *a, DBusConnection *b) {
     require(dbus_message_get_args(reply, &error, DBUS_TYPE_STRING, &value, DBUS_TYPE_INVALID) && !strcmp(value, payload), "reply contents");
     dbus_message_unref(reply); dbus_error_free(&error);
 }
+static void restart_supervisor(void) {
+    DBusConnection *c = await_bus(SYSTEM_ADDRESS);
+    dbus_uint32_t old_daemon = daemon_property(c, "GetConnectionUnixProcessID");
+    close_bus(c);
+    FILE *f = fopen("/run/ominx/bus-service.lock", "r");
+    char text[64], *end;
+    require(f && fgets(text, sizeof text, f), "supervisor pid record");
+    fclose(f);
+    errno = 0;
+    long pid = strtol(text, &end, 10);
+    require(!errno && pid > 1 && pid <= INT_MAX && end[0] == '\n' && end[1] == 0, "valid supervisor pid");
+    char proc[64], exe[128];
+    snprintf(proc, sizeof proc, "/proc/%ld/exe", pid);
+    ssize_t n = readlink(proc, exe, sizeof exe - 1);
+    require(n > 0, "supervisor executable");
+    exe[n] = 0;
+    require(!strcmp(exe, "/sbin/ominx-desktop-bus"), "fixed supervisor identity");
+    require(!kill((pid_t)pid, SIGKILL), "supervisor termination");
+    usleep(500000);
+    for (int i = 0; i < 100; i++) {
+        usleep(100000);
+        c = connect_bus(SYSTEM_ADDRESS);
+        if (!c) continue;
+        dbus_uint32_t daemon = daemon_property(c, "GetConnectionUnixProcessID");
+        require(daemon_property(c, "GetConnectionUnixUser") == 81, "restarted system uid");
+        close_bus(c);
+        if (daemon != old_daemon) {
+            /* No inherited root bus connection; verify the restarted user bus too. */
+            pid_t child = fork(); require(child >= 0, "restart user test fork");
+            if (!child) {
+                require(!setgroups(0, NULL) && !setgid(1000) && !setuid(1000), "restart test drop");
+                execl("/bin/ominx-bus-probe", "ominx-bus-probe", "--guest-test", (char *)NULL);
+                _exit(1);
+            }
+            int status;
+            require(waitpid(child, &status, 0) == child && WIFEXITED(status) && !WEXITSTATUS(status), "restarted user bus test");
+            puts("PASS bus supervisor restart and child cleanup"); return;
+        }
+    }
+    fail("PID1 supervisor restart timeout");
+}
 int main(int argc, char **argv) {
     if (!source_boot() || argc != 2) { fputs("requires explicit source guest test mode\n", stderr); return 2; }
+    if (!strcmp(argv[1], "--restart-service") && getuid() == 0) { restart_supervisor(); return 0; }
     if (!strcmp(argv[1], "--deny-other-uid") && getuid() == 0) {
         DBusConnection *live = await_bus(SYSTEM_ADDRESS);
         require(daemon_property(live, "GetConnectionUnixUser") == 81, "live system bus before denial");

@@ -27,6 +27,7 @@ try:
             if case.get('recovery'):
                 vm.command('/bin/ominx-bus-probe --deny-other-uid', 'PASS bus cross-uid isolation')
                 vm.command('/sbin/ominx-desktop-bus', 'bus supervisor already running')
+                vm.command('/bin/ominx-bus-probe --restart-service', 'PASS bus supervisor restart and child cleanup')
             else:
                 vm.command('id', 'uid=1000 euid=1000 suid=1000')
                 vm.command('/bin/ominx-bus-probe --guest-test', 'PASS bus: external credentials, system policy, session roundtrip, supervised restart')
