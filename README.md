@@ -106,20 +106,31 @@ refuses writes. Data mounts prohibit executable files, device nodes, and setuid.
 A busy data mount prevents shutdown rather than silently forcing its removal.
 This is not an installer; use disposable virtual data disks for development.
 
-## Graphics/service work and login theme
+## Graphics, controlled services and graphical login
 
-The image now builds a narrow local power broker and additional kernel graphics
-drivers. An original SDDM/Qt6 login theme is available under `desktop/sddm/ominx/`.
-**The default image still has no Qt/KDE/SDDM runtime and does not yet boot to graphical
-login.** Host theme rendering must not be confused with target authentication.
-Optional development media now pass [source-built Qt Quick/theme guest checks](docs/validation/target-qt-quick.md),
-with authentication explicitly disabled and no installed desktop session.
-Optional [source-built shared graphics runtime](docs/validation/graphics-runtime.md) passes real
-Mesa shader, Wayland, XKB and DRM checks in guests, and optional
-[source-built desktop IPC services](docs/desktop-bus.md) also pass guest
-authorization and supervision checks, alongside an isolated
-[target Qt DBus integration test](docs/validation/target-qt-dbus.md). Neither is
-password or desktop login.
+The image builds a narrow local power broker, additional kernel graphics drivers,
+and an **original graphical login**: a root authentication broker
+(`/sbin/ominx-login`), a seat supervisor (`/sbin/ominx-seat`), and one source-built
+static Qt Quick program (`/bin/ominx-desktop`) that is both the login screen and
+the desktop session. Passwords are sha512crypt records in a root-only file,
+verified by musl `crypt`; no PAM, SDDM, X11 or Wayland server is used.
+
+[Graphical login acceptance](docs/validation/graphical-login.md) covers BIOS and
+UEFI guests: themed login screen, refused password, login service unreachable by
+the signed-in user, authenticated session as UID 1000, logout back to the login
+screen, login-screen shutdown, and recovery password changes.
+
+**The default image still boots its live console.** The login stack ships in media
+packaged with `--login-dir`, and it is a framebuffer login rather than a
+compositor session: there is still no KDE Plasma, no window manager and no display
+server. Host theme rendering remains a separate, clearly labelled check.
+
+Also guest-verified: [source-built Qt Quick/theme checks](docs/validation/target-qt-quick.md),
+a [source-built shared graphics runtime](docs/validation/graphics-runtime.md) with
+real Mesa shader, Wayland, XKB and DRM results,
+[source-built desktop IPC services](docs/desktop-bus.md) with authorization and
+supervision checks, and an isolated
+[target Qt DBus integration test](docs/validation/target-qt-dbus.md).
 See [implementation details, test boundaries and remaining integration](docs/graphics-login.md).
 
 ## Earlier verified session build

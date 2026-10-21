@@ -2,17 +2,19 @@
 
 ## Runtime boundary — read this first
 
-The independent image now has a root power broker and an expanded **kernel graphics
-configuration**. The original login theme has been rendered and interaction-tested
-with Qt 6, and rendered by an upstream SDDM greeter built on the **build host**.
+The independent image now has a root power broker, an expanded **kernel graphics
+configuration**, and an original **graphical login**: a root authentication
+broker, a seat supervisor, and a source-built Qt Quick login screen plus desktop
+session. That stack is validated end to end in real guests —
+see [graphical login acceptance](validation/graphical-login.md).
 
-**The default source-built image still boots its live console, not an authenticated
-graphical login. It does not package Qt, SDDM/PAM, a display server or KDE Plasma.**
-Optional development media now run source-built Qt and Qt Quick validation
-applications, but still have no real display manager or desktop session.
-No host Qt libraries or display-manager binaries are copied into the musl target.
-A successful theme test is not a successful OS login. The old Debian image remains
-a separate preserved build and is not used to bypass this distinction.
+**The default source-built image still boots its live console.** The graphical
+login ships in optional media produced with `--login-dir`; it is not yet the
+default boot path, and it is a framebuffer login, not a compositor session.
+There is still no SDDM daemon, no PAM, no X11/Wayland display server and no KDE
+Plasma in any image. No host Qt libraries or display-manager binaries are copied
+into the musl target, and the old Debian image remains a separate preserved build
+that is not used to bypass this distinction.
 
 ## Recorded acceptance
 
@@ -24,14 +26,21 @@ display manager and does not enable graphical login in the default image.
 on those three emulated adapters, using an explicitly disabled authentication
 context and an empty session model—not a fabricated Plasma login.
 
-A separate [source-built desktop IPC stage](desktop-bus.md) now provides tested
+[Graphical login acceptance](validation/graphical-login.md) now covers the
+original login broker, seat supervisor and Qt Quick login/session on BIOS and
+UEFI media, including a refused password, socket-level isolation from the signed-in
+user, an authenticated session, logout, login-screen poweroff, and recovery-side
+password changes verified by musl `crypt`.
+
+A separate [source-built desktop IPC stage](desktop-bus.md) provides tested
 system/session buses and fixed privilege-separated supervision in optional media.
 An isolated [target Qt Core/DBus bootstrap](validation/target-qt-dbus.md) passes
 actual guest object-call tests, and a source-built [shared graphics runtime](validation/graphics-runtime.md)
 (Mesa softpipe EGL/GLES, Wayland, libxkbcommon, libdrm) passes real shader and
-protocol checks as an unprivileged user. These are the graphics and IPC
-foundations required before a login manager can be integrated. These stages do not yet connect the theme
-to authentication or a KDE session.
+protocol checks as an unprivileged user. Those graphics and IPC stacks are not yet
+joined to the login session: the login screen renders on the kernel framebuffer
+with static Qt Quick, and no compositor, KDE component or DBus-driven session
+service runs yet.
 
 ## Controlled system service
 
@@ -119,22 +128,40 @@ Two host-only test layers are kept distinct:
 
 The small preview in `validation/graphics-login/login-preview.png` is an actual
 Qt-rendered test image with a demonstration account, downscaled/quantized for review.
-Full screenshots are in the theme workflow artifact. The theme is intentionally
-not enabled in target init while its runtime dependencies are absent.
+Full screenshots are in the theme workflow artifact.
 
-## Required before this request can be called complete
+The same artwork now also runs **in the target image** as the real login screen:
+`desktop/desktop-shell/GreeterRoot.qml` embeds `desktop/sddm/ominx/Main.qml`
+unchanged and supplies a genuine authentication context instead of the mock one,
+so the theme is exercised by both harnesses without diverging.
 
-1. Source-build a target graphics stack: libdrm, Mesa/software rendering as needed,
-   Wayland/X11, libinput, xkbcommon, device discovery and a seat/session implementation.
-2. Source-build target Qt 6 and the required KDE Frameworks/Plasma components;
-   extend image packaging for their audited runtime libraries, plugins, data and licenses.
-3. Source-build and configure SDDM, PAM/password hashing and DBus integration,
-   secure account provisioning, and appropriate greeter/helper/session privileges.
-4. Integrate the theme at boot and verify correct/incorrect authentication, logout,
-   relogin, session launch, display/input handoff and ordinary-user power controls
-   inside the independent image. Mock greeter tests cannot replace these checks.
-5. Expand a concrete physical GPU/firmware/display support matrix and review the
-   remaining security, recovery and release/license requirements.
+## Achieved and still open
 
-Until those gates pass, the login theme is ready for integration; **boot-time
-KDE graphical login is unfinished**.
+Achieved and guest-verified:
+
+1. A source-built target graphics stack (Mesa softpipe EGL/GLES, Wayland client and
+   server libraries, libxkbcommon with real keymap data, libdrm) with an audited
+   musl shared-library closure — [evidence](validation/graphics-runtime.md).
+2. An original login stack: root authentication broker, seat supervisor, Qt Quick
+   login screen and desktop session, recovery password tool, and packaging that
+   fails closed on malformed account records —
+   [evidence](validation/graphical-login.md).
+3. Correct/incorrect authentication, logout and relogin, session launch as the
+   authenticated user, login-screen power through the fixed power broker, and
+   isolation of the login service from the signed-in user, all inside real BIOS
+   and UEFI guests.
+
+Still open:
+
+1. A real compositor session: the login screen and session draw directly on the
+   kernel framebuffer with static Qt Quick. Window management, the shared
+   Wayland/Mesa runtime, and DBus session services are not yet joined to it.
+2. KDE Frameworks/Plasma components are not built; the session shell is original
+   QML with a Windows-familiar layout, not Plasma.
+3. Account provisioning is limited to the packaged records: no account creation,
+   expiry, or non-local authentication.
+4. A physical GPU/firmware/display support matrix beyond the emulated adapters,
+   and the remaining release/license review.
+
+**Boot-time KDE Plasma graphical login is still unfinished**; what is finished and
+verified is an original graphical login and desktop session on the source image.
