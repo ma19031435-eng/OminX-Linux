@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Prepare Windows apps support
+Comment=Creates the Wine environment in the background at first sign-in
+Exec=/usr/local/bin/ominx-wine-firstboot
+NoDisplay=true
+Terminal=false
+X-GNOME-Autostart-enabled=true

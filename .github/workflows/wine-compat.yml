@@ -1,0 +1,31 @@
+name: Windows compatibility services
+on:
+  push:
+    branches: [main, 'arena/**']
+    paths: ['src/win/**', 'src/lib/pe.*', 'src/lib/winproto.h', 'src/lib/session.*', 'src/core/**', 'src/login/seat.c', 'desktop/desktop-shell/**', 'scripts/make-initramfs.py', 'scripts/stage-wine-runtime.py', 'scripts/check-kernel-graphics.py', 'build.sh', 'Makefile', 'compat/**', 'tests/test_pe.py', 'tests/test_wined.py', 'tests/test_win_packaging.py', 'tests/test_wine_runtime_stage.py', 'tests/ui/test_desktop_shell.py', 'config/includes.chroot/usr/local/bin/ominx-wine-firstboot', 'config/includes.chroot/usr/local/bin/ominx-open-windows', 'scripts/check-config.sh', '.github/workflows/wine-compat.yml']
+  pull_request:
+    paths: ['src/win/**', 'src/lib/pe.*', 'src/lib/winproto.h', 'compat/**', 'tests/test_pe.py', 'tests/test_wined.py', 'tests/test_win_packaging.py', 'tests/test_wine_runtime_stage.py', '.github/workflows/wine-compat.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+defaults:
+  run:
+    shell: bash
+jobs:
+  services:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build tools only
+        run: sudo apt-get update && sudo apt-get install -y build-essential python3
+      - name: Host tests (Windows services, PE inspector, packaging, kernel config)
+        run: make check 2>&1 | tee build/host-tests.log
+      - name: Legacy Debian track recipe checks (incl. first-boot Wine setup)
+        run: ./scripts/check-config.sh
+      - name: QML syntax for the desktop Windows panel
+        run: |
+          python3 -m venv build/ui-env
+          build/ui-env/bin/pip install 'PySide6==6.8.*'
+          build/ui-env/bin/pyside6-qmllint desktop/desktop-shell/Session.qml 2>&1 | tee build/qmllint.log
+          ! grep -q '^Error' build/qmllint.log

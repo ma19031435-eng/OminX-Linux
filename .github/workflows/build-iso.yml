@@ -3,7 +3,8 @@ name: Build OminX installable ISO
 on:
   push:
     branches:
-      - "arena/30b7965b-ominx-linux"
+      - "main"
+      - "arena/**"
     paths:
       - ".github/workflows/build-iso.yml"
       - "Makefile"
