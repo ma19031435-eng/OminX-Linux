@@ -97,3 +97,24 @@ class SourceArchiveTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             path,digest=self.fixture(directory)
             with self.assertRaises(ValueError):m.unpack(path,digest,Path(directory)/'tree',max_unpacked=5)
+
+    def test_bounded_directory_alias(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path,_=self.fixture(directory,('upstream/real/file',))
+            with tarfile.open(path,'a') as out:
+                info=tarfile.TarInfo('upstream/alias');info.type=tarfile.SYMTYPE;info.linkname='real';out.addfile(info)
+            digest=hashlib.sha256(path.read_bytes()).hexdigest();dest=Path(directory)/'tree'
+            with self.assertRaises(ValueError):m.unpack(path,digest,dest,allow_internal_links=True)
+            m.unpack(path,digest,dest,allow_internal_links=True,allow_internal_directories=True)
+            self.assertTrue((dest/'alias').is_dir());self.assertFalse((dest/'alias').is_symlink())
+            self.assertEqual((dest/'alias/file').read_bytes(),b'source')
+            m.unpack(path,digest,dest,allow_internal_links=True,allow_internal_directories=True)
+
+    def test_directory_alias_cycle(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path,_=self.fixture(directory,('upstream/real/file',))
+            with tarfile.open(path,'a') as out:
+                info=tarfile.TarInfo('upstream/real/loop');info.type=tarfile.SYMTYPE;info.linkname='.';out.addfile(info)
+            digest=hashlib.sha256(path.read_bytes()).hexdigest()
+            with self.assertRaisesRegex(ValueError,'Cyclic'):
+                m.unpack(path,digest,Path(directory)/'tree',allow_internal_links=True,allow_internal_directories=True)
