@@ -69,7 +69,7 @@ exec gcc --sysroot="$STAGE" -nostdinc \
     -isystem "$(gcc -print-file-name=include)" \
     -B"$SFP/lib/" -L"$SFP/lib" \
     -Wl,--dynamic-linker,"$SFP/lib/ld-linux-x86-64.so.2" \
-    -Wl,-rpath,"$SFP/lib" "\$@"
+    -Wl,-rpath,"$SFP/lib" -Wl,-rpath-link,"$SFP/lib" "\$@"
 WRAP
 chmod +x "$RTCC"
 export PKG_CONFIG_LIBDIR="$SFP/lib/pkgconfig:$SFP/share/pkgconfig"

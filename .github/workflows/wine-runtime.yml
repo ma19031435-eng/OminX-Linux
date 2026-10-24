@@ -64,10 +64,18 @@ jobs:
           errors = [i for i, line in enumerate(lines)
                     if re.search(r'\berror:|Error [0-9]+|\*\*\*|fatal error|undefined reference|No such file or directory', line)]
           block = []
-          for i in errors[-2:]:
+          for i in errors[-1:]:
               block += lines[max(0, i - 2):i + 2] + ['----']
           probes = [line for line in lines if re.search(r'checking for (wayland|xkb|libxml)|configure: error', line)][-4:]
-          message = '%0A'.join(clean(line) for line in (block + ['==== probes ===='] + probes + ['==== tail ===='] + lines[-8:]))
+          cfg = Path('build/wine-rt/wine-build/config.log')
+          ctx = []
+          if cfg.exists():
+              cl = cfg.read_text(errors='replace').splitlines()
+              hits = [i for i, l in enumerate(cl) if 'wl_display_connect' in l or 'rxkb_context_new' in l]
+              if hits:
+                  win = cl[hits[-1]:hits[-1] + 60]
+                  ctx = [l for l in win if re.search(r'ld|cannot|undefined|rror|No such|not found', l)][:6]
+          message = '%0A'.join(clean(line) for line in (block + ['==== probes ===='] + probes + ['==== config.log link ===='] + ctx + ['==== tail ===='] + lines[-6:]))
           message = message.encode()[:3900].decode(errors='ignore')
           print('::error title=wine runtime build failure::' + message)
           PY
