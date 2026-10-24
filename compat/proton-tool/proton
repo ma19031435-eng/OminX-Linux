@@ -1,0 +1,51 @@
+#!/bin/sh
+# OminX Proton: Steam compatibility-tool entry point for full desktop
+# installs (where /bin/sh exists). Steam invokes this as
+#   proton <verb> <game command...>
+# and every verb is delegated to the OminX Windows service, which owns
+# per-game prefixes in the standard compatdata/<appid>/pfx layout.
+# In the source-built target the same logic is implemented natively by
+# ominx-wined; this script is the bridge Steam itself requires.
+# Original OminX code; implements the public compatibility-tool contract.
+set -eu
+
+verb=${1:-}
+[ $# -gt 0 ] && shift
+
+appid=${SteamAppId:-}
+if [ -z "$appid" ] && [ -n "${STEAM_COMPAT_DATA_PATH:-}" ]; then
+    appid=$(basename -- "$STEAM_COMPAT_DATA_PATH")
+fi
+appid=${appid:-default}
+case "$appid" in
+    *[!A-Za-z0-9_-]*) appid=default ;;
+esac
+
+case "$verb" in
+    waitforexitandrun|run)
+        [ $# -ge 1 ] || exit 2
+        game=$1; shift
+        if [ "$verb" = waitforexitandrun ]; then
+            exec ominx-win proton --appid "$appid" --wait "$game" "$@"
+        fi
+        exec ominx-win proton --appid "$appid" "$game" "$@"
+        ;;
+    getcompatpath)
+        # Linux path -> Windows Z: path
+        printf 'Z:%s\n' "$(printf '%s' "${1:-}" | sed 's|/|\\|g')"
+        ;;
+    getnativepath)
+        # Windows path -> Linux path (drive letters resolve in the prefix)
+        path=$(printf '%s' "${1:-}" | sed 's|\\|/|g')
+        case "$path" in
+            [Zz]:/*) printf '%s\n' "${path#?:}" ;;
+            [Cc]:/*)
+                printf '%s\n' "${STEAM_COMPAT_DATA_PATH:-$HOME/.local/share/ominx/proton/compatdata/$appid}/pfx/drive_c${path#?:}" ;;
+            *) printf '%s\n' "$path" ;;
+        esac
+        ;;
+    *)
+        echo "OminX Proton: unknown verb '$verb'" >&2
+        exit 2
+        ;;
+esac

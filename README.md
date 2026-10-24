@@ -133,6 +133,29 @@ supervision checks, and an isolated
 [target Qt DBus integration test](docs/validation/target-qt-dbus.md).
 See [implementation details, test boundaries and remaining integration](docs/graphics-login.md).
 
+## Windows .exe/.msi compatibility (Wine + Proton)
+
+Windows programs are a first-class, always-prepared feature, not an
+afterthought that sets itself up on first use. Three original services
+implement the lifecycle on both the source-built target and the legacy
+desktop: a root first-boot service (`/sbin/ominx-winsetup`, started by
+PID 1 before login: binfmt registration so `./program.exe` works, the
+Proton `vm.max_map_count`, runtime verification — it never runs Windows
+code), a per-user background service (`/bin/ominx-wined`, started by the
+seat at graphical login: silent Wine prefix creation with DXVK and
+vkd3d-proton DLLs, the default Proton prefix precreated, then a
+persistent wineserver), and the validated client (`win run|install|msi|
+proton|probe|apps|doctor` in the console, the **Windows apps** panel in
+the desktop start menu, and the packaged `.exe`/`.msi` file
+association). Every file is PE/MSI-classified before Wine sees it;
+DLLs, wrong architectures and malformed headers are refused with a
+reason. The Wine runtime itself is a from-source glibc/Wine 10 (WoW64)/
+DXVK/vkd3d-proton tree (`scripts/build-wine-runtime.sh`,
+`compat/sources.env`) packaged separately after a self-containment
+audit; services-only images report `runtime-missing` honestly.
+Architecture, security model and remaining gates:
+[Windows compatibility](docs/windows-compatibility.md).
+
 ## Earlier verified session build
 
 **19 automated checks, five normal-user configurations, five recovery regressions,
@@ -176,6 +199,8 @@ toolchain/                  Pinned upstream identities
 boot/                       Independent bootloader configuration
 src/core/                   Original init, console and data-mount operations
 src/files/, src/lib/         Original file backend, safe copy/move and argument parser
+src/win/, compat/           Windows services (first-boot, per-user daemon, client),
+                            PE/MSI inspector and pinned Wine/Proton runtime sources
 scripts/build-toolchain.sh  Source cross-toolchain build
 scripts/build-media.sh      Source bootloader and hybrid ISO creation
 scripts/test-platforms.py   Firmware/media/terminal/storage acceptance matrix
@@ -187,7 +212,9 @@ docs/legacy-debian.md        Historical desktop build documentation
 The existing desktop is retained via `make legacy-build` and `make legacy-check`.
 It remains a separate Debian-based track and is **not** the independent OS image.
 KDE integration, original graphical applications/file manager, network services,
-authentication, installation, updates and Windows-file workflows are later layers.
+authentication, installation and updates are later layers. (Windows .exe/.msi
+services now ship by default; the large Wine runtime artifact and a glibc
+Vulkan ICD are the remaining compatibility gates.)
 Normal mode is an unprivileged automatic live login, not authenticated login.
 Root recovery remains explicitly selectable; use these images for isolated development.
 

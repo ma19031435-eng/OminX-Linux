@@ -234,9 +234,35 @@ int main(int argc, char **argv) {
         child_pid = start_child(session_uid, session_uid, session_home, runtime,
                                 OMINX_LOGIN_SESSION_LOG, dbus, session);
         log_event("seat: session started uid=%u pid=%ld", session_uid, (long)child_pid);
+        /* The per-user Windows service starts in the background at login: on
+           first login it silently creates the Wine prefix and the default
+           Proton prefix, then keeps a persistent wineserver for the session.
+           It is best-effort; a missing Wine runtime never blocks login. */
+        pid_t wined_pid = -1;
+        if (!access("/bin/ominx-wined", X_OK)) {
+            static const char *const wined[] = {"/bin/ominx-wined", NULL};
+            static char wined_log[96];
+            snprintf(wined_log, sizeof wined_log, "%s/ominx-wined.log", runtime);
+            wined_pid = start_child(session_uid, session_uid, session_home, runtime,
+                                    wined_log, dbus, wined);
+            log_event("seat: windows service started uid=%u pid=%ld", session_uid, (long)wined_pid);
+        }
         while (child_pid > 0 && waitpid(child_pid, &status, 0) < 0 && errno == EINTR) {}
         log_event("seat: session ended uid=%u status=%d", session_uid, status);
         child_pid = -1;
+        if (wined_pid > 0) {
+            kill(wined_pid, SIGTERM);
+            int wined_status = 0, reaped = 0;
+            for (int waited = 0; waited < 20 && !reaped; waited++) {
+                if (waitpid(wined_pid, &wined_status, WNOHANG) == wined_pid) reaped = 1;
+                else usleep(100000);
+            }
+            if (!reaped) {
+                kill(wined_pid, SIGKILL);
+                while (waitpid(wined_pid, &wined_status, 0) < 0 && errno == EINTR) {}
+            }
+            log_event("seat: windows service ended uid=%u", session_uid);
+        }
     }
     if (child_pid > 0) {
         kill(child_pid, SIGTERM);

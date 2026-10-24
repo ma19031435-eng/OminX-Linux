@@ -50,6 +50,13 @@ if ! command -v wine >/dev/null 2>&1; then
     exit 127
 fi
 
+# The prefix is prepared in the background at first sign-in. If a user
+# manages to open a program before that finishes (or the service never
+# ran), wait for the same one-time setup instead of racing wineboot.
+if command -v ominx-wine-firstboot >/dev/null 2>&1; then
+    ominx-wine-firstboot --wait 2>/dev/null || true
+fi
+
 # Start in the selected file's directory. Some Windows installers expect their
 # companion files to be found relative to the installer rather than the user's
 # home directory or the file manager's working directory.

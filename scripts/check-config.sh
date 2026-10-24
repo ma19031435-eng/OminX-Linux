@@ -5,7 +5,7 @@ set -eu
 ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 cd "$ROOT"
 
-shell_files="auto/config build.sh scripts/build-debian-legacy.sh scripts/verify-boot-menu.sh config/hooks/normal/1000-ominx-finalize.hook.chroot config/includes.chroot/usr/local/bin/ominx-welcome config/includes.chroot/usr/local/bin/ominx-protontricks config/includes.chroot/usr/local/bin/ominx-open-windows config/includes.chroot/usr/local/bin/ominx-store config/includes.chroot/usr/local/bin/ominx-settings config/includes.chroot/usr/local/bin/ominx-setup"
+shell_files="auto/config build.sh scripts/build-debian-legacy.sh scripts/verify-boot-menu.sh config/hooks/normal/1000-ominx-finalize.hook.chroot config/includes.chroot/usr/local/bin/ominx-welcome config/includes.chroot/usr/local/bin/ominx-protontricks config/includes.chroot/usr/local/bin/ominx-open-windows config/includes.chroot/usr/local/bin/ominx-wine-firstboot config/includes.chroot/usr/local/bin/ominx-store config/includes.chroot/usr/local/bin/ominx-settings config/includes.chroot/usr/local/bin/ominx-setup"
 for file in $shell_files; do
     sh -n "$file"
 done
@@ -412,6 +412,45 @@ with tempfile.TemporaryDirectory(prefix="ominx-wine-test-") as temporary:
 
     exercise_launch("setup with spaces $value.EXE", lambda path: [path])
     exercise_launch("product installer.msi", lambda path: ["msiexec", "/i", path])
+
+    # First-sign-in background preparation must create the prefix once,
+    # record the exact Wine version, and leave later runs as a no-op.
+    firstboot = config_root / "usr/local/bin/ominx-wine-firstboot"
+    if not os.access(firstboot, os.X_OK):
+        raise SystemExit("ominx-wine-firstboot must be executable")
+    service = (config_root / "usr/lib/systemd/user/ominx-wine-firstboot.service").read_text(encoding="utf-8")
+    if "ExecStart=/usr/local/bin/ominx-wine-firstboot" not in service or "ConditionPathExists=" not in service:
+        raise SystemExit("The Wine first-boot user service is incomplete")
+    if "systemctl --global enable ominx-wine-firstboot.service" not in hook:
+        raise SystemExit("The image hook must enable Wine first-boot preparation for all users")
+    gaming_sysctl = (config_root / "etc/sysctl.d/91-ominx-gaming.conf").read_text(encoding="utf-8")
+    if "vm.max_map_count = 1048576" not in gaming_sysctl:
+        raise SystemExit("Proton requires the raised vm.max_map_count default")
+    boot_calls = test_root / "wineboot-calls"
+    for mock_name, body in (
+        ("wineboot", "mkdir -p \"$WINEPREFIX/drive_c\"\nprintf 'booted\\n' >> \"$OMINX_WINE_TEST_BOOTLOG\"\n"),
+        ("wineserver", "exit 0\n"),
+        ("wine", "if [ \"$1\" = --version ]; then echo wine-10.0-test; fi\n"),
+    ):
+        mock_tool = mock_bin / mock_name
+        mock_tool.write_text("#!/bin/sh\n" + body, encoding="utf-8")
+        mock_tool.chmod(0o755)
+    first_env = test_env.copy()
+    first_env["HOME"] = str(test_root / "home")
+    first_env["XDG_RUNTIME_DIR"] = str(test_root / "run")
+    first_env["OMINX_WINE_TEST_BOOTLOG"] = str(boot_calls)
+    (test_root / "home").mkdir()
+    (test_root / "run").mkdir()
+    for attempt in range(2):
+        prepared = subprocess.run([str(firstboot), "--wait"], env=first_env,
+                                  capture_output=True, text=True, check=False)
+        if prepared.returncode != 0:
+            raise SystemExit(f"Wine first-boot setup failed: {prepared.stderr.strip()}")
+    marker = test_root / "home/.local/share/ominx/wine-setup-v1"
+    if marker.read_text(encoding="utf-8").strip() != "wine-10.0-test":
+        raise SystemExit("Wine first-boot setup did not record the prepared runtime")
+    if boot_calls.read_text(encoding="utf-8").splitlines() != ["booted"]:
+        raise SystemExit("Wine prefix preparation must run exactly once")
 
 # Check repository-specific boot menu, installer, splash, provenance, and
 # conservative performance expectations.

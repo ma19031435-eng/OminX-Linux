@@ -24,6 +24,26 @@ apt-get install --yes --no-install-recommends \
     libpulse0:i386 \
     libasound2-plugins:i386
 
+# Prepare Wine/Proton in the background at each user's first sign-in, so
+# the first .exe/.msi opens immediately. --global enables it for all users;
+# the skel autostart entry is the fallback for sessions without the user
+# manager picking up new enables.
+systemctl --global enable ominx-wine-firstboot.service || {
+    mkdir -p /etc/systemd/user/default.target.wants
+    ln -s /usr/lib/systemd/user/ominx-wine-firstboot.service \
+        /etc/systemd/user/default.target.wants/ominx-wine-firstboot.service
+}
+if [ ! -x /usr/local/bin/ominx-wine-firstboot ]; then
+    echo "OminX image validation failed: missing Wine first-boot setup" >&2; exit 1
+fi
+if [ ! -x /usr/bin/wine ] && [ ! -x /usr/games/wine ]; then
+    echo "OminX image validation failed: Wine was selected but its launcher was not installed" >&2; exit 1
+fi
+if ! grep -q '^vm.max_map_count = 1048576$' /etc/sysctl.d/91-ominx-gaming.conf; then
+    echo "OminX image validation failed: Proton vm.max_map_count is not configured" >&2; exit 1
+fi
+desktop-file-validate /usr/share/applications/ominx-windows-app.desktop
+
 # Discover is the real Debian/Flatpak package manager behind the OminX Store.
 # Keep its native launcher available to OminX Store, but avoid a second Store
 # icon in the Plasma application launcher.

@@ -1,0 +1,18 @@
+[Unit]
+Description=Prepare Wine and Proton data for Windows apps (first sign-in)
+Documentation=file:///usr/share/doc/ominx/compatibility.md
+# Runs once per user; the script's marker short-circuits later logins, and
+# this condition keeps systemd from even starting it again.
+ConditionPathExists=!%h/.local/share/ominx/wine-setup-v1
+After=graphical-session-pre.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/ominx-wine-firstboot
+# Background preparation must never compete with the login itself.
+Nice=10
+IOSchedulingClass=idle
+CPUWeight=30
+
+[Install]
+WantedBy=default.target

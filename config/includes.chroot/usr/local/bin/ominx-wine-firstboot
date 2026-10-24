@@ -1,0 +1,75 @@
+#!/bin/sh
+# Prepare Wine (and the Proton layout) at first sign-in, in the background.
+# Started by the ominx-wine-firstboot systemd user service (enabled for all
+# users in the image hook) so the first .exe a user double-clicks opens
+# immediately instead of waiting through prefix creation. Idempotent:
+# after one successful run only the marker is checked.
+set -u
+
+WAIT=0
+case "${1:-}" in
+    "") ;;
+    --wait) WAIT=1 ;;
+    *) echo "Usage: ominx-wine-firstboot [--wait]" >&2; exit 2 ;;
+esac
+
+STATE_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/ominx"
+MARKER="$STATE_DIR/wine-setup-v1"
+LOG="$STATE_DIR/wine-firstboot.log"
+export WINEPREFIX="${WINEPREFIX:-$HOME/.wine}"
+export WINEARCH="${WINEARCH:-win64}"
+# Never block sign-in or a first launch behind Mono/Gecko download prompts.
+export WINEDLLOVERRIDES="mscoree,mshtml=${WINEDLLOVERRIDES:-}"
+export WINEDEBUG="${WINEDEBUG:--all}"
+
+if [ -f "$MARKER" ]; then
+    exit 0
+fi
+if ! command -v wine >/dev/null 2>&1; then
+    echo "ominx-wine-firstboot: Wine is not installed; nothing to prepare." >&2
+    exit 0
+fi
+
+mkdir -p "$STATE_DIR" "$STATE_DIR/proton/compatdata" || exit 1
+LOCK="${XDG_RUNTIME_DIR:-$STATE_DIR}/ominx-wine-firstboot.lock"
+exec 9>"$LOCK" || exit 1
+if [ "$WAIT" = 1 ]; then
+    # A launch is waiting: join the queue, then reuse whoever finished.
+    flock 9 || exit 1
+else
+    # Background first-boot run: never run twice, never block anything.
+    if ! flock -n 9; then
+        exit 0
+    fi
+fi
+if [ -f "$MARKER" ]; then
+    exit 0
+fi
+
+{
+    echo "ominx-wine-firstboot: creating Wine prefix at $WINEPREFIX"
+    wineboot --init
+    wineserver -w
+    # Proton (through Steam) uses the same prefix layout conventions;
+    # having the directories and a warm wineserver ready keeps first game
+    # launches close to native speed. Steam still downloads its own
+    # Proton builds after sign-in (see the compatibility guide).
+    wineserver -p || true
+    wine --version
+} >>"$LOG" 2>&1 || {
+    echo "ominx-wine-firstboot: setup failed; see $LOG" >&2
+    exit 1
+}
+
+if wine --version >"$MARKER.tmp" 2>/dev/null; then
+    mv "$MARKER.tmp" "$MARKER"
+else
+    echo "unknown" >"$MARKER"
+fi
+echo "ominx-wine-firstboot: Windows environment is ready" >>"$LOG"
+if command -v notify-send >/dev/null 2>&1 && [ -n "${DISPLAY:-}" ]; then
+    notify-send "Windows apps are ready" \
+        "Wine finished preparing in the background. You can now open .exe and .msi files." \
+        >/dev/null 2>&1 || true
+fi
+exit 0
