@@ -64,6 +64,7 @@ cat > "$RTCC" <<WRAP
 #!/bin/sh
 exec gcc -nostdinc \\
     -isystem "$SFP/usr/include" -isystem "$SFP/include" \\
+    -isystem "$(gcc -print-file-name=include)" \\
     -B"$SFP/lib/" -L"$SFP/lib" \\
     -Wl,--dynamic-linker,"$SFP/lib/ld-linux-x86-64.so.2" \\
     -Wl,-rpath,"$SFP/lib" "\$@"
@@ -232,7 +233,7 @@ if ! done_stage wine; then
     "$SRC/wine/configure" --prefix="$FP" \
         --enable-archs=i386,x86_64 \
         --with-wayland --with-vulkan --with-alsa --with-freetype \
-        --with-fontconfig --with-png \
+        --with-fontconfig \
         --without-x --without-opengl --without-gstreamer --without-dbus \
         --without-cups --without-sane --without-v4l2 --without-pcap \
         --without-netapi --without-udev --without-unwind
@@ -259,13 +260,13 @@ if ! done_stage dxvk; then
     meson_mingw dxvk64 "$SRC/dxvk" "$SRC/dxvk/build-win64.txt" src/dxvk dxvk-temp
     mkdir -p "$SFP/share/dxvk/x64" "$SFP/share/dxvk/x32"
     # DXVK emits the D3D front-end DLLs from src/{d3d9,d3d10,d3d11,dxgi}.
-    for part in d3d9 d3d10 d3d11 dxgi dxvk; do
+    for part in d3d8 d3d9 d3d10 d3d11 dxgi; do
         for dll in "$WORK/dxvk64-build/src/$part"/*.dll; do
             [ -f "$dll" ] && cp "$dll" "$SFP/share/dxvk/x64/"
         done
     done
     meson_mingw dxvk32 "$SRC/dxvk" "$SRC/dxvk/build-win32.txt" src/dxvk dxvk-temp32
-    for part in d3d9 d3d10 d3d11 dxgi dxvk; do
+    for part in d3d8 d3d9 d3d10 d3d11 dxgi; do
         for dll in "$WORK/dxvk32-build/src/$part"/*.dll; do
             [ -f "$dll" ] && cp "$dll" "$SFP/share/dxvk/x32/"
         done
@@ -289,16 +290,22 @@ endian = 'little'
 CROSS
     sed 's/x86_64-w64-mingw32/i686-w64-mingw32/g; s/cpu_family = .x86_64./cpu_family = '"'"'x86'"'"'/; s/cpu = .x86_64./cpu = '"'"'i686'"'"'/' \
         "$WORK/vkd3d-cross64.ini" > "$WORK/vkd3d-cross32.ini"
-    meson_mingw vkd3d64 "$SRC/vkd3d-proton" "$WORK/vkd3d-cross64.ini" libs/vkd3d vkd3d-temp \
+    # vkd3d-proton 2.14 builds d3d12.dll and d3d12core.dll in libs/d3d12 and
+    # libs/d3d12core. libs/vkd3d and libs/vkd3d-common build no DLLs.
+    meson_mingw vkd3d64 "$SRC/vkd3d-proton" "$WORK/vkd3d-cross64.ini" libs/d3d12 vkd3d-temp \
+        -Denable_tests=false
+    meson_mingw vkd3d32 "$SRC/vkd3d-proton" "$WORK/vkd3d-cross32.ini" libs/d3d12 vkd3d-temp32 \
         -Denable_tests=false
     mkdir -p "$SFP/share/vkd3d-proton/x64" "$SFP/share/vkd3d-proton/x86"
-    for dll in "$WORK"/vkd3d64-build/libs/vkd3d/*.dll "$WORK"/vkd3d64-build/libs/vkd3d-common/*.dll; do
+    for dll in "$WORK"/vkd3d64-build/libs/d3d12/*.dll "$WORK"/vkd3d64-build/libs/d3d12core/*.dll; do
         [ -f "$dll" ] && cp "$dll" "$SFP/share/vkd3d-proton/x64/"
     done
-    meson_mingw vkd3d32 "$SRC/vkd3d-proton" "$WORK/vkd3d-cross32.ini" libs/vkd3d vkd3d-temp32 \
-        -Denable_tests=false
-    for dll in "$WORK"/vkd3d32-build/libs/vkd3d/*.dll "$WORK"/vkd3d32-build/libs/vkd3d-common/*.dll; do
+    for dll in "$WORK"/vkd3d32-build/libs/d3d12/*.dll "$WORK"/vkd3d32-build/libs/d3d12core/*.dll; do
         [ -f "$dll" ] && cp "$dll" "$SFP/share/vkd3d-proton/x86/"
+    done
+    # An empty DLL set is a build failure, never a silent warning.
+    for dll in x64/d3d12.dll x64/d3d12core.dll x86/d3d12.dll x86/d3d12core.dll; do
+        test -f "$SFP/share/vkd3d-proton/$dll" || { echo "vkd3d-proton did not produce $dll" >&2; exit 1; }
     done
     rm -rf "$SFP/share/vkd3d-temp" "$SFP/share/vkd3d-temp32"
     mark_stage vkd3d

@@ -1,6 +1,8 @@
 name: Source-built Wine/Proton runtime
-# Manual only: a from-source glibc + Wine + DXVK build takes hours and the
-# result changes only when compat/ pins change. The artifact feeds
+# A from-source glibc + Wine + DXVK build takes hours, so it runs when the
+# runtime itself changes: manually, or on a push to an arena/** branch that
+# touches the pins, the build script, the auditor or this workflow. Source
+# and stamps are cached by those files. The artifact feeds
 # make-initramfs --wine-runtime-dir build/wine-runtime; see
 # docs/windows-compatibility.md.
 on:
@@ -9,6 +11,14 @@ on:
       jobs:
         description: Parallel build jobs
         default: '4'
+  push:
+    branches: ['arena/**']
+    paths:
+      - 'compat/**'
+      - 'scripts/build-wine-runtime.sh'
+      - 'scripts/stage-wine-runtime.py'
+      - 'toolchain/sources.env'
+      - '.github/workflows/wine-runtime.yml'
 permissions:
   contents: read
 defaults:
