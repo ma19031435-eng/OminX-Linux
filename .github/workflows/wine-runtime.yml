@@ -58,13 +58,13 @@ jobs:
           from pathlib import Path
           log = Path('build/wine-runtime-build.log')
           lines = log.read_text(errors='replace').splitlines() if log.exists() else ['(no log produced)']
-          hits = [i for i, line in enumerate(lines) if re.search(r'error|\*\*\*|No such file|undefined reference|not found|failed', line, re.I)]
-          keep = []
-          for i in hits[:6]:
-              keep += lines[max(0, i - 8):i + 3]
-              keep.append('----')
-          keep += ['==== tail ===='] + lines[-40:]
-          message = '%0A'.join(line.replace('%', '%25').replace('\r', '%0D')[:400] for line in keep[-160:])
+          clean = lambda line: line.replace('%', '%25').replace('\r', '%0D')[:300]
+          errors = [i for i, line in enumerate(lines)
+                    if re.search(r'\berror:|Error [0-9]+|\*\*\*|fatal error|undefined reference|No such file or directory', line)]
+          first = []
+          for i in errors[:3]:
+              first += lines[max(0, i - 4):i + 2] + ['----']
+          message = '%0A'.join(clean(line) for line in (first + ['==== last 120 lines ===='] + lines[-120:]))
           print('::error title=wine runtime build failure::' + message)
           PY
       - uses: actions/cache/save@v4
