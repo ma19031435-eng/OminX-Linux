@@ -64,11 +64,11 @@ cat > "$RTCC" <<WRAP
 #!/bin/sh
 # --sysroot maps the absolute paths inside glibc's linker scripts
 # (libc.so, libm.so: /usr/lib/ominx/wine-runtime/...) onto the stage.
-exec gcc --sysroot="$STAGE" -nostdinc \\
-    -isystem "$SFP/usr/include" -isystem "$SFP/include" \\
-    -isystem "$(gcc -print-file-name=include)" \\
-    -B"$SFP/lib/" -L"$SFP/lib" \\
-    -Wl,--dynamic-linker,"$SFP/lib/ld-linux-x86-64.so.2" \\
+exec gcc --sysroot="$STAGE" -nostdinc \
+    -isystem "$SFP/usr/include" -isystem "$SFP/include" \
+    -isystem "$(gcc -print-file-name=include)" \
+    -B"$SFP/lib/" -L"$SFP/lib" \
+    -Wl,--dynamic-linker,"$SFP/lib/ld-linux-x86-64.so.2" \
     -Wl,-rpath,"$SFP/lib" "\$@"
 WRAP
 chmod +x "$RTCC"
@@ -88,6 +88,8 @@ if ! done_stage sources; then
     fetch_git "$FONTCONFIG_REPO" "$FONTCONFIG_TAG" "$FONTCONFIG_COMMIT" fontconfig
     fetch_git "$EXPAT_REPO" "$EXPAT_TAG" "$EXPAT_COMMIT" expat
     fetch_git "$ZLIB_REPO" "$ZLIB_TAG" "$ZLIB_COMMIT" zlib
+    fetch_git "$XKBCOMMON_REPO" "$XKBCOMMON_TAG" "$XKBCOMMON_COMMIT" xkbcommon
+    fetch_git "$LIBXML2_REPO" "$LIBXML2_TAG" "$LIBXML2_COMMIT" libxml2
     fetch_git "$LIBPNG_REPO" "$LIBPNG_TAG" "$LIBPNG_COMMIT" libpng
     fetch_git "$ALSA_REPO" "$ALSA_TAG" "$ALSA_COMMIT" alsa-lib
     fetch_git "$VKHEADERS_REPO" "$VKHEADERS_TAG" "$VKHEADERS_COMMIT" vulkan-headers
@@ -182,6 +184,18 @@ if ! done_stage wayland; then
     meson_rt wayland "$SRC/wayland" -Ddocumentation=false -Ddtd_validation=false \
         -Dtests=false -Dscanner=true -Dlibraries=true
     mark_stage wayland
+fi
+# Wine 10 Wayland driver: xkbcommon + xkbregistry (xkbregistry needs libxml2).
+if ! done_stage xkbcommon; then
+    meson_rt xkbcommon "$SRC/xkbcommon" -Denable-x11=false -Denable-wayland=false \
+        -Denable-docs=false -Denable-tools=false -Denable-bash-completion=false \
+        -Denable-xkbregistry=true
+    mark_stage xkbcommon
+fi
+if ! done_stage libxml2; then
+    meson_rt libxml2 "$SRC/libxml2" -Dpython=disabled -Dhttp=disabled \
+        -Dicu=disabled -Dzlib=enabled -Ddocs=disabled
+    mark_stage libxml2
 fi
 if ! done_stage freetype; then
     meson_rt freetype "$SRC/freetype" -Dzlib=enabled -Dpng=disabled \

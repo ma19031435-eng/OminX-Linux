@@ -64,7 +64,9 @@ jobs:
           first = []
           for i in errors[:3]:
               first += lines[max(0, i - 4):i + 2] + ['----']
-          message = '%0A'.join(clean(line) for line in (first + ['==== last 120 lines ===='] + lines[-120:]))
+          # Configure results for the libraries Wine probes (Wayland, xkb, ...).
+          probes = [line for line in lines if re.search(r'checking for (wayland|xkb|libxml|vulkan|alsa|freetype|fontconfig|png)|configure: error', line)][-40:]
+          message = '%0A'.join(clean(line) for line in (first + ['==== configure probes ===='] + probes + ['==== last 120 lines ===='] + lines[-120:]))
           print('::error title=wine runtime build failure::' + message)
           PY
       - uses: actions/cache/save@v4
