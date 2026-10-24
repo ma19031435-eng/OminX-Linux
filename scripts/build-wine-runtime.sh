@@ -150,10 +150,16 @@ fi
 
 meson_rt() { # meson_rt <name> <srcdir> <extra args...>
     name=$1; src=$2; shift 2
+    # Per-phase logs: meson's own errors go to stdout, so keep it all and
+    # show the tail of the failing phase instead of silently discarding it.
+    local log="$WORK/$name-meson.log"
     "$MESON" setup "$WORK/$name-build" "$src" --prefix="$FP" \
-        --libdir=lib --buildtype=release "$@" >/dev/null
-    "$MESON" compile -C "$WORK/$name-build" -j "$JOBS" >/dev/null
-    DESTDIR="$STAGE" "$MESON" install -C "$WORK/$name-build" >/dev/null
+        --libdir=lib --buildtype=release "$@" >"$log" 2>&1 \
+        || { tail -60 "$log" >&2; echo "meson setup failed: $name" >&2; exit 1; }
+    "$MESON" compile -C "$WORK/$name-build" -j "$JOBS" >>"$log" 2>&1 \
+        || { tail -60 "$log" >&2; echo "meson compile failed: $name" >&2; exit 1; }
+    DESTDIR="$STAGE" "$MESON" install -C "$WORK/$name-build" >>"$log" 2>&1 \
+        || { tail -60 "$log" >&2; echo "meson install failed: $name" >&2; exit 1; }
 }
 export CC="$RTCC"
 export LDFLAGS="-Wl,-rpath,$SFP/lib"
