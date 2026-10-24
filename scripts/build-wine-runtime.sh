@@ -317,6 +317,10 @@ endian = 'little'
 CROSS
     sed 's/x86_64-w64-mingw32/i686-w64-mingw32/g; s/cpu_family = .x86_64./cpu_family = '"'"'x86'"'"'/; s/cpu = .x86_64./cpu = '"'"'i686'"'"'/' \
         "$WORK/vkd3d-cross64.ini" > "$WORK/vkd3d-cross32.ini"
+    # vkd3d-proton generates headers with an IDL compiler found on PATH; use
+    # the widl that the Wine build just installed (host tool, never shipped).
+    test -x "$SFP/bin/widl" || { echo "Wine did not install widl" >&2; exit 1; }
+    export PATH="$SFP/bin:$PATH"
     # vkd3d-proton 2.14 builds d3d12.dll and d3d12core.dll in libs/d3d12 and
     # libs/d3d12core. libs/vkd3d and libs/vkd3d-common build no DLLs.
     meson_mingw vkd3d64 "$SRC/vkd3d-proton" "$WORK/vkd3d-cross64.ini" libs/d3d12 vkd3d-temp \
