@@ -353,6 +353,14 @@ rm -rf "$OUT/include" "$OUT/usr" "$OUT/share/man" "$OUT/share/doc" \
        "$OUT/lib/pkgconfig" "$OUT/share/pkgconfig"
 find "$OUT" -name '*.a' -delete
 find "$OUT" -name '*.la' -delete
+# Wine installs developer scripts (winemaker, function_grep.pl) that need Perl.
+# The target has no script interpreters, so executable scripts are dropped here.
+find "$OUT" -type f -perm -u+x | while read -r script; do
+    if [ "$(head -c 2 "$script" 2>/dev/null)" = '#!' ]; then
+        echo "ominx-wine-runtime: dropping developer script ${script#"$OUT"/}"
+        rm -f "$script"
+    fi
+done
 printf 'wine-%s\nominx-runtime=1\ndxvk=%s\nvkd3d-proton=%s\n' \
     "$WINE_VERSION" "$DXVK_TAG" "$VKD3D_TAG" > "$OUT/VERSION"
 test -x "$OUT/lib/ld-linux-x86-64.so.2"
