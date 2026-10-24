@@ -105,7 +105,10 @@ def audit(root):
             if total > MAX_TOTAL:
                 raise ValueError('Wine runtime exceeds its 2 GiB packaging budget')
             if data.startswith(b'\x7fELF'):
-                info = elf(data)
+                try:
+                    info = elf(data)
+                except ValueError as error:
+                    raise ValueError(f'{error}: {relative}') from None
                 if mode & 0o111 and info['interpreter'] not in (None, LOADER):
                     raise ValueError(
                         'Foreign dynamic linker in executable ' + relative +

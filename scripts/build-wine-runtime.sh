@@ -374,11 +374,14 @@ if [ ! -e "$OUT/bin/wineserver" ] && [ -x "$OUT/lib/wine/x86_64-unix/wineserver"
     ln -s ../lib/wine/x86_64-unix/wineserver "$OUT/bin/wineserver"
 fi
 # New WoW64 runs 32-bit Windows programs from 64-bit unix code, so 32-bit unix
-# ELF objects (Wine's i386-unix tree) are build products the x86-64 target never
-# loads. Drop them; the 32-bit PE side (i386-windows) stays.
+# objects and build products (relocatable .o, non-x86-64 ELF) never load on the
+# x86-64 target. Drop them with a logged message; the PE side (i386-windows) stays.
 find "$OUT" -type f | while read -r file; do
-    if readelf -h "$file" 2>/dev/null | grep -q 'Class:[[:space:]]*ELF32'; then
-        echo "ominx-wine-runtime: dropping 32-bit unix object ${file#"$OUT"/}"
+    hdr=$(readelf -h "$file" 2>/dev/null) || continue
+    [ -n "$hdr" ] || continue
+    if printf '%s\n' "$hdr" | grep -q 'Type:[[:space:]]*REL' ||
+       ! printf '%s\n' "$hdr" | grep -q 'Machine:[[:space:]]*Advanced Micro Devices X86-64'; then
+        echo "ominx-wine-runtime: dropping non-runtime ELF ${file#"$OUT"/}"
         rm -f "$file"
     fi
 done
