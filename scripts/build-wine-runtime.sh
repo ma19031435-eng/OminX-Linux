@@ -388,7 +388,8 @@ done
 # Upstream install modes leave data files (e.g. share/vulkan/registry/vk.xml)
 # executable. Only ELF and PE (MZ) may be executable; normalize everything else.
 find "$OUT" -type f -perm -u+x | while read -r file; do
-    if [ "$(head -c 2 "$file" 2>/dev/null)" != 'MZ' ]; then
+    if [ "$(head -c 2 "$file" 2>/dev/null)" != 'MZ' ] &&
+       ! readelf -h "$file" >/dev/null 2>&1; then
         chmod 644 "$file"
         echo "ominx-wine-runtime: normalized mode of ${file#"$OUT"/}"
     fi
