@@ -64,7 +64,7 @@ cat > "$RTCC" <<WRAP
 #!/bin/sh
 # --sysroot maps the absolute paths inside glibc's linker scripts
 # (libc.so, libm.so: /usr/lib/ominx/wine-runtime/...) onto the stage.
-exec gcc --sysroot="$STAGE" -nostdinc \
+exec gcc -static-libgcc --sysroot="$STAGE" -nostdinc \
     -isystem "$SFP/usr/include" -isystem "$SFP/include" \
     -isystem "$(gcc -print-file-name=include)" \
     -B"$SFP/lib/" -L"$SFP/lib" \
