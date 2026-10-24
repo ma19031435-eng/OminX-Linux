@@ -85,6 +85,7 @@ if ! done_stage sources; then
     fetch_git "$FREETYPE_REPO" "$FREETYPE_TAG" "$FREETYPE_COMMIT" freetype
     fetch_git "$FONTCONFIG_REPO" "$FONTCONFIG_TAG" "$FONTCONFIG_COMMIT" fontconfig
     fetch_git "$EXPAT_REPO" "$EXPAT_TAG" "$EXPAT_COMMIT" expat
+    fetch_git "$ZLIB_REPO" "$ZLIB_TAG" "$ZLIB_COMMIT" zlib
     fetch_git "$LIBPNG_REPO" "$LIBPNG_TAG" "$LIBPNG_COMMIT" libpng
     fetch_git "$ALSA_REPO" "$ALSA_TAG" "$ALSA_COMMIT" alsa-lib
     fetch_git "$VKHEADERS_REPO" "$VKHEADERS_TAG" "$VKHEADERS_COMMIT" vulkan-headers
@@ -94,6 +95,8 @@ if ! done_stage sources; then
     python3 - <<'PY'
 import json, subprocess
 for name, source in json.load(open('compat/sources.json')).items():
+    if name == 'zlib':  # pinned as git in compat/sources.env (ZLIB_*)
+        continue
     subprocess.run(['python3', 'scripts/fetch-archive.py', source['url'], source['sha256'],
                     'build/sources/wine-rt/' + name, '--max-unpacked-mib=512',
                     '--max-download-mib=128'], check=True)
