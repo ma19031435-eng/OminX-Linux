@@ -50,15 +50,22 @@ jobs:
           key: wine-runtime-${{ runner.os }}-${{ hashFiles('compat/sources.env', 'compat/sources.json', 'scripts/build-wine-runtime.sh') }}
       - name: Build glibc, Wine (WoW64), DXVK and vkd3d-proton from pinned source
         run: MESON="$PWD/build/meson-env/bin/meson" JOBS="${{ inputs.jobs }}" scripts/build-wine-runtime.sh 2>&1 | tee build/wine-runtime-build.log
-      - name: Surface the build failure tail (Actions logs are not downloadable from the sandbox)
+      - name: Surface the build failure (Actions logs are not downloadable from the sandbox)
         if: failure()
         run: |
           python3 - <<'PY'
+          import re
           from pathlib import Path
           log = Path('build/wine-runtime-build.log')
-          lines = log.read_text(errors='replace').splitlines()[-60:] if log.exists() else ['(no log produced)']
-          message = '%0A'.join(line.replace('%', '%25').replace('\r', '%0D') for line in lines)
-          print('::error title=wine runtime build failure tail::' + message)
+          lines = log.read_text(errors='replace').splitlines() if log.exists() else ['(no log produced)']
+          hits = [i for i, line in enumerate(lines) if re.search(r'error|\*\*\*|No such file|undefined reference|not found|failed', line, re.I)]
+          keep = []
+          for i in hits[:6]:
+              keep += lines[max(0, i - 8):i + 3]
+              keep.append('----')
+          keep += ['==== tail ===='] + lines[-40:]
+          message = '%0A'.join(line.replace('%', '%25').replace('\r', '%0D')[:400] for line in keep[-160:])
+          print('::error title=wine runtime build failure::' + message)
           PY
       - uses: actions/cache/save@v4
         if: steps.sources.outputs.cache-hit != 'true'
