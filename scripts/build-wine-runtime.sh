@@ -62,7 +62,9 @@ mkdir -p "$SRC" "$SFP/lib" "$SFP/include" "$SFP/usr/include" "$STAMPS" "$WORK/bi
 RTCC="$WORK/bin/rtcc"
 cat > "$RTCC" <<WRAP
 #!/bin/sh
-exec gcc -nostdinc \\
+# --sysroot maps the absolute paths inside glibc's linker scripts
+# (libc.so, libm.so: /usr/lib/ominx/wine-runtime/...) onto the stage.
+exec gcc --sysroot="$STAGE" -nostdinc \\
     -isystem "$SFP/usr/include" -isystem "$SFP/include" \\
     -isystem "$(gcc -print-file-name=include)" \\
     -B"$SFP/lib/" -L"$SFP/lib" \\
