@@ -194,7 +194,7 @@ fi
 # Wine 10 Wayland driver: libxml2 first, then xkbcommon with xkbregistry (needs libxml2).
 if ! done_stage libxml2; then
     meson_rt libxml2 "$SRC/libxml2" -Dpython=disabled -Dhttp=disabled \
-        -Dicu=disabled -Dzlib=enabled -Ddocs=disabled
+        -Dicu=disabled -Dzlib=enabled -Ddocs=disabled -Dc_link_args=-lm
     mark_stage libxml2
 fi
 if ! done_stage xkbcommon; then
