@@ -98,6 +98,7 @@ def archive(binary, files=None, control=None, graphics_probe=None, quick_probe=N
         entry('bin/ominx-win-binfmt', stat.S_IFLNK | 0o777, b'ominx-win')
         entry('etc/ominx/windows-compat', stat.S_IFREG | 0o444, b'1\n')
         # Game profiles (compat/games): read-only policy data for `win game`.
+        # The launch gate reads them as-is; they are never generated or edited on the target.
         entry('usr/share/ominx', stat.S_IFDIR | 0o755)
         entry('usr/share/ominx/games', stat.S_IFDIR | 0o755)
         for name, data in sorted((win_games or {}).items()):
