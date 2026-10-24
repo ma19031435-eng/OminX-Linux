@@ -361,6 +361,8 @@ find "$OUT" -type f -perm -u+x | while read -r script; do
         rm -f "$script"
     fi
 done
+# Links whose developer targets were just removed (libpng-config -> ...) dangle; drop them.
+find "$OUT" -xtype l -print -delete | sed 's/^/ominx-wine-runtime: dropping dangling link /'
 printf 'wine-%s\nominx-runtime=1\ndxvk=%s\nvkd3d-proton=%s\n' \
     "$WINE_VERSION" "$DXVK_TAG" "$VKD3D_TAG" > "$OUT/VERSION"
 test -x "$OUT/lib/ld-linux-x86-64.so.2"
