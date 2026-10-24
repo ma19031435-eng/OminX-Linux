@@ -45,7 +45,7 @@ MESON=${MESON:-meson}
 
 for tool in gcc g++ make cmake pkg-config patchelf flex bison gperf \
             x86_64-w64-mingw32-gcc i686-w64-mingw32-gcc \
-            autoreconf "$MESON"; do
+            autoreconf glslangValidator "$MESON"; do
     command -v "$tool" >/dev/null 2>&1 || {
         echo "Missing build-host tool: $tool" >&2
         echo "On the CI image these come from apt/pip as build tools only." >&2
