@@ -274,8 +274,10 @@ fi
 meson_mingw() { # meson_mingw <name> <srcdir> <cross> <subdir with dlls> <dest share subdir>
     name=$1; src=$2; cross=$3; dlls=$4; dest=$5; shift 5
     "$MESON" setup "$WORK/$name-build" "$src" --cross-file "$cross" \
-        --buildtype=release --strip "$@" >/dev/null
-    "$MESON" compile -C "$WORK/$name-build" -j "$JOBS" >/dev/null
+        --buildtype=release --strip "$@" >"$WORK/$name-meson.log" 2>&1 \
+        || { tail -60 "$WORK/$name-meson.log" >&2; echo "meson setup failed: $name" >&2; exit 1; }
+    "$MESON" compile -C "$WORK/$name-build" -j "$JOBS" >>"$WORK/$name-meson.log" 2>&1 \
+        || { tail -60 "$WORK/$name-meson.log" >&2; echo "meson compile failed: $name" >&2; exit 1; }
     mkdir -p "$SFP/share/$dest"
     for dll in "$WORK/$name-build/$dlls"/*.dll; do
         if [ -f "$dll" ]; then cp "$dll" "$SFP/share/$dest/"; fi
