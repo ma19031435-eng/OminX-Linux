@@ -191,17 +191,17 @@ if ! done_stage wayland; then
         -Dtests=false -Dscanner=true -Dlibraries=true
     mark_stage wayland
 fi
-# Wine 10 Wayland driver: xkbcommon + xkbregistry (xkbregistry needs libxml2).
+# Wine 10 Wayland driver: libxml2 first, then xkbcommon with xkbregistry (needs libxml2).
+if ! done_stage libxml2; then
+    meson_rt libxml2 "$SRC/libxml2" -Dpython=disabled -Dhttp=disabled \
+        -Dicu=disabled -Dzlib=enabled -Ddocs=disabled
+    mark_stage libxml2
+fi
 if ! done_stage xkbcommon; then
     meson_rt xkbcommon "$SRC/xkbcommon" -Denable-x11=false -Denable-wayland=false \
         -Denable-docs=false -Denable-tools=false -Denable-bash-completion=false \
         -Denable-xkbregistry=true
     mark_stage xkbcommon
-fi
-if ! done_stage libxml2; then
-    meson_rt libxml2 "$SRC/libxml2" -Dpython=disabled -Dhttp=disabled \
-        -Dicu=disabled -Dzlib=enabled -Ddocs=disabled
-    mark_stage libxml2
 fi
 if ! done_stage freetype; then
     meson_rt freetype "$SRC/freetype" -Dzlib=enabled -Dpng=disabled \
