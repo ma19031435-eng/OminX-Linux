@@ -385,6 +385,14 @@ find "$OUT" -type f | while read -r file; do
         rm -f "$file"
     fi
 done
+# Upstream install modes leave data files (e.g. share/vulkan/registry/vk.xml)
+# executable. Only ELF and PE (MZ) may be executable; normalize everything else.
+find "$OUT" -type f -perm -u+x | while read -r file; do
+    if [ "$(head -c 2 "$file" 2>/dev/null)" != 'MZ' ]; then
+        chmod 644 "$file"
+        echo "ominx-wine-runtime: normalized mode of ${file#"$OUT"/}"
+    fi
+done
 # Rewrite build-machine paths to the target prefix, then prove it.
 find "$OUT" -type f | while read -r file; do
     if readelf -h "$file" >/dev/null 2>&1; then
