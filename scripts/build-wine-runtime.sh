@@ -373,6 +373,15 @@ if [ ! -e "$OUT/bin/wine64" ]; then ln -s wine "$OUT/bin/wine64"; fi
 if [ ! -e "$OUT/bin/wineserver" ] && [ -x "$OUT/lib/wine/x86_64-unix/wineserver" ]; then
     ln -s ../lib/wine/x86_64-unix/wineserver "$OUT/bin/wineserver"
 fi
+# New WoW64 runs 32-bit Windows programs from 64-bit unix code, so 32-bit unix
+# ELF objects (Wine's i386-unix tree) are build products the x86-64 target never
+# loads. Drop them; the 32-bit PE side (i386-windows) stays.
+find "$OUT" -type f | while read -r file; do
+    if readelf -h "$file" 2>/dev/null | grep -q 'Class:[[:space:]]*ELF32'; then
+        echo "ominx-wine-runtime: dropping 32-bit unix object ${file#"$OUT"/}"
+        rm -f "$file"
+    fi
+done
 # Rewrite build-machine paths to the target prefix, then prove it.
 find "$OUT" -type f | while read -r file; do
     if readelf -h "$file" >/dev/null 2>&1; then
