@@ -65,7 +65,8 @@ STATUS -> state=ready percent=100 wineserver=running proton-default=ready
 
 ## Remaining acceptance (not covered here)
 
-1. First `wine-runtime.yml` artifact (glibc + Wine + DXVK from source),
+1. ~~First `wine-runtime.yml` artifact (glibc + Wine + DXVK from source)~~ done:
+   run 40111487744 on 6db0b81, audit passed;
 2. guest runs of real CUI PE programs with that artifact,
 3. GUI programs after the Wayland compositor milestone,
 4. glibc Vulkan ICD (llvmpipe first) for hardware/software rendering.

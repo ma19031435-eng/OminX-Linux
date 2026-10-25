@@ -207,8 +207,10 @@ the OminX behavior contract, not Wine itself.
 
 Still required before claiming Windows programs run on the target:
 
-1. First green `wine-runtime.yml` build producing the audited runtime
-   artifact (manually dispatched; multi-hour, cached by source pins).
+1. ~~First green `wine-runtime.yml` build producing the audited runtime artifact.~~
+   **Done:** run 40111487744 (commit 6db0b81) built glibc, Wine (WoW64), DXVK and
+   vkd3d-proton from pinned source and passed the audit. Artifact:
+   `OminX-wine-runtime-6db0b81…` (about 508 MB).
 2. Guest acceptance with that artifact: console (CUI) PE programs
    end-to-end, then GUI programs once the Wayland compositor milestone
    (graphics-runtime track) lands — the current framebuffer desktop
@@ -218,3 +220,7 @@ Still required before claiming Windows programs run on the target:
    ICD on the target.
 4. Wine Mono/Gecko as explicitly installed optional components for
    .NET/HTML-embedding programs, and per-title result recording.
+5. Image integration: the ISO pipeline does not yet consume the runtime
+   artifact. Decide how the image gets it (a cross-workflow artifact
+   download pinned to a commit, or a release asset), then pass it to
+   `make-initramfs.py --wine-runtime-dir`.
