@@ -27,13 +27,24 @@ Rectangle {
         anchors.leftMargin: 14
         spacing: 10
 
-        Rectangle {
-            width: 20; height: 20; radius: 6
-            gradient: Gradient {
-                GradientStop { position: 0; color: Theme.accent }
-                GradientStop { position: 1; color: Theme.accentDeep }
+        // OminX logo, from desktop/branding/. Falls back to the letter if the file is missing.
+        Image {
+            Layout.preferredWidth: 22
+            Layout.preferredHeight: 22
+            Layout.alignment: Qt.AlignVCenter
+            source: Qt.resolvedUrl("../../branding/ominx-logo-64.png")
+            sourceSize.width: 64
+            sourceSize.height: 64
+            fillMode: Image.PreserveAspectFit
+            smooth: true
+            Text {
+                anchors.centerIn: parent
+                visible: parent.status !== Image.Ready
+                text: bar.mark
+                color: Theme.teal
+                font.pixelSize: 12
+                font.weight: Font.Black
             }
-            Text { anchors.centerIn: parent; text: bar.mark; color: Theme.navy; font.pixelSize: 11; font.weight: Font.Black }
         }
 
         Text {
