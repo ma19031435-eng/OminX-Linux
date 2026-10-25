@@ -373,6 +373,7 @@ static void print_game_json(const struct ominx_game *game) {
     json_string(install);
     fputs(",\"program\":", stdout); json_string(game->exe);
     fputs(",\"notes\":", stdout); json_string(game->notes);
+    fputs(",\"icon\":", stdout); json_string(game->icon);
     fputs(",\"scheduling\":{\"state\":", stdout); json_string(ominx_sched_state_name(state));
     fputs(",\"detail\":", stdout); json_string(detail);
     fputs("}}", stdout);

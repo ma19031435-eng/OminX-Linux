@@ -52,6 +52,7 @@ def main(argv):
     engine.rootContext().setContextProperty('bridge', bridge)
     engine.rootContext().setContextProperty('initialGames', games_json)
     engine.rootContext().setContextProperty('initialService', args.service)
+    engine.rootContext().setContextProperty('initialGamesDir', str(Path(args.fixture).resolve().parent))
     engine.load(QUrl.fromLocalFile(str(QML)))
     if not engine.rootObjects():
         return 1

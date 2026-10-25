@@ -1,23 +1,29 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Window
 
 // OminX Game Library.
-// The host sets two inputs: gamesJson (the output of `ominx-win game list --json`)
-// and serviceState ("ready", "preparing", or "stopped"). It also provides a
-// `bridge` object with launch(id). Nothing here runs a command itself.
+// The host sets these inputs: gamesJson (the output of `ominx-win game list --json`),
+// serviceState ("ready", "preparing" or "stopped"), and gamesDir (where profile icons
+// live). It also provides a `bridge` object with launch(id). Nothing here runs a command.
+//
+// The window is frameless: TitleBar draws minimize, maximize and close, as every
+// OminX app does. The page has one search field and no navigation chrome.
 ApplicationWindow {
     id: window
-    width: 1280
-    height: 820
-    minimumWidth: 980
-    minimumHeight: 620
+    width: 1200
+    height: 760
+    minimumWidth: 900
+    minimumHeight: 560
     visible: true
     title: "OminX Game Library"
     color: Theme.background
+    flags: Qt.Window | Qt.FramelessWindowHint
 
     property string gamesJson: typeof initialGames === "string" ? initialGames : "{\"schema\":1,\"games\":[]}"
     property string serviceState: typeof initialService === "string" ? initialService : "ready"
+    property string gamesDir: typeof initialGamesDir === "string" ? initialGamesDir : "/usr/share/ominx/games"
     property string selectedId: ""
     property string filter: ""
     property var allGames: []
@@ -26,10 +32,21 @@ ApplicationWindow {
     readonly property var selectedGame: findGame(selectedId)
     readonly property int schemaVersion: parsedSchema
 
+    // Shown when nothing is selected, so the detail panel never reads null fields.
+    readonly property var blankGame: ({ name: "", runner: "", anticheat: "none", publisher_status: "none",
+                                        launchable: false, refusal: "", program: "", notes: "", icon: "",
+                                        requires: "none", scheduling: { state: "", detail: "" } })
+
     property int parsedSchema: 0
 
     onGamesJsonChanged: parseGames()
     Component.onCompleted: parseGames()
+
+    // Escape clears the selection, the same as clicking empty space.
+    Shortcut {
+        sequence: "Escape"
+        onActivated: window.selectedId = ""
+    }
 
     function parseGames() {
         var data = JSON.parse(gamesJson)
@@ -57,221 +74,129 @@ ApplicationWindow {
         if (typeof bridge !== "undefined" && bridge) bridge.launch(id)
     }
 
+    TitleBar {
+        id: titleBar
+        appWindow: window
+        title: "OminX Game Library"
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+    }
+
+    // Header: heading, a one-line status, and the search field.
     RowLayout {
-        anchors.fill: parent
-        spacing: 0
+        id: header
+        anchors.top: titleBar.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.leftMargin: 28
+        anchors.rightMargin: 28
+        anchors.topMargin: 22
+        spacing: 16
 
-        // Sidebar
-        Rectangle {
-            Layout.preferredWidth: 224
-            Layout.fillHeight: true
-            color: Theme.sidebar
-
-            ColumnLayout {
-                anchors.fill: parent
-                anchors.margins: 22
-                spacing: 6
-
-                RowLayout {
-                    Layout.bottomMargin: 26
-                    spacing: 12
-                    Rectangle {
-                        width: 34; height: 34; radius: 10
-                        gradient: Gradient {
-                            GradientStop { position: 0; color: Theme.accent }
-                            GradientStop { position: 1; color: Theme.accentDeep }
-                        }
-                        Text { anchors.centerIn: parent; text: "O"; color: "#06141a"; font.pixelSize: 17; font.weight: Font.Black }
-                    }
-                    ColumnLayout {
-                        spacing: 0
-                        Text { text: "OminX"; color: Theme.text; font.pixelSize: 16; font.weight: Font.DemiBold }
-                        Text { text: "Harbor"; color: Theme.muted; font.pixelSize: 11 }
-                    }
-                }
-
-                Repeater {
-                    model: [
-                        { label: "Library", key: "library", enabled: true },
-                        { label: "Scheduling", key: "scheduling", enabled: false },
-                        { label: "Windows programs", key: "programs", enabled: false },
-                        { label: "Settings", key: "settings", enabled: false }
-                    ]
-                    delegate: Rectangle {
-                        required property var modelData
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: 40
-                        radius: 10
-                        color: modelData.key === "library" ? Theme.card : "transparent"
-                        Rectangle {
-                            visible: modelData.key === "library"
-                            width: 3; height: 20; radius: 2
-                            color: Theme.accent
-                            anchors.left: parent.left
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-                        Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            anchors.left: parent.left
-                            anchors.leftMargin: 18
-                            text: modelData.label
-                            color: modelData.enabled ? Theme.text : Theme.disabled
-                            font.pixelSize: 14
-                        }
-                    }
-                }
-
-                Item { Layout.fillHeight: true }
-
-                Rectangle {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 52
-                    radius: 12
-                    color: Theme.card
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.margins: 14
-                        spacing: 10
-                        Rectangle {
-                            width: 9; height: 9; radius: 4.5
-                            color: window.serviceState === "ready" ? Theme.accent
-                                 : (window.serviceState === "preparing" ? Theme.amber : Theme.red)
-                        }
-                        ColumnLayout {
-                            spacing: 0
-                            Text { text: "Windows service"; color: Theme.text; font.pixelSize: 12 }
-                            Text {
-                                text: window.serviceState.charAt(0).toUpperCase() + window.serviceState.slice(1)
-                                color: Theme.muted
-                                font.pixelSize: 11
-                            }
-                        }
-                    }
-                }
+        ColumnLayout {
+            Layout.fillWidth: true
+            spacing: 2
+            Text {
+                text: "Games"
+                color: Theme.text
+                font.pixelSize: 26
+                font.weight: Font.DemiBold
+            }
+            Text {
+                text: window.visibleCount + (window.visibleCount === 1 ? " title" : " titles")
+                      + "  \u00b7  Windows service " + (window.serviceState === "ready" ? "ready" : window.serviceState)
+                color: Theme.muted
+                font.pixelSize: 12
             }
         }
 
-        // Main column
-        ColumnLayout {
+        TextField {
+            id: search
+            Layout.preferredWidth: 240
+            Layout.preferredHeight: 36
+            placeholderText: "Search"
+            color: Theme.text
+            placeholderTextColor: Theme.muted
+            selectByMouse: true
+            leftPadding: 12
+            rightPadding: 12
+            background: Rectangle {
+                radius: 10
+                color: Theme.card
+                border.width: search.activeFocus ? 1 : 0
+                border.color: Theme.accent
+            }
+            onTextChanged: window.filter = text
+        }
+    }
+
+    // Body: the grid, and the detail panel that appears when a title is selected.
+    RowLayout {
+        anchors.top: header.bottom
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.topMargin: 18
+        spacing: 0
+
+        Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            spacing: 0
 
-            Rectangle {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 104
-                color: "transparent"
-
-                RowLayout {
-                    anchors.fill: parent
-                    anchors.leftMargin: 32
-                    anchors.rightMargin: 32
-                    spacing: 20
-
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        spacing: 4
-                        Text {
-                            text: "Game Library"
-                            color: Theme.text
-                            font.pixelSize: 28
-                            font.weight: Font.DemiBold
-                        }
-                        Text {
-                            text: "Compatibility and scheduling for every title on this computer"
-                            color: Theme.muted
-                            font.pixelSize: 13
-                        }
-                    }
-
-                    TextField {
-                        id: search
-                        Layout.preferredWidth: 220
-                        Layout.preferredHeight: 40
-                        placeholderText: "Search titles"
-                        color: Theme.text
-                        placeholderTextColor: Theme.muted
-                        font.pixelSize: 14
-                        leftPadding: 14
-                        rightPadding: 14
-                        onTextChanged: window.filter = text
-                        background: Rectangle {
-                            radius: 12
-                            color: Theme.card
-                            border.width: search.activeFocus ? 2 : 1
-                            border.color: search.activeFocus ? Theme.accent : Theme.line
-                        }
-                    }
-                }
+            // Clicking empty space clears the selection.
+            MouseArea {
+                anchors.fill: parent
+                onClicked: window.selectedId = ""
             }
 
             GridView {
                 id: grid
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                leftMargin: 32
-                topMargin: 4
+                anchors.fill: parent
+                anchors.leftMargin: 22
+                anchors.rightMargin: 12
+                anchors.bottomMargin: 12
                 clip: true
-                cellWidth: 316
-                cellHeight: 224
                 model: window.visibleGames
+                cellWidth: 200
+                cellHeight: 214
                 boundsBehavior: Flickable.StopAtBounds
-                ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
 
-                delegate: Item {
-                    required property var modelData
-                    width: grid.cellWidth
-                    height: grid.cellHeight
-                    GameCard {
-                        anchors.fill: parent
-                        anchors.margins: 8
-                        modelData: parent.modelData
-                        selected: window.selectedId === modelData.id
-                        onChosen: window.selectedId = modelData.id
-                        onLaunchRequested: window.launch(modelData.id)
-                    }
+                delegate: GameCard {
+                    width: grid.cellWidth - 14
+                    height: grid.cellHeight - 14
+                    iconBase: window.gamesDir
+                    selected: window.selectedId === modelData.id
+                    onChosen: window.selectedId = modelData.id
                 }
 
                 Text {
                     anchors.centerIn: parent
-                    visible: grid.count === 0
-                    text: window.allGames.length === 0 ? "No titles are installed yet." : "No titles match \"" + window.filter + "\"."
+                    visible: window.visibleCount === 0
+                    text: window.allGames.length === 0 ? "No games yet." : "No games match that search."
                     color: Theme.muted
-                    font.pixelSize: 15
-                }
-            }
-
-            // Status footer
-            Rectangle {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 36
-                color: Theme.sidebar
-                RowLayout {
-                    anchors.fill: parent
-                    anchors.leftMargin: 32
-                    anchors.rightMargin: 32
-                    Text {
-                        text: window.visibleCount + (window.visibleCount === 1 ? " title" : " titles")
-                        color: Theme.muted
-                        font.pixelSize: 12
-                    }
-                    Item { Layout.fillWidth: true }
-                    Text {
-                        text: "Game data schema " + window.schemaVersion
-                        color: Theme.muted
-                        font.pixelSize: 12
-                    }
+                    font.pixelSize: 14
                 }
             }
         }
 
         DetailPanel {
-            Layout.preferredWidth: window.selectedGame ? 360 : 0
-            Layout.fillHeight: true
+            id: detail
             visible: window.selectedGame !== null
-            game: window.selectedGame
-            onCloseRequested: window.selectedId = ""
-            onLaunchRequested: function (id) { window.launch(id) }
+            Layout.preferredWidth: visible ? 320 : 0
+            Layout.fillHeight: true
+            game: window.selectedGame !== null ? window.selectedGame : window.blankGame
+            iconBase: window.gamesDir
+            onLaunchRequested: window.launch(window.selectedId)
         }
+    }
+
+    // Resize grip for the frameless window.
+    MouseArea {
+        width: 16; height: 16
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        cursorShape: Qt.SizeFDiagCursor
+        onPressed: window.startSystemResize(Qt.RightEdge | Qt.BottomEdge)
     }
 }

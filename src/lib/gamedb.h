@@ -42,6 +42,7 @@ struct ominx_game {
     char dir[256];   /* relative to $HOME, e.g. Games/fortnite */
     char exe[256];   /* relative to dir */
     char notes[256];
+    char icon[256];  /* optional PNG, relative to the games dir, e.g. icons/racer.png */
     int runner;      /* enum ominx_game_runner */
     int anticheat;   /* enum ominx_game_anticheat */
     int status;      /* enum ominx_game_ac_status */

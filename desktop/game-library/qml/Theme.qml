@@ -6,18 +6,25 @@ import QtQuick
 // a player understands. The JSON values never change; only the wording does.
 QtObject {
     readonly property color background: "#0b1622"
-    readonly property color sidebar: "#0e1a28"
-    readonly property color card: "#13243a"
-    readonly property color cardHover: "#183050"
+    readonly property color chrome: "#091320"
+    readonly property color card: "#12223a"
+    readonly property color cardHover: "#172c47"
     readonly property color cardSelected: "#1a3a52"
-    readonly property color line: "#1f3a55"
+    readonly property color hover: "#16283d"
+    readonly property color line: "#1d3350"
     readonly property color accent: "#5fd3c1"
     readonly property color accentDeep: "#2a8f87"
     readonly property color amber: "#e8be60"
     readonly property color red: "#e87171"
+    readonly property color closeRed: "#c42b1c"
     readonly property color text: "#e2ecf2"
     readonly property color muted: "#8fa4b4"
     readonly property color disabled: "#3b5165"
+
+    // Monogram tile colours when a title has no icon file. Chosen per runner.
+    function tileColor(runner) {
+        return runner === "proton" ? "#24506b" : "#4a3d6b"
+    }
 
     function publisherLabel(status) {
         switch (status) {

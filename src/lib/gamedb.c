@@ -179,6 +179,12 @@ static int parse_profile(const char *text, struct ominx_game *game, char *error,
         } else if (!strcmp(key, "requires")) {
             game->requires = parse_requires(value);
             if (game->requires < 0) { set_error(error, error_size, "bad-requires"); return -1; }
+        } else if (!strcmp(key, "icon")) {
+            size_t n = strlen(value);
+            if (n < 5 || strcmp(value + n - 4, ".png") || !valid_relative(value, sizeof game->icon) ||
+                copy_field(game->icon, sizeof game->icon, value)) {
+                set_error(error, error_size, "bad-icon"); return -1;
+            }
         } else if (!strcmp(key, "notes")) {
             if (*value && (!valid_text(value, sizeof game->notes) ||
                            copy_field(game->notes, sizeof game->notes, value))) {

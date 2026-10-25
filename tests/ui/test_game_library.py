@@ -66,6 +66,7 @@ def load():
     engine.rootContext().setContextProperty('bridge', bridge)
     engine.rootContext().setContextProperty('initialGames', FIXTURE.read_text())
     engine.rootContext().setContextProperty('initialService', 'ready')
+    engine.rootContext().setContextProperty('initialGamesDir', str(FIXTURE.parent))
     engine.load(QUrl.fromLocalFile(str(QML)))
     roots = engine.rootObjects()
     if not roots:
@@ -96,6 +97,8 @@ def main():
     check(window.property('visibleCount') == len(valid),
           f"expected {len(valid)} titles, got {window.property('visibleCount')}")
     check(window.property('schemaVersion') == 1, 'schema must be 1')
+    check(window.property('gamesDir') == str(FIXTURE.parent), 'icons resolve against the games dir')
+    check((ROOT / 'desktop/game-library/fixtures/icons/racer.png').exists(), 'fixture icon missing')
 
     window.setProperty('filter', 'racer')
     check(window.property('visibleCount') == 1, 'search "racer" should match one title')

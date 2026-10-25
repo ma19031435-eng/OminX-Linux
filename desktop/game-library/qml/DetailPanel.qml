@@ -1,160 +1,165 @@
 import QtQuick
-import QtQuick.Controls
 import QtQuick.Layouts
 
-// The selected title in full. Every field comes from the backend's schema-1 JSON.
+// The selected title. It is the only place with a launch action, so the page
+// has at most one button. `game` is always an object; Main passes a blank one
+// when nothing is selected.
 Rectangle {
     id: panel
-    property var game: null
-    signal closeRequested()
-    signal launchRequested(string id)
+    property var game: ({})
+    property string iconBase: ""
+    signal launchRequested()
 
-    color: Theme.sidebar
-    border.width: 0
+    readonly property bool launchable: game.launchable === true
+    readonly property bool hasIcon: game.icon !== undefined && game.icon !== "" && art.status === Image.Ready
 
-    Rectangle { width: 1; height: parent.height; color: Theme.line; anchors.left: parent.left }
+    color: Theme.chrome
+
+    // Left edge rule instead of a box border.
+    Rectangle {
+        anchors.left: parent.left
+        width: 1
+        height: parent.height
+        color: Theme.line
+    }
 
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 26
-        spacing: 14
-        visible: panel.game !== null
+        spacing: 16
 
-        RowLayout {
+        Item {
+            Layout.alignment: Qt.AlignHCenter
+            Layout.preferredWidth: 120
+            Layout.preferredHeight: 120
+            opacity: panel.launchable ? 1.0 : 0.5
+
+            Rectangle {
+                anchors.fill: parent
+                radius: 28
+                color: Theme.tileColor(panel.game.runner)
+                visible: !panel.hasIcon
+                Text {
+                    anchors.centerIn: parent
+                    text: panel.game.name ? panel.game.name.charAt(0).toUpperCase() : ""
+                    color: Theme.text
+                    font.pixelSize: 52
+                    font.weight: Font.Black
+                }
+            }
+
+            Image {
+                id: art
+                anchors.fill: parent
+                source: (panel.game.icon !== undefined && panel.game.icon !== "" && panel.iconBase !== "")
+                        ? panel.iconBase + "/" + panel.game.icon : ""
+                fillMode: Image.PreserveAspectFit
+                asynchronous: true
+                visible: panel.hasIcon
+            }
+        }
+
+        ColumnLayout {
             Layout.fillWidth: true
+            spacing: 4
             Text {
                 Layout.fillWidth: true
-                text: panel.game ? panel.game.name : ""
+                horizontalAlignment: Text.AlignHCenter
+                text: panel.game.name || ""
                 color: Theme.text
                 font.pixelSize: 22
                 font.weight: Font.DemiBold
                 wrapMode: Text.WordWrap
             }
-            ToolButton {
-                text: "×"
-                onClicked: panel.closeRequested()
-                contentItem: Text {
-                    text: parent.text
-                    color: Theme.muted
-                    font.pixelSize: 22
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
-                background: Rectangle { color: "transparent" }
+            Text {
+                Layout.fillWidth: true
+                horizontalAlignment: Text.AlignHCenter
+                text: Theme.publisherLabel(panel.game.publisher_status || "")
+                color: Theme.publisherColor(panel.game.publisher_status || "")
+                font.pixelSize: 13
             }
         }
 
-        StatusPill {
-            label: panel.game ? Theme.publisherLabel(panel.game.publisher_status) : ""
-            tint: panel.game ? Theme.publisherColor(panel.game.publisher_status) : Theme.muted
-        }
-
-        Rectangle {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 1
-            color: Theme.line
-        }
-
-        GridLayout {
-            Layout.fillWidth: true
-            columns: 2
-            columnSpacing: 16
-            rowSpacing: 12
-
-            Repeater {
-                model: panel.game ? [
-                    ["Runner", panel.game.runner === "proton" ? "Proton" : "Wine"],
-                    ["Anti-cheat", panel.game.anticheat === "none" ? "None" : panel.game.anticheat.toUpperCase()],
-                    ["Requires", panel.game.requires === "none" ? "Nothing extra" : "EAC Linux v2"],
-                    ["Install folder", panel.game.install_dir],
-                    ["Program", panel.game.program]
-                ] : []
-                delegate: ColumnLayout {
-                    required property var modelData
-                    Layout.columnSpan: modelData[0] === "Program" || modelData[0] === "Install folder" ? 2 : 1
-                    Layout.fillWidth: true
-                    spacing: 3
-                    Text { text: modelData[0].toUpperCase(); color: Theme.muted; font.pixelSize: 10; font.letterSpacing: 1 }
-                    Text {
-                        Layout.fillWidth: true
-                        text: modelData[1]
-                        color: Theme.text
-                        font.pixelSize: 13
-                        wrapMode: Text.WrapAnywhere
-                    }
-                }
-            }
-        }
-
-        Rectangle {
-            Layout.fillWidth: true
-            Layout.preferredHeight: schedText.implicitHeight + 24
-            radius: 12
-            color: Theme.card
-            border.width: 1
-            border.color: Theme.line
-
-            ColumnLayout {
-                id: schedText
-                anchors.fill: parent
-                anchors.margins: 12
-                spacing: 4
+        // Facts, one per line. Plain labels, no grid of boxes.
+        Repeater {
+            model: panel.game.name ? [
+                ["Runner", panel.game.runner === "proton" ? "Proton" : "Wine"],
+                ["Anti-cheat", panel.game.anticheat === "none" ? "None" : (panel.game.anticheat || "").toUpperCase()],
+                ["Requires", panel.game.requires === "none" ? "Nothing extra" : "EAC Linux v2"],
+                ["Program", panel.game.program || ""]
+            ] : []
+            delegate: RowLayout {
+                required property var modelData
+                Layout.fillWidth: true
+                spacing: 12
                 Text {
-                    text: "SCHEDULING"
+                    Layout.preferredWidth: 84
+                    text: modelData[0]
                     color: Theme.muted
-                    font.pixelSize: 10
-                    font.letterSpacing: 1
+                    font.pixelSize: 12
                 }
                 Text {
                     Layout.fillWidth: true
-                    text: panel.game ? Theme.schedLabel(panel.game.scheduling.state) : ""
-                    color: panel.game ? Theme.schedColor(panel.game.scheduling.state) : Theme.muted
+                    text: modelData[1]
+                    color: Theme.text
                     font.pixelSize: 13
-                    wrapMode: Text.WordWrap
-                }
-                Text {
-                    Layout.fillWidth: true
-                    text: panel.game && panel.game.scheduling.detail ? panel.game.scheduling.detail : ""
-                    color: Theme.muted
-                    font.pixelSize: 11
-                    wrapMode: Text.WordWrap
-                    visible: text.length > 0
+                    elide: Text.ElideMiddle
                 }
             }
         }
 
         Text {
             Layout.fillWidth: true
-            text: panel.game && panel.game.notes ? panel.game.notes : ""
+            visible: text.length > 0
+            text: panel.game.scheduling ? Theme.schedLabel(panel.game.scheduling.state) : ""
+            color: panel.game.scheduling ? Theme.schedColor(panel.game.scheduling.state) : Theme.muted
+            font.pixelSize: 13
+            wrapMode: Text.WordWrap
+        }
+
+        Text {
+            Layout.fillWidth: true
+            visible: text.length > 0
+            text: panel.game.notes || ""
             color: Theme.muted
             font.pixelSize: 12
             wrapMode: Text.WordWrap
-            visible: text.length > 0
         }
 
         Item { Layout.fillHeight: true }
 
-        Button {
+        // The one action. When blocked, the reason is text, not a disabled button.
+        Rectangle {
+            visible: panel.launchable
             Layout.fillWidth: true
             Layout.preferredHeight: 44
-            enabled: panel.game !== null && panel.game.launchable === true
-            text: enabled ? "Launch " + panel.game.name : Theme.humanRefusal(panel.game ? panel.game.refusal : "")
-            onClicked: panel.launchRequested(panel.game.id)
-            contentItem: Text {
-                text: parent.text
-                color: parent.enabled ? "#06141a" : Theme.muted
-                font.pixelSize: parent.enabled ? 14 : 12
-                font.weight: parent.enabled ? Font.DemiBold : Font.Normal
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-                elide: Text.ElideRight
+            radius: 12
+            color: launchMouse.containsMouse ? Theme.accent : Theme.accentDeep
+
+            Text {
+                anchors.centerIn: parent
+                text: "Launch"
+                color: "#06141a"
+                font.pixelSize: 15
+                font.weight: Font.DemiBold
             }
-            background: Rectangle {
-                radius: 10
-                color: parent.enabled ? Theme.accent : "transparent"
-                border.width: parent.enabled ? 0 : 1
-                border.color: Theme.disabled
+            MouseArea {
+                id: launchMouse
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: panel.launchRequested()
             }
+        }
+
+        Text {
+            visible: !panel.launchable
+            Layout.fillWidth: true
+            horizontalAlignment: Text.AlignHCenter
+            text: Theme.humanRefusal(panel.game.refusal || "")
+            color: Theme.muted
+            font.pixelSize: 13
+            wrapMode: Text.WordWrap
         }
     }
 }

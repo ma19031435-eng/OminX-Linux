@@ -1,21 +1,24 @@
 import QtQuick
 import QtQuick.Layouts
 
-// One title. `game` is one entry of the backend's games[] array (schema 1).
+// One title, shown as artwork and a name. The card selects; launching happens
+// in the detail panel, so the grid carries no buttons. `game` is one entry of
+// the backend's games[] array (schema 1).
 Rectangle {
     id: card
     required property var modelData
+    property string iconBase: ""
     property bool selected: false
     signal chosen()
-    signal launchRequested()
 
     readonly property var game: modelData
     readonly property bool launchable: game.launchable === true
+    readonly property bool hasIcon: game.icon !== undefined && game.icon !== "" && icon.status === Image.Ready
 
-    radius: 16
+    radius: 14
     color: selected ? Theme.cardSelected : (hover.containsMouse ? Theme.cardHover : Theme.card)
-    border.width: selected ? 2 : 1
-    border.color: selected ? Theme.accent : Theme.line
+    border.width: selected ? 2 : 0
+    border.color: Theme.accent
 
     Behavior on color { ColorAnimation { duration: 120 } }
 
@@ -29,87 +32,60 @@ Rectangle {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 18
-        spacing: 10
+        anchors.margins: 16
+        spacing: 12
 
-        RowLayout {
-            Layout.fillWidth: true
-            StatusPill {
-                label: Theme.publisherLabel(card.game.publisher_status)
-                tint: Theme.publisherColor(card.game.publisher_status)
+        // Artwork: the title's own icon when the profile has one, otherwise a
+        // monogram tile. Blocked titles are dimmed so the state reads at a glance.
+        Item {
+            Layout.alignment: Qt.AlignHCenter
+            Layout.preferredWidth: 96
+            Layout.preferredHeight: 96
+            opacity: card.launchable ? 1.0 : 0.5
+
+            Rectangle {
+                anchors.fill: parent
+                radius: 22
+                color: Theme.tileColor(card.game.runner)
+                visible: !card.hasIcon
+
+                Text {
+                    anchors.centerIn: parent
+                    text: card.game.name.charAt(0).toUpperCase()
+                    color: Theme.text
+                    font.pixelSize: 40
+                    font.weight: Font.Black
+                }
             }
-            Item { Layout.fillWidth: true }
-            Text {
-                text: card.game.runner === "proton" ? "Proton" : "Wine"
-                color: Theme.muted
-                font.pixelSize: 12
+
+            Image {
+                id: icon
+                anchors.fill: parent
+                source: (card.game.icon !== undefined && card.game.icon !== "" && card.iconBase !== "")
+                        ? card.iconBase + "/" + card.game.icon : ""
+                fillMode: Image.PreserveAspectFit
+                asynchronous: true
+                visible: card.hasIcon
             }
         }
 
         Text {
             Layout.fillWidth: true
+            horizontalAlignment: Text.AlignHCenter
             text: card.game.name
             color: Theme.text
-            font.pixelSize: 19
+            font.pixelSize: 15
             font.weight: Font.DemiBold
             elide: Text.ElideRight
         }
 
         Text {
             Layout.fillWidth: true
-            text: card.game.anticheat === "none" ? "No anti-cheat" : "Anti-cheat: " + card.game.anticheat.toUpperCase()
-            color: Theme.muted
-            font.pixelSize: 13
+            horizontalAlignment: Text.AlignHCenter
+            text: Theme.publisherLabel(card.game.publisher_status)
+            color: Theme.publisherColor(card.game.publisher_status)
+            font.pixelSize: 12
             elide: Text.ElideRight
-        }
-
-        Item { Layout.fillHeight: true }
-
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: 8
-            Rectangle {
-                width: 9; height: 9; radius: 4.5
-                color: Theme.schedColor(card.game.scheduling.state)
-            }
-            Text {
-                Layout.fillWidth: true
-                text: Theme.schedLabel(card.game.scheduling.state)
-                color: Theme.schedColor(card.game.scheduling.state)
-                font.pixelSize: 12
-                elide: Text.ElideRight
-            }
-        }
-
-        // Launch when allowed; otherwise say why, in plain words.
-        Rectangle {
-            id: action
-            Layout.fillWidth: true
-            Layout.preferredHeight: 40
-            radius: 10
-            color: card.launchable ? (launchMouse.containsMouse ? Theme.accent : Theme.accentDeep) : "transparent"
-            border.width: card.launchable ? 0 : 1
-            border.color: Theme.disabled
-
-            Text {
-                anchors.centerIn: parent
-                width: parent.width - 20
-                horizontalAlignment: Text.AlignHCenter
-                elide: Text.ElideRight
-                text: card.launchable ? "Launch" : Theme.humanRefusal(card.game.refusal)
-                color: card.launchable ? "#06141a" : Theme.muted
-                font.pixelSize: card.launchable ? 14 : 12
-                font.weight: card.launchable ? Font.DemiBold : Font.Normal
-            }
-
-            MouseArea {
-                id: launchMouse
-                anchors.fill: parent
-                enabled: card.launchable
-                hoverEnabled: true
-                cursorShape: card.launchable ? Qt.PointingHandCursor : Qt.ArrowCursor
-                onClicked: card.launchRequested()
-            }
         }
     }
 }
