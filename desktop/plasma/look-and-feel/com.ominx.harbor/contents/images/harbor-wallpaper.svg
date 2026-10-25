@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0c1826"/>
+      <stop offset="0.6" stop-color="#12304a"/>
+      <stop offset="1" stop-color="#0b2b33"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#5fd3c1" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#5fd3c1" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#5fd3c1" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="1920" height="1080" fill="url(#sky)"/>
+  <g fill="none" stroke="#5fd3c1" stroke-opacity="0.12" stroke-width="2">
+    <path d="M0 640 Q480 600 960 640 T1920 640"/>
+    <path d="M0 700 Q480 660 960 700 T1920 700"/>
+    <path d="M0 760 Q480 720 960 760 T1920 760"/>
+    <path d="M0 820 Q480 780 960 820 T1920 820"/>
+  </g>
+  <rect x="0" y="638" width="1920" height="2" fill="url(#glass)"/>
+</svg>
