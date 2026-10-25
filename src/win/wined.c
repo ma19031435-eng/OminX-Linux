@@ -576,7 +576,10 @@ static void handle(int client, char *request, ssize_t size) {
            GPU knob is global, so a second game keeps default priorities. */
         if (slot >= 0) {
             char sched[256];
-            ominx_sched_plan_game(&game, sysroot, OMINX_SCHED_ROOT_DEFAULT, &running[slot].plan);
+            char user_root[OMINX_SCHED_PATH_MAX];
+            if (ominx_sched_user_root(OMINX_SCHED_ROOT_DEFAULT, (unsigned)geteuid(), user_root, sizeof user_root))
+                user_root[0] = '\0';
+            ominx_sched_plan_game(&game, sysroot, user_root, &running[slot].plan);
             if (boosted_count() > 0) {
                 snprintf(sched, sizeof sched, "%s", "scheduling: not boosted (another game is boosted)");
             } else {

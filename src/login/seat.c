@@ -7,6 +7,7 @@
 #include "login.h"
 #include "../lib/control.h"
 #include "../lib/session.h"
+#include "../lib/gamesched.h"
 #include <errno.h>
 #include <fcntl.h>
 #include <grp.h>
@@ -246,6 +247,15 @@ int main(int argc, char **argv) {
             wined_pid = start_child(session_uid, session_uid, session_home, runtime,
                                     wined_log, dbus, wined);
             log_event("seat: windows service started uid=%u pid=%ld", session_uid, (long)wined_pid);
+            /* Put the service in its delegated cgroup so game boosts can move
+               processes under it. Best-effort: without it the daemon runs at default
+               priority and reports that in the game status. */
+            if (wined_pid > 0) {
+                char sched[256];
+                (void)ominx_sched_enter("/", OMINX_SCHED_ROOT_DEFAULT, session_uid, wined_pid,
+                                        sched, sizeof sched);
+                log_event("seat: scheduling uid=%u %s", session_uid, sched);
+            }
         }
         while (child_pid > 0 && waitpid(child_pid, &status, 0) < 0 && errno == EINTR) {}
         log_event("seat: session ended uid=%u status=%d", session_uid, status);

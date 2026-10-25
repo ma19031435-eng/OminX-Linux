@@ -20,7 +20,7 @@ build/ominx-control: src/control/main.c src/lib/control.h src/lib/session.h
 build/ominx-login: src/login/broker.c src/login/login.c src/login/login.h
 	mkdir -p build
 	$(CC) $(CFLAGS) -static -o $@ $(filter %.c,$^)
-build/ominx-seat: src/login/seat.c src/lib/control.c src/lib/control.h src/lib/session.h src/login/login.h
+build/ominx-seat: src/login/seat.c src/lib/control.c src/lib/control.h src/lib/session.h src/login/login.h src/lib/gamesched.c src/lib/gamesched.h src/lib/gamedb.c src/lib/gamedb.h
 	mkdir -p build
 	$(CC) $(CFLAGS) -static -o $@ $(filter %.c,$^)
 build/ominx-passwd: src/login/passwd.c src/login/login.c src/login/login.h

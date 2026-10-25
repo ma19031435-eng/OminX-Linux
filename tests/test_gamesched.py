@@ -1,11 +1,19 @@
 """Game scheduling tests: CPU, I/O and GPU boost for the foreground game.
 
+Layout under the ominx root: user-<uid>/service holds the daemon and
+user-<uid>/game-<appid> holds a boosted title. The seat moves the daemon in
+(enter); the daemon moves games in and out (boost and release).
+
 Two layers. The gamesched driver (src/lib/gamesched-test.c) runs the same library
-code the daemon uses against a fake sysroot. The daemon tests then drive a real
-GAMELAUNCH through the per-user service. Shipped Valorant and Fortnite must never
-be boosted. A vendor-opt-in fixture stands in for a title its publisher enabled.
+code against a fake sysroot. The daemon tests then drive a real GAMELAUNCH
+through the per-user service. Shipped Valorant and Fortnite must never be
+boosted. A vendor-opt-in fixture stands in for a title its publisher enabled.
 Every knob is optional: a missing or read-only knob is reported and skipped, and
-the launch still succeeds."""
+the launch still succeeds.
+
+A plain filesystem cannot create cgroup control files. The fixtures therefore
+populate the directories the kernel would fill on mkdir. mkdir itself and the
+kernel's migration rules are only verified on a real cgroup v2 mount."""
 import os
 from pathlib import Path
 import shutil
@@ -19,11 +27,13 @@ from test_wined import ServiceCase, make_runtime, pe_image
 
 ROOT = Path(__file__).resolve().parents[1]
 GAMESCHED = os.environ.get('OMINX_GAMESCHED_BINARY', str(ROOT / 'build/host/ominx-gamesched-test'))
-GROUP_ROOT = 'sys/fs/cgroup/ominx'
+OMINX = 'sys/fs/cgroup/ominx'
+USER = f'{OMINX}/user-{os.getuid()}'
+SERVICE = f'{USER}/service'
+GAME = f'{USER}/game-boostdemo'
 GPU = 'sys/class/drm/card0/device/power_dpm_force_performance_level'
 PUBLISHER_ENABLED = dict(id='boostdemo', name='Boost Demo', appid='boostdemo', dir='Games/boostdemo',
-                         exe='Demo/demo.exe',
-                         anticheat='eac', anticheat_status='vendor-opt-in')
+                         exe='Demo/demo.exe', anticheat='eac', anticheat_status='vendor-opt-in')
 
 
 def populate_cgroup(path):
@@ -38,10 +48,10 @@ def fake_sysroot(root, gpu=True, delegated=True):
     (sysroot / 'sys/fs/cgroup').mkdir(parents=True)
     (sysroot / 'sys/fs/cgroup/cgroup.subtree_control').write_text('')
     if delegated:
-        populate_cgroup(sysroot / GROUP_ROOT)
-        # The per-title group exists with its knobs, as the kernel would present it, so
-        # boost takes the EEXIST path and writes the real control files.
-        populate_cgroup(sysroot / GROUP_ROOT / 'game-boostdemo')
+        populate_cgroup(sysroot / OMINX)
+        populate_cgroup(sysroot / USER)
+        populate_cgroup(sysroot / SERVICE)
+        populate_cgroup(sysroot / GAME)
     if gpu:
         (sysroot / GPU).parent.mkdir(parents=True)
         (sysroot / GPU).write_text('auto\n')
@@ -76,7 +86,7 @@ class StatusTests(SchedCase):
         self.assertEqual(boost.returncode, 0, boost.stderr)
         self.assertIn('not boosted', boost.stdout)
         self.assertIn('boosted-knobs: 0', boost.stdout)
-        self.assertFalse((sysroot / GROUP_ROOT / 'game-valorant').exists())
+        self.assertFalse((sysroot / USER / 'game-valorant').exists())
         self.assertEqual((sysroot / GPU).read_text(), 'auto\n')
 
     def test_shipped_fortnite_stays_pending_and_is_never_boosted(self):
@@ -86,31 +96,31 @@ class StatusTests(SchedCase):
         self.assertIn('anticheat-pending-publisher-support', status.stdout)
         boost = self.driver(sysroot, 'fortnite', 'boost', '4243')
         self.assertIn('boosted-knobs: 0', boost.stdout)
-        self.assertFalse((sysroot / GROUP_ROOT / 'game-fortnite').exists())
+        self.assertFalse((sysroot / USER / 'game-fortnite').exists())
 
-    def test_status_reports_ready_only_when_the_group_is_delegated(self):
+    def test_status_reports_ready_only_when_the_user_group_is_delegated(self):
         ready = self.driver(fake_sysroot(self.root), 'boostdemo', 'status').stdout
         self.assertIn('Compatibility: vendor-opt-in, launch allowed', ready)
         self.assertIn('scheduling: game boost ready', ready)
-        other = self.root / 'undelegated'
-        bare = self.driver(fake_sysroot(other, delegated=False), 'boostdemo', 'status').stdout
+        bare = self.driver(fake_sysroot(self.root / 'undelegated', delegated=False),
+                           'boostdemo', 'status').stdout
         self.assertIn('group not delegated', bare)
 
-    def test_non_publisher_enabled_title_keeps_default_priorities(self):
-        (self.games / 'plain.game').write_text(profile(id='plain', name='Plain', appid='plain',
-                                                       exe='Demo/plain.exe'))
-        sysroot = fake_sysroot(self.root)
-        boost = self.driver(sysroot, 'plain', 'boost', '77')
-        self.assertIn('not a publisher-enabled title', boost.stdout)
-        self.assertIn('boosted-knobs: 0', boost.stdout)
+    def test_status_says_when_scheduling_is_off_for_a_title(self):
+        (self.games / 'pending.game').write_text(profile(
+            id='pending', name='Pending', appid='pending', exe='Demo/p.exe',
+            anticheat='eac', anticheat_status='pending'))
+        out = self.driver(fake_sysroot(self.root), 'pending', 'status').stdout
+        self.assertIn('Compatibility: pending, launch refused', out)
+        self.assertIn('default priorities', out)
 
 
 class BoostTests(SchedCase):
-    def test_boost_writes_cpu_io_and_gpu_then_release_restores(self):
+    def test_boost_writes_cpu_io_and_gpu_then_release_returns_to_service(self):
         sysroot = fake_sysroot(self.root)
         boost = self.driver(sysroot, 'boostdemo', 'boost', '4242')
         self.assertEqual(boost.returncode, 0, boost.stderr)
-        group = sysroot / GROUP_ROOT / 'game-boostdemo'
+        group = sysroot / GAME
         self.assertEqual((group / 'cpu.weight').read_text(), '1000\n')
         self.assertEqual((group / 'io.weight').read_text(), '800\n')
         self.assertEqual((group / 'cgroup.procs').read_text(), '4242\n')
@@ -120,7 +130,9 @@ class BoostTests(SchedCase):
         release = self.driver(sysroot, 'boostdemo', 'release', '4242')
         self.assertEqual(release.returncode, 0, release.stderr)
         self.assertEqual((sysroot / GPU).read_text(), 'auto\n')
-        self.assertEqual((sysroot / GROUP_ROOT / 'cgroup.procs').read_text(), '4242\n')
+        # The game goes back to the daemon's own leaf, not the root cgroup.
+        self.assertEqual((sysroot / SERVICE / 'cgroup.procs').read_text(), '4242\n')
+        self.assertEqual((sysroot / OMINX / 'cgroup.procs').read_text(), '')
 
     def test_missing_gpu_knob_is_skipped_not_fatal(self):
         sysroot = fake_sysroot(self.root, gpu=False)
@@ -138,6 +150,16 @@ class BoostTests(SchedCase):
         self.assertIn('boosted-knobs: 0', boost.stdout)
         self.assertEqual((sysroot / GPU).read_text(), 'auto\n')
 
+    def test_plain_title_with_no_anticheat_is_boosted_too(self):
+        (self.games / 'plain.game').write_text(profile(id='plain', name='Plain', appid='plain',
+                                                       dir='Games/plain', exe='Demo/plain.exe'))
+        sysroot = fake_sysroot(self.root)
+        populate_cgroup(sysroot / USER / 'game-plain')
+        boost = self.driver(sysroot, 'plain', 'boost', '77')
+        self.assertEqual(boost.returncode, 0, boost.stderr)
+        self.assertIn('boosted-knobs: 3', boost.stdout)
+        self.assertEqual((sysroot / USER / 'game-plain' / 'cpu.weight').read_text(), '1000\n')
+
     def test_bad_app_id_cannot_escape_the_group_root(self):
         (self.games / 'evil.game').write_text(profile(
             id='evil', name='Evil', appid='../../etc', exe='Demo/evil.exe',
@@ -148,28 +170,54 @@ class BoostTests(SchedCase):
         self.assertFalse((sysroot / 'sys/fs/cgroup/etc').exists())
 
 
-class PrepareTests(SchedCase):
-    def test_prepare_creates_group_and_enables_controllers(self):
+class RootSetupTests(SchedCase):
+    def test_prepare_enables_cpu_and_io_on_the_ominx_root(self):
         sysroot = self.root / 'sysroot'
         (sysroot / 'sys/fs/cgroup').mkdir(parents=True)
         (sysroot / 'sys/fs/cgroup/cgroup.subtree_control').write_text('')
-        # A real cgroup mount fills the group on mkdir; a plain fake directory cannot, so the
-        # group is populated here. mkdir itself is only verified on a real cgroup v2 mount.
-        populate_cgroup(sysroot / GROUP_ROOT)
-        prepare = subprocess.run([GAMESCHED, str(sysroot), str(self.games), 'boostdemo', 'prepare',
-                                  str(os.getuid())], capture_output=True, text=True)
+        # A real cgroup mount fills the root on mkdir; the fake populates it here.
+        populate_cgroup(sysroot / OMINX)
+        prepare = self.driver(sysroot, 'boostdemo', 'prepare')
         self.assertEqual(prepare.returncode, 0, prepare.stdout + prepare.stderr)
         self.assertEqual((sysroot / 'sys/fs/cgroup/cgroup.subtree_control').read_text(), '+cpu +io\n')
-        self.assertEqual((sysroot / GROUP_ROOT / 'cgroup.subtree_control').read_text(), '+cpu +io\n')
-        self.assertIn('scheduling group ready', prepare.stdout)
+        self.assertEqual((sysroot / OMINX / 'cgroup.subtree_control').read_text(), '+cpu +io\n')
+        self.assertIn('scheduling root ready', prepare.stdout)
 
     def test_prepare_without_a_cgroup_mount_fails_softly(self):
         sysroot = self.root / 'bare'
         sysroot.mkdir()
-        prepare = subprocess.run([GAMESCHED, str(sysroot), str(self.games), 'boostdemo', 'prepare', '1000'],
-                                 capture_output=True, text=True)
+        prepare = self.driver(sysroot, 'boostdemo', 'prepare')
         self.assertEqual(prepare.returncode, 1)
-        self.assertIn('prepare: cannot enable cpu/io on the parent', prepare.stdout)
+        self.assertIn('prepare: parent: cannot enable cpu/io', prepare.stdout)
+
+    def test_enter_creates_the_user_group_and_moves_the_daemon_into_service(self):
+        sysroot = self.root / 'sysroot'
+        (sysroot / 'sys/fs/cgroup').mkdir(parents=True)
+        (sysroot / 'sys/fs/cgroup/cgroup.subtree_control').write_text('')
+        populate_cgroup(sysroot / OMINX)
+        # Kernel fills on mkdir; the fake populates the user subtree and its service leaf.
+        populate_cgroup(sysroot / USER)
+        populate_cgroup(sysroot / SERVICE)
+        enter = subprocess.run([GAMESCHED, str(sysroot), str(self.games), 'boostdemo', 'enter',
+                                str(os.getuid()), '4300'], capture_output=True, text=True)
+        self.assertEqual(enter.returncode, 0, enter.stdout + enter.stderr)
+        self.assertIn('enter: session group ready', enter.stdout)
+        self.assertEqual((sysroot / SERVICE / 'cgroup.procs').read_text(), '4300\n')
+        self.assertEqual((sysroot / USER / 'cgroup.subtree_control').read_text(), '+cpu +io\n')
+
+    def test_enter_reports_a_kernel_without_the_controllers(self):
+        sysroot = self.root / 'sysroot'
+        (sysroot / 'sys/fs/cgroup').mkdir(parents=True)
+        (sysroot / 'sys/fs/cgroup/cgroup.subtree_control').write_text('')
+        populate_cgroup(sysroot / OMINX)
+        populate_cgroup(sysroot / USER)
+        # No cgroup.subtree_control in the user group: cpu/io cannot be delegated.
+        (sysroot / USER / 'cgroup.subtree_control').unlink()
+        enter = subprocess.run([GAMESCHED, str(sysroot), str(self.games), 'boostdemo', 'enter',
+                                str(os.getuid()), '4300'], capture_output=True, text=True)
+        self.assertEqual(enter.returncode, 1)
+        self.assertIn('enter: user group: cannot enable cpu/io (knob missing)', enter.stdout)
+        self.assertFalse((sysroot / SERVICE / 'cgroup.procs').exists())
 
 
 class DaemonSchedulingTests(ServiceCase):
@@ -180,7 +228,6 @@ class DaemonSchedulingTests(ServiceCase):
         self.games = self.root / 'games'
         shutil.copytree(SHIPPED_PROFILES, self.games, ignore=shutil.ignore_patterns('README.md'))
         (self.games / 'boostdemo.game').write_text(profile(**PUBLISHER_ENABLED))
-        (self.games / 'demo.game').write_text(profile())
         program = self.home / 'Games/boostdemo/Demo'
         program.mkdir(parents=True)
         (program / 'demo.exe').write_bytes(pe_image())
@@ -201,7 +248,7 @@ class DaemonSchedulingTests(ServiceCase):
         self.wait_status('state=ready')
         reply = self.request('GAMELAUNCH\tboostdemo\n')
         self.assertTrue(reply.startswith('OK pid='), reply)
-        group = self.sysroot / GROUP_ROOT / 'game-boostdemo'
+        group = self.sysroot / GAME
         self.assertEqual((group / 'cpu.weight').read_text(), '1000\n')
         self.assertEqual((group / 'io.weight').read_text(), '800\n')
 
@@ -212,8 +259,8 @@ class DaemonSchedulingTests(ServiceCase):
         self.assertEqual(self.request('GAMELAUNCH\tvalorant\n'), 'ERR refused-anticheat-denied\n')
         self.assertEqual(self.request('GAMELAUNCH\tfortnite\n'),
                          'ERR refused-anticheat-pending-publisher-support\n')
-        self.assertFalse((self.sysroot / GROUP_ROOT / 'game-valorant').exists())
-        self.assertFalse((self.sysroot / GROUP_ROOT / 'game-fortnite').exists())
+        self.assertFalse((self.sysroot / USER / 'game-valorant').exists())
+        self.assertFalse((self.sysroot / USER / 'game-fortnite').exists())
 
 
 if __name__ == '__main__':

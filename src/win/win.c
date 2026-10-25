@@ -357,7 +357,10 @@ static int game_command(int argc, char **argv) {
         int allowed = ominx_game_gate(&game, sysroot_path(), reason, sizeof reason) == 0;
         /* Compatibility and scheduling state, shown before anything else happens. */
         char status[320];
-        ominx_sched_status(&game, sysroot_path(), OMINX_SCHED_ROOT_DEFAULT, status, sizeof status);
+        char user_root[OMINX_SCHED_PATH_MAX];
+        if (ominx_sched_user_root(OMINX_SCHED_ROOT_DEFAULT, (unsigned)geteuid(), user_root, sizeof user_root))
+            user_root[0] = '\0';
+        ominx_sched_status(&game, sysroot_path(), user_root, status, sizeof status);
         if (!strcmp(verb, "info")) {
             printf("id:            %s\nname:          %s\nrunner:        %s\nappid:         %s\n"
                    "install dir:   $HOME/%s\nprogram:       %s\nanti-cheat:    %s\n"

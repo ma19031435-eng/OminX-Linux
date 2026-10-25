@@ -135,7 +135,7 @@ static void system_setup(void) {
 #ifndef OMINX_WINSETUP_TEST
     {
         char sched[256];
-        int ready = ominx_sched_prepare("/", OMINX_SCHED_ROOT_DEFAULT, OMINX_UID, sched, sizeof sched);
+        int ready = ominx_sched_prepare("/", OMINX_SCHED_ROOT_DEFAULT, sched, sizeof sched);
         char line[400];
         snprintf(line, sizeof line, "OMINX_WINSETUP_SCHED %s %s", ready ? "unavailable" : "ready", sched);
         record(line);

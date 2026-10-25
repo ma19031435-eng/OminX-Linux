@@ -14,7 +14,6 @@ for (var desktopIndex = 0; desktopIndex < desktops.length; desktopIndex++) {
 }
 
 var panel = new Panel;
-var geometry = screenGeometry(panel.screen);
 
 panel.location = "bottom";
 panel.alignment = "center";
@@ -37,6 +36,7 @@ menu.writeConfig("favorites", [
     "ominx-programs.desktop",
     "ominx-settings.desktop"
 ]);
+menu.writeConfig("favoritesPortedToKAstats", false);
 menu.writeConfig("favoritesDisplay", 1);
 menu.writeConfig("applicationsDisplay", 1);
 menu.writeConfig("alphaSort", true);
@@ -44,7 +44,15 @@ menu.writeConfig("showActionButtonCaptions", false);
 menu.writeConfig("compactMode", true);
 menu.writeConfig("switchCategoryOnHover", false);
 
-panel.addWidget("org.kde.plasma.panelspacer");
+// Two expanding spacers push the pinned row to the middle of the bar.
+function addSpacer(bar) {
+    var spacer = bar.addWidget("org.kde.plasma.panelspacer");
+    spacer.currentConfigGroup = ["General"];
+    spacer.writeConfig("expanding", true);
+    return spacer;
+}
+
+addSpacer(panel);
 
 var tasks = panel.addWidget("org.kde.plasma.icontasks");
 tasks.currentConfigGroup = ["General"];
@@ -55,17 +63,10 @@ tasks.writeConfig("launchers", [
     "applications:ominx-programs.desktop",
     "applications:ominx-settings.desktop"
 ]);
-tasks.writeConfig("groupingStrategy", 1);
-tasks.writeConfig("groupPopups", true);
-tasks.writeConfig("onlyGroupWhenFull", true);
-tasks.writeConfig("separateLaunchers", true);
-tasks.writeConfig("showOnlyCurrentDesktop", false);
-tasks.writeConfig("maxStripes", 1);
-tasks.writeConfig("showToolTips", true);
-tasks.writeConfig("fill", false);
-tasks.writeConfig("iconSpacing", 2);
+// Only the launcher list is written: the other icon-task options are left at
+// their Plasma defaults until they are checked against the running release.
 
-panel.addWidget("org.kde.plasma.panelspacer");
+addSpacer(panel);
 
 panel.addWidget("org.kde.plasma.systemtray");
 var clock = panel.addWidget("org.kde.plasma.digitalclock");

@@ -103,7 +103,8 @@ class LayoutScriptTests(unittest.TestCase):
         text = (PACKAGE / 'contents/layouts/org.kde.plasma.desktop-layout.js').read_text()
         self.assertIn('panel.location = "bottom"', text)
         self.assertIn('panel.lengthMode = "fill"', text)
-        self.assertEqual(text.count('org.kde.plasma.panelspacer'), 2)
+        self.assertEqual(text.count('addSpacer(panel)'), 2)
+        self.assertIn('spacer.writeConfig("expanding", true)', text)
         self.assertIn('org.kde.plasma.icontasks', text)
 
 

@@ -74,18 +74,29 @@ static void say(char *report, size_t size, const char *a, const char *b) {
 /* Records one knob result: "<name>: applied" or "<name>: skipped (<why>)". */
 static void note_knob(char *report, size_t size, const char *name, int err) {
     say(report, size, name, err ? ": skipped (" : ": applied");
-    if (err) {
-        say(report, size, errno_word(err), ")");
-    }
+    if (err) say(report, size, errno_word(err), ")");
     say(report, size, "; ", "");
 }
 
-static int delegated(const char *sysroot, const char *root) {
+static int is_dir(const char *sysroot, const char *abs) {
     char real[OMINX_SCHED_PATH_MAX];
     struct stat st;
-    if (under_sysroot(real, sizeof real, sysroot, root)) return 0;
-    if (stat(real, &st) || !S_ISDIR(st.st_mode)) return 0;
+    if (under_sysroot(real, sizeof real, sysroot, abs)) return 0;
+    return stat(real, &st) == 0 && S_ISDIR(st.st_mode);
+}
+
+/* True when the user's group exists and the session user can create children in it. */
+static int delegated(const char *sysroot, const char *user_root) {
+    char real[OMINX_SCHED_PATH_MAX];
+    if (!is_dir(sysroot, user_root)) return 0;
+    if (under_sysroot(real, sizeof real, sysroot, user_root)) return 0;
     return access(real, W_OK) == 0;
+}
+
+int ominx_sched_user_root(const char *root, unsigned uid, char *out, size_t size) {
+    char name[24];
+    snprintf(name, sizeof name, "user-%u", uid);
+    return child_path(out, size, root, name);
 }
 
 void ominx_sched_plan_game(const struct ominx_game *game, const char *sysroot, const char *root,
@@ -97,18 +108,22 @@ void ominx_sched_plan_game(const struct ominx_game *game, const char *sysroot, c
         snprintf(plan->why, sizeof plan->why, "%s", "no profile");
         return;
     }
+    if (!root || !*root) {
+        snprintf(plan->why, sizeof plan->why, "%s", "no delegated group");
+        return;
+    }
     if (ominx_game_gate(game, sysroot, reason, sizeof reason)) {
         snprintf(plan->why, sizeof plan->why, "launch refused (%s)", reason);
         return;
     }
-    /* Only publisher-enabled titles are boosted. Titles with no anti-cheat are
-       left at the default priorities until a reviewed rule covers them. */
-    if (game->status != OMINX_AC_VENDOR_OPT_IN) {
-        snprintf(plan->why, sizeof plan->why, "%s", "not a publisher-enabled title");
+    /* The gate has passed, so the title has no anti-cheat, or its publisher enabled
+       it. Either way it may be boosted. */
+    if (game->anticheat != OMINX_AC_NONE && game->status != OMINX_AC_VENDOR_OPT_IN) {
+        snprintf(plan->why, sizeof plan->why, "%s", "publisher has not enabled this title");
         return;
     }
-    /* One group per title: "<root>/game-<appid>". The app id is numeric or a
-       short token from the reviewed profile, so it cannot escape the root. */
+    /* One group per title: "<user root>/game-<appid>". The profile loader validates
+       the app id; the slash check guards the group name regardless. */
     char name[sizeof game->appid + 8];
     snprintf(name, sizeof name, "game-%s", game->appid);
     if (strchr(game->appid, '/') || child_path(plan->group, sizeof plan->group, root, name)) {
@@ -120,7 +135,7 @@ void ominx_sched_plan_game(const struct ominx_game *game, const char *sysroot, c
 
 int ominx_sched_boost(const char *sysroot, struct ominx_sched_plan *plan, pid_t pid,
                       char *report, size_t report_size) {
-    char real_root[OMINX_SCHED_PATH_MAX], real_group[OMINX_SCHED_PATH_MAX];
+    char real_group[OMINX_SCHED_PATH_MAX];
     char path[OMINX_SCHED_PATH_MAX + 32], text[32];
     int applied = 0;
 
@@ -130,8 +145,7 @@ int ominx_sched_boost(const char *sysroot, struct ominx_sched_plan *plan, pid_t 
         say(report, report_size, ")", "");
         return 0;
     }
-    if (under_sysroot(real_root, sizeof real_root, sysroot, plan->root) ||
-        under_sysroot(real_group, sizeof real_group, sysroot, plan->group)) {
+    if (under_sysroot(real_group, sizeof real_group, sysroot, plan->group)) {
         say(report, report_size, "scheduling: not boosted (path too long)", "");
         return 0;
     }
@@ -179,16 +193,17 @@ int ominx_sched_boost(const char *sysroot, struct ominx_sched_plan *plan, pid_t 
 }
 
 void ominx_sched_release(const char *sysroot, const struct ominx_sched_plan *plan, pid_t pid) {
-    char real_root[OMINX_SCHED_PATH_MAX], real_group[OMINX_SCHED_PATH_MAX];
+    char real_group[OMINX_SCHED_PATH_MAX], service[OMINX_SCHED_PATH_MAX], real_service[OMINX_SCHED_PATH_MAX];
     char path[OMINX_SCHED_PATH_MAX + 32], text[32];
 
     if (!plan->boost) return;
-    if (under_sysroot(real_root, sizeof real_root, sysroot, plan->root) ||
-        under_sysroot(real_group, sizeof real_group, sysroot, plan->group))
+    if (under_sysroot(real_group, sizeof real_group, sysroot, plan->group)) return;
+    if (child_path(service, sizeof service, plan->root, "service") ||
+        under_sysroot(real_service, sizeof real_service, sysroot, service))
         return;
 
     snprintf(text, sizeof text, "%d\n", (int)pid);
-    if (child_path(path, sizeof path, real_root, "cgroup.procs") == 0)
+    if (child_path(path, sizeof path, real_service, "cgroup.procs") == 0)
         (void)write_knob(path, text);
     /* Fails harmlessly while another process is still in the group. */
     rmdir(real_group);
@@ -218,73 +233,121 @@ void ominx_sched_status(const struct ominx_game *game, const char *sysroot, cons
     }
 }
 
-int ominx_sched_prepare(const char *sysroot, const char *root, unsigned uid,
+/* Each helper appends "<what>: <reason>" to @report on failure and returns -1. */
+static int ensure_group(const char *sysroot, const char *abs, const char *what,
                         char *report, size_t report_size) {
-    char real_root[OMINX_SCHED_PATH_MAX], parent[OMINX_SCHED_PATH_MAX], path[OMINX_SCHED_PATH_MAX + 32];
-    char tmp[OMINX_SCHED_PATH_MAX];
-    size_t lr = strlen(root);
-    int err;
-
-    if (report_size) report[0] = '\0';
-    if (under_sysroot(real_root, sizeof real_root, sysroot, root)) {
-        say(report, report_size, "prepare: root path too long", "");
+    char real[OMINX_SCHED_PATH_MAX];
+    if (under_sysroot(real, sizeof real, sysroot, abs)) {
+        say(report, report_size, what, ": path too long");
         return -1;
     }
-    /* The parent of @root is the cgroup v2 mount, which must enable the controllers. */
-    if (lr == 0 || root[lr - 1] == '/') {
+    if (mkdir(real, 0755) && errno != EEXIST) {
+        say(report, report_size, what, ": ");
+        say(report, report_size, strerror(errno), "");
+        return -1;
+    }
+    return 0;
+}
+
+static int enable_controllers(const char *sysroot, const char *abs, const char *what,
+                              char *report, size_t report_size) {
+    char real[OMINX_SCHED_PATH_MAX], path[OMINX_SCHED_PATH_MAX + 32];
+    if (under_sysroot(real, sizeof real, sysroot, abs) ||
+        child_path(path, sizeof path, real, "cgroup.subtree_control")) {
+        say(report, report_size, what, ": path too long");
+        return -1;
+    }
+    int err = write_knob(path, "+cpu +io\n");
+    if (err) {
+        say(report, report_size, what, ": cannot enable cpu/io (");
+        say(report, report_size, errno_word(err), ")");
+        return -1;
+    }
+    return 0;
+}
+
+static int chown_group(const char *sysroot, const char *abs, unsigned uid, const char *what,
+                       char *report, size_t report_size) {
+    char real[OMINX_SCHED_PATH_MAX], path[OMINX_SCHED_PATH_MAX + 32];
+    static const char *const files[] = {"cgroup.procs", "cgroup.subtree_control"};
+    if (under_sysroot(real, sizeof real, sysroot, abs)) {
+        say(report, report_size, what, ": path too long");
+        return -1;
+    }
+    if (chown(real, (uid_t)uid, (gid_t)-1)) {
+        say(report, report_size, what, ": chown failed");
+        return -1;
+    }
+    /* The files the user writes must belong to the user as well. */
+    for (size_t i = 0; i < sizeof files / sizeof files[0]; i++) {
+        if (child_path(path, sizeof path, real, files[i]) || chown(path, (uid_t)uid, (gid_t)-1)) {
+            say(report, report_size, what, ": chown failed for ");
+            say(report, report_size, files[i], "");
+            return -1;
+        }
+    }
+    return 0;
+}
+
+int ominx_sched_prepare(const char *sysroot, const char *root, char *report, size_t report_size) {
+    char parent[OMINX_SCHED_PATH_MAX];
+    if (report_size) report[0] = '\0';
+    size_t lr = strlen(root);
+    if (lr == 0 || root[lr - 1] == '/' || lr >= sizeof parent) {
         say(report, report_size, "prepare: bad root", "");
         return -1;
     }
-    snprintf(tmp, sizeof tmp, "%s", root);
-    char *slash = strrchr(tmp, '/');
-    if (!slash || slash == tmp) {
+    snprintf(parent, sizeof parent, "%s", root);
+    char *slash = strrchr(parent, '/');
+    if (!slash || slash == parent) {
         say(report, report_size, "prepare: root must sit below the cgroup mount", "");
         return -1;
     }
     *slash = '\0';
-    if (under_sysroot(parent, sizeof parent, sysroot, tmp)) {
-        say(report, report_size, "prepare: parent path too long", "");
-        return -1;
-    }
-    if (child_path(path, sizeof path, parent, "cgroup.subtree_control") == 0) {
-        err = write_knob(path, "+cpu +io\n");
-        if (err) {
-            say(report, report_size, "prepare: cannot enable cpu/io on the parent (", errno_word(err));
-            say(report, report_size, ")", "");
-            return -1;
-        }
-    }
+    /* The parent is the cgroup v2 mount. Enabling its controllers lets the ominx
+       root delegate cpu and io to its children. */
+    if (enable_controllers(sysroot, parent, "prepare: parent", report, report_size)) return -1;
+    if (ensure_group(sysroot, root, "prepare: root", report, report_size)) return -1;
+    if (enable_controllers(sysroot, root, "prepare: root", report, report_size)) return -1;
+    say(report, report_size, "prepare: scheduling root ready", "");
+    return 0;
+}
 
-    if (mkdir(real_root, 0755) && errno != EEXIST) {
-        say(report, report_size, "prepare: cannot create group (", strerror(errno));
-        say(report, report_size, ")", "");
-        return -1;
-    }
-    if (child_path(path, sizeof path, real_root, "cgroup.subtree_control") == 0) {
-        err = write_knob(path, "+cpu +io\n");
-        if (err) {
-            say(report, report_size, "prepare: cannot delegate cpu/io to children (", errno_word(err));
-            say(report, report_size, ")", "");
-            return -1;
-        }
-    }
+int ominx_sched_enter(const char *sysroot, const char *root, unsigned uid, pid_t pid,
+                      char *report, size_t report_size) {
+    char user[OMINX_SCHED_PATH_MAX], service[OMINX_SCHED_PATH_MAX], real_service[OMINX_SCHED_PATH_MAX];
+    char path[OMINX_SCHED_PATH_MAX + 32], text[32];
+    if (report_size) report[0] = '\0';
 
-    /* Hand the group's control files to the session user so the daemon can
-       create per-game children. Failure here leaves scheduling disabled. */
-    if (child_path(path, sizeof path, real_root, "cgroup.procs") == 0 &&
-        chown(path, (uid_t)uid, (gid_t)-1) != 0) {
-        say(report, report_size, "prepare: chown of cgroup.procs failed", "");
+    /* Idempotent, so the seat does not depend on the boot service having run first. */
+    if (ominx_sched_prepare(sysroot, root, report, report_size)) return -1;
+    if (ominx_sched_user_root(root, uid, user, sizeof user)) {
+        say(report, report_size, "enter: user path too long", "");
         return -1;
     }
-    if (child_path(path, sizeof path, real_root, "cgroup.subtree_control") == 0 &&
-        chown(path, (uid_t)uid, (gid_t)-1) != 0) {
-        say(report, report_size, "prepare: chown of subtree_control failed", "");
+    if (ensure_group(sysroot, user, "enter: user group", report, report_size)) return -1;
+    /* Enable the controllers while the user group has no processes in it. The daemon
+       goes into service/, a child, so the group never holds a process of its own. */
+    if (enable_controllers(sysroot, user, "enter: user group", report, report_size)) return -1;
+    if (child_path(service, sizeof service, user, "service") ||
+        under_sysroot(real_service, sizeof real_service, sysroot, service)) {
+        say(report, report_size, "enter: service path too long", "");
         return -1;
     }
-    if (chown(real_root, (uid_t)uid, (gid_t)-1) != 0) {
-        say(report, report_size, "prepare: chown of group failed", "");
+    if (ensure_group(sysroot, service, "enter: service group", report, report_size)) return -1;
+    if (chown_group(sysroot, user, uid, "enter: user group", report, report_size)) return -1;
+    if (chown_group(sysroot, service, uid, "enter: service group", report, report_size)) return -1;
+
+    snprintf(text, sizeof text, "%d\n", (int)pid);
+    if (child_path(path, sizeof path, real_service, "cgroup.procs")) {
+        say(report, report_size, "enter: path too long", "");
         return -1;
     }
-    say(report, report_size, "prepare: scheduling group ready", "");
+    int err = write_knob(path, text);
+    if (err) {
+        say(report, report_size, "enter: move daemon: ", errno_word(err));
+        return -1;
+    }
+    say(report, report_size, "enter: session group ready", "");
     return 0;
 }
