@@ -11,6 +11,7 @@
 #define _GNU_SOURCE
 #include "../lib/pe.h"
 #include "../lib/gamedb.h"
+#include "../lib/gamesched.h"
 #include "../lib/winproto.h"
 #include <dirent.h>
 #include <errno.h>
@@ -48,7 +49,8 @@ static pid_t worker = -1, wineserver_pid = -1;
 static int worker_pipe = -1, worker_proton;
 static char worker_prefix[PATHBUF], worker_appid[40];
 static char proton_setup[16] = "idle";
-static struct { pid_t pid; char what[128]; } running[OMINX_WIN_MAX_RUNNING];
+/* boosted: this program holds the one game boost; plan is what release undoes. */
+static struct { pid_t pid; char what[128]; int boosted; struct ominx_sched_plan plan; } running[OMINX_WIN_MAX_RUNNING];
 static int last_exit = -1, stopping;
 
 static int join(char *out, size_t capacity, const char *a, const char *b) {
@@ -436,14 +438,22 @@ static pid_t launch(const char *target_prefix, const char *file, char *const arg
     execv(argv[0], argv);
     _exit(127);
 }
-static void track(pid_t pid, const char *file) {
+/* Returns the slot used, or -1 when the table is full. */
+static int track(pid_t pid, const char *file) {
     for (int i = 0; i < OMINX_WIN_MAX_RUNNING; i++)
         if (!running[i].pid) {
             running[i].pid = pid;
+            running[i].boosted = 0;
             const char *name = strrchr(file, '/');
             snprintf(running[i].what, sizeof running[i].what, "%s", name ? name + 1 : file);
-            return;
+            return i;
         }
+    return -1;
+}
+static int boosted_count(void) {
+    int count = 0;
+    for (int i = 0; i < OMINX_WIN_MAX_RUNNING; i++) if (running[i].pid > 0 && running[i].boosted) count++;
+    return count;
 }
 /* Splits one request packet in place on tabs. Returns field count or -1. */
 static int split(char *request, ssize_t size, char *fields[], int max) {
@@ -561,7 +571,22 @@ static void handle(int client, char *request, ssize_t size) {
         if (running_count() >= OMINX_WIN_MAX_RUNNING) { out = "ERR too-many-programs\n"; goto send; }
         pid_t pid = launch(pfx, exe, NULL, 0, 0, proton, proton ? game.appid : "");
         if (pid < 0) { out = "ERR launch-failed\n"; goto send; }
-        track(pid, exe);
+        int slot = track(pid, exe);
+        /* Scheduling never blocks the launch. One boosted game at a time: the
+           GPU knob is global, so a second game keeps default priorities. */
+        if (slot >= 0) {
+            char sched[256];
+            ominx_sched_plan_game(&game, sysroot, OMINX_SCHED_ROOT_DEFAULT, &running[slot].plan);
+            if (boosted_count() > 0) {
+                snprintf(sched, sizeof sched, "%s", "scheduling: not boosted (another game is boosted)");
+            } else {
+                /* Release is safe on a plan that never moved the process, so
+                   every attempted boost is undone when the program exits. */
+                ominx_sched_boost(sysroot, &running[slot].plan, pid, sched, sizeof sched);
+                running[slot].boosted = 1;
+            }
+            record("ominx-wined: %s %s", game.id, sched);
+        }
         append(reply, sizeof reply, &used, "OK pid=%ld game=%s\n", (long)pid, game.id);
         goto send;
     }
@@ -656,6 +681,8 @@ static void reap(void) {
         } else {
             for (int i = 0; i < OMINX_WIN_MAX_RUNNING; i++)
                 if (running[i].pid == ended) {
+                    if (running[i].boosted) ominx_sched_release(sysroot, &running[i].plan, ended);
+                    running[i].boosted = 0;
                     running[i].pid = 0;
                     last_exit = WIFEXITED(status) ? WEXITSTATUS(status) : 128;
                     record("ominx-wined: %s exited %d", running[i].what, last_exit);

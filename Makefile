@@ -33,25 +33,28 @@ build/ominx-login-probe: src/login/probe.c src/login/login.c src/login/login.h
 build/ominx-login-test: src/login/broker.c src/login/login.c src/login/login.h
 	mkdir -p build
 	$(CC) $(CFLAGS) -DOMINX_LOGIN_TEST -static -o $@ $(filter %.c,$^)
-build/ominx-win: src/win/win.c src/lib/pe.c src/lib/pe.h src/lib/gamedb.c src/lib/gamedb.h src/lib/winproto.h
+build/ominx-win: src/win/win.c src/lib/pe.c src/lib/pe.h src/lib/gamedb.c src/lib/gamedb.h src/lib/gamesched.c src/lib/gamesched.h src/lib/winproto.h
 	mkdir -p build
 	$(CC) $(CFLAGS) -static -o $@ $(filter %.c,$^)
-build/ominx-wined: src/win/wined.c src/lib/pe.c src/lib/pe.h src/lib/gamedb.c src/lib/gamedb.h src/lib/winproto.h
+build/ominx-wined: src/win/wined.c src/lib/pe.c src/lib/pe.h src/lib/gamedb.c src/lib/gamedb.h src/lib/gamesched.c src/lib/gamesched.h src/lib/winproto.h
 	mkdir -p build
 	$(CC) $(CFLAGS) -static -o $@ $(filter %.c,$^)
-build/ominx-winsetup: src/win/winsetup.c src/lib/winproto.h src/lib/session.h
+build/ominx-winsetup: src/win/winsetup.c src/lib/winproto.h src/lib/session.h src/lib/gamesched.c src/lib/gamesched.h src/lib/gamedb.c src/lib/gamedb.h
 	mkdir -p build
 	$(CC) $(CFLAGS) -static -o $@ $(filter %.c,$^)
 # Same sources with root/service-context checks bypassed; host tests drive
 # them against a stub runtime. Never packaged.
 # Same client with the game-policy fixture hooks (OMINX_GAMES_DIR, OMINX_SYSROOT).
 # Never packaged; the shipped ominx-win ignores those variables.
-build/ominx-win-test: src/win/win.c src/lib/pe.c src/lib/pe.h src/lib/gamedb.c src/lib/gamedb.h src/lib/winproto.h
+build/ominx-win-test: src/win/win.c src/lib/pe.c src/lib/pe.h src/lib/gamedb.c src/lib/gamedb.h src/lib/gamesched.c src/lib/gamesched.h src/lib/winproto.h
 	mkdir -p build
 	$(CC) $(CFLAGS) -DOMINX_WIN_TEST -static -o $@ $(filter %.c,$^)
-build/ominx-wined-test: src/win/wined.c src/lib/pe.c src/lib/pe.h src/lib/gamedb.c src/lib/gamedb.h src/lib/winproto.h
+build/ominx-wined-test: src/win/wined.c src/lib/pe.c src/lib/pe.h src/lib/gamedb.c src/lib/gamedb.h src/lib/gamesched.c src/lib/gamesched.h src/lib/winproto.h
 	mkdir -p build
 	$(CC) $(CFLAGS) -DOMINX_WINED_TEST -static -o $@ $(filter %.c,$^)
+build/ominx-gamesched-test: src/lib/gamesched-test.c src/lib/gamedb.c src/lib/gamedb.h src/lib/gamesched.c src/lib/gamesched.h
+	mkdir -p build
+	$(CC) $(CFLAGS) -static -o $@ $(filter %.c,$^)
 build/ominx-winsetup-test: src/win/winsetup.c src/lib/winproto.h src/lib/session.h
 	mkdir -p build
 	$(CC) $(CFLAGS) -DOMINX_WINSETUP_TEST -static -o $@ $(filter %.c,$^)
@@ -75,19 +78,22 @@ build/host/ominx-login-test: src/login/broker.c src/login/login.c src/login/logi
 build/host/ominx-passwd: src/login/passwd.c src/login/login.c src/login/login.h
 	mkdir -p build/host
 	$(HOSTCC) $(CFLAGS) -static -o $@ $(filter %.c,$^) -lcrypt
-build/host/ominx-win: src/win/win.c src/lib/pe.c src/lib/pe.h src/lib/gamedb.c src/lib/gamedb.h src/lib/winproto.h
+build/host/ominx-win: src/win/win.c src/lib/pe.c src/lib/pe.h src/lib/gamedb.c src/lib/gamedb.h src/lib/gamesched.c src/lib/gamesched.h src/lib/winproto.h
 	mkdir -p build/host
 	$(HOSTCC) $(CFLAGS) -DOMINX_WIN_TEST -static -o $@ $(filter %.c,$^)
-build/host/ominx-wined-test: src/win/wined.c src/lib/pe.c src/lib/pe.h src/lib/gamedb.c src/lib/gamedb.h src/lib/winproto.h
+build/host/ominx-wined-test: src/win/wined.c src/lib/pe.c src/lib/pe.h src/lib/gamedb.c src/lib/gamedb.h src/lib/gamesched.c src/lib/gamesched.h src/lib/winproto.h
 	mkdir -p build/host
 	$(HOSTCC) $(CFLAGS) -DOMINX_WINED_TEST -static -o $@ $(filter %.c,$^)
 build/host/ominx-winsetup-test: src/win/winsetup.c src/lib/winproto.h src/lib/session.h
 	mkdir -p build/host
 	$(HOSTCC) $(CFLAGS) -DOMINX_WINSETUP_TEST -static -o $@ $(filter %.c,$^)
-check: build/host/ominx build/host/ominx-files build/host/ominx-control build/host/ominx-login-test build/host/ominx-passwd build/host/ominx-win build/host/ominx-wined-test build/host/ominx-winsetup-test
-	OMINX_CONTROL_BINARY=$(CURDIR)/build/host/ominx-control OMINX_FILES_BINARY=$(CURDIR)/build/host/ominx-files OMINX_TEST_BINARY=$(CURDIR)/build/host/ominx OMINX_WIN_BINARY=$(CURDIR)/build/host/ominx-win OMINX_WINED_BINARY=$(CURDIR)/build/host/ominx-wined-test OMINX_WINSETUP_BINARY=$(CURDIR)/build/host/ominx-winsetup-test python3 -m unittest discover -s tests -v
-target-check: initramfs build/ominx-login build/ominx-seat build/ominx-passwd build/ominx-login-probe build/ominx-login-test build/ominx-win-test build/ominx-wined-test build/ominx-winsetup-test
-	OMINX_CONTROL_BINARY=$(CURDIR)/build/ominx-control OMINX_FILES_BINARY=$(CURDIR)/build/ominx-files OMINX_TEST_BINARY=$(CURDIR)/build/ominx OMINX_LOGIN_BINARY=$(CURDIR)/build/ominx-login-test OMINX_PASSWD_BINARY=$(CURDIR)/build/ominx-passwd OMINX_WIN_BINARY=$(CURDIR)/build/ominx-win-test OMINX_WINED_BINARY=$(CURDIR)/build/ominx-wined-test OMINX_WINSETUP_BINARY=$(CURDIR)/build/ominx-winsetup-test python3 -m unittest discover -s tests -v
+build/host/ominx-gamesched-test: src/lib/gamesched-test.c src/lib/gamedb.c src/lib/gamedb.h src/lib/gamesched.c src/lib/gamesched.h
+	mkdir -p build/host
+	$(HOSTCC) $(CFLAGS) -static -o $@ $(filter %.c,$^)
+check: build/host/ominx build/host/ominx-files build/host/ominx-control build/host/ominx-login-test build/host/ominx-passwd build/host/ominx-win build/host/ominx-wined-test build/host/ominx-winsetup-test build/host/ominx-gamesched-test
+	OMINX_CONTROL_BINARY=$(CURDIR)/build/host/ominx-control OMINX_FILES_BINARY=$(CURDIR)/build/host/ominx-files OMINX_TEST_BINARY=$(CURDIR)/build/host/ominx OMINX_WIN_BINARY=$(CURDIR)/build/host/ominx-win OMINX_WINED_BINARY=$(CURDIR)/build/host/ominx-wined-test OMINX_WINSETUP_BINARY=$(CURDIR)/build/host/ominx-winsetup-test OMINX_GAMESCHED_BINARY=$(CURDIR)/build/host/ominx-gamesched-test python3 -m unittest discover -s tests -v
+target-check: initramfs build/ominx-login build/ominx-seat build/ominx-passwd build/ominx-login-probe build/ominx-login-test build/ominx-win-test build/ominx-wined-test build/ominx-winsetup-test build/ominx-gamesched-test
+	OMINX_CONTROL_BINARY=$(CURDIR)/build/ominx-control OMINX_FILES_BINARY=$(CURDIR)/build/ominx-files OMINX_TEST_BINARY=$(CURDIR)/build/ominx OMINX_LOGIN_BINARY=$(CURDIR)/build/ominx-login-test OMINX_PASSWD_BINARY=$(CURDIR)/build/ominx-passwd OMINX_WIN_BINARY=$(CURDIR)/build/ominx-win-test OMINX_WINED_BINARY=$(CURDIR)/build/ominx-wined-test OMINX_WINSETUP_BINARY=$(CURDIR)/build/ominx-winsetup-test OMINX_GAMESCHED_BINARY=$(CURDIR)/build/ominx-gamesched-test python3 -m unittest discover -s tests -v
 media:
 	./scripts/build-media.sh
 run:

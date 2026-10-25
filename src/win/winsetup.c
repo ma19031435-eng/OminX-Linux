@@ -9,6 +9,7 @@
  * ominx-wined with that user's privileges only. */
 #define _GNU_SOURCE
 #include "../lib/session.h"
+#include "../lib/gamesched.h"
 #include "../lib/winproto.h"
 #include <errno.h>
 #include <fcntl.h>
@@ -129,6 +130,17 @@ static void system_setup(void) {
                  runtime_state, runtime_version, !!(flags_bits & 1), !!(flags_bits & 2));
         (void)write_text(report_path, report, 0644);
     }
+    /* Game scheduling is independent of the runtime: the delegated cgroup is
+       prepared on every boot so a later game launch can boost itself. */
+#ifndef OMINX_WINSETUP_TEST
+    {
+        char sched[256];
+        int ready = ominx_sched_prepare("/", OMINX_SCHED_ROOT_DEFAULT, OMINX_UID, sched, sizeof sched);
+        char line[400];
+        snprintf(line, sizeof line, "OMINX_WINSETUP_SCHED %s %s", ready ? "unavailable" : "ready", sched);
+        record(line);
+    }
+#endif
     char message[256];
     snprintf(message, sizeof message,
              "OMINX_WINSETUP_DONE runtime=%s version=%s binfmt=%d sysctl=%d marker=%d",

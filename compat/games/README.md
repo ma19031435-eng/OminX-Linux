@@ -34,3 +34,20 @@ must match `id`.
 
 Profiles never add anti-cheat exemptions, spoofed hardware IDs, or driver
 workarounds. A title is enabled only when its publisher says so.
+
+## Game scheduling
+
+When a title launches, the daemon moves the program into its own cgroup v2
+group (`/sys/fs/cgroup/ominx/game-<appid>`) and sets the boost:
+
+* CPU: `cpu.weight` 1000 (default 100).
+* I/O: `io.weight` 800 (default 100).
+* GPU: `power_dpm_force_performance_level` = `high` on amdgpu, restored to
+  `auto` when the program exits. Other drivers are skipped.
+
+Only `anticheat_status = vendor-opt-in` titles that pass the launch gate are
+boosted. Titles with no anti-cheat run at default priorities. One title is
+boosted at a time, because the GPU knob is global. Every knob is optional: a
+missing or read-only knob is reported in the log and skipped, and the launch
+still goes ahead. `ominx-win game info|check|launch` print the compatibility
+and scheduling status before anything else.

@@ -5,6 +5,7 @@
 #define _GNU_SOURCE
 #include "../lib/files.h"
 #include "../lib/gamedb.h"
+#include "../lib/gamesched.h"
 #include "../lib/pe.h"
 #include "../lib/winproto.h"
 #include <ctype.h>
@@ -354,6 +355,9 @@ static int game_command(int argc, char **argv) {
             return 1;
         }
         int allowed = ominx_game_gate(&game, sysroot_path(), reason, sizeof reason) == 0;
+        /* Compatibility and scheduling state, shown before anything else happens. */
+        char status[320];
+        ominx_sched_status(&game, sysroot_path(), OMINX_SCHED_ROOT_DEFAULT, status, sizeof status);
         if (!strcmp(verb, "info")) {
             printf("id:            %s\nname:          %s\nrunner:        %s\nappid:         %s\n"
                    "install dir:   $HOME/%s\nprogram:       %s\nanti-cheat:    %s\n"
@@ -362,11 +366,13 @@ static int game_command(int argc, char **argv) {
                    game.dir, game.exe, ominx_game_anticheat_name(game.anticheat),
                    ominx_game_status_name(game.status), ominx_game_requirement_name(game.requires),
                    allowed ? "yes" : "no");
+            printf("status:        %s\n", status);
             if (game.notes[0]) printf("notes:         %s\n", game.notes);
             if (!allowed) explain_refusal(reason);
             return 0;
         }
         if (!strcmp(verb, "check")) {
+            printf("status: %s\n", status);
             if (allowed) { printf("%s: launchable on this host.\n", game.name); return 0; }
             printf("%s: not launchable.\n", game.name);
             explain_refusal(reason);
@@ -378,6 +384,7 @@ static int game_command(int argc, char **argv) {
             explain_refusal(reason);
             return 1;
         }
+        printf("status: %s\n", status);
         if (find_socket()) { fputs("No user runtime directory for the Windows service.\n", stderr); return 1; }
         char request[256], reply[16384];
         snprintf(request, sizeof request, "GAMELAUNCH\t%s\n", game.id);
