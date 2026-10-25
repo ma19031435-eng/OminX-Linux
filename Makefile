@@ -2,7 +2,7 @@ CC = $(CURDIR)/build/toolchain/bin/x86_64-linux-musl-gcc
 HOSTCC = cc
 CFLAGS = -O2 -Wall -Wextra -Werror
 
-.PHONY: all check target-check build toolchain initramfs run media boot-check
+.PHONY: all check target-check build toolchain initramfs run media boot-check previews
 all: build
 toolchain:
 	./scripts/build-toolchain.sh
@@ -101,3 +101,7 @@ run:
 	qemu-system-x86_64 -m 512 -cdrom build/ominx-x86_64.iso -boot d -serial stdio -nic none
 boot-check:
 	python3 scripts/test-platforms.py
+
+# Preview images in docs/previews (needs Pillow: pip install pillow).
+previews:
+	python3 scripts/render-previews.py
