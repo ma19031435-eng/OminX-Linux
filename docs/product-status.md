@@ -14,10 +14,10 @@ Nothing here is a claim of compatibility or performance that has not been measur
 
 | Brief claim | Status | Notes |
 |---|---|---|
-| Modern desktop, brand palette (navy, teal, cyan, slate, soft white) | Partial | Game library uses the brand palette (`desktop/game-library/qml/Theme.qml`). The Plasma look (`desktop/plasma/`) still uses the earlier Harbor palette and needs a brand pass. |
+| Modern desktop, brand palette (navy, teal, cyan, slate, soft white) | Partial | Game library uses the brand palette and the supplied logo (`desktop/branding/`). The Plasma look (`desktop/plasma/`) still uses the earlier Harbor palette. The logo is not in the Plasma package, because `test_plasma_look` requires a vector-only package. A vector version of the logo, or a rule for a branding exception, is needed. |
 | Consistent window controls for OminX apps | Partial | Game library draws its own minimize, maximize and close (`TitleBar.qml`). A KWin rule to suppress the compositor's duplicate frame is not written or tested. |
 | No terminal required; graphical install, printers, network, users, updates | Not started | No graphical settings, printer, network, or user-management UI exists yet. |
-| User-controlled updates; no forced reboots | Not started | No update system exists. |
+| User-controlled updates; no forced reboots | Partial | Decision library built and tested (`src/lib/updatepolicy.*`): downloads, installs and restarts are separate user choices; no install or restart by default; nothing installs or restarts during a game. No update client, download backend, or scheduler daemon yet. |
 | Designed to disappear, fast startup | Target | Not measured. |
 
 ## Applications and compatibility
