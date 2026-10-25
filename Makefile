@@ -2,7 +2,7 @@ CC = $(CURDIR)/build/toolchain/bin/x86_64-linux-musl-gcc
 HOSTCC = cc
 CFLAGS = -O2 -Wall -Wextra -Werror
 
-.PHONY: all check target-check build toolchain initramfs run media boot-check previews
+.PHONY: all check target-check build toolchain initramfs run media boot-check previews ui-check
 all: build
 toolchain:
 	./scripts/build-toolchain.sh
@@ -105,3 +105,8 @@ boot-check:
 # Preview images in docs/previews (needs Pillow: pip install pillow).
 previews:
 	python3 scripts/render-previews.py
+
+# Game library QML checks (needs PySide6). Set OMINX_QT_STUB_DIR only in sandboxes
+# without a GL/EGL/xkb/dbus runtime. Also refreshes the game library screenshots.
+ui-check:
+	$${OMINX_UI_PYTHON:-python3} tests/ui/test_game_library.py

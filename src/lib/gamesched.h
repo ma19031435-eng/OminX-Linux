@@ -58,6 +58,19 @@ int ominx_sched_boost(const char *sysroot, struct ominx_sched_plan *plan, pid_t 
    GPU knob to automatic when this plan raised it. Safe on a plan never boosted. */
 void ominx_sched_release(const char *sysroot, const struct ominx_sched_plan *plan, pid_t pid);
 
+/* Structured scheduling state for front ends. READY means a launch will be boosted
+   when the daemon is running with its delegated group. */
+enum ominx_sched_state {
+    OMINX_SCHED_READY = 0,
+    OMINX_SCHED_NOT_ELIGIBLE = 1,  /* the title is refused or not boosted by policy */
+    OMINX_SCHED_NOT_DELEGATED = 2  /* eligible, but the user's group is not available */
+};
+
+/* Returns the state. @detail receives a short human-readable reason. */
+enum ominx_sched_state ominx_sched_state_of(const struct ominx_game *game, const char *sysroot,
+                                            const char *root, char *detail, size_t detail_size);
+const char *ominx_sched_state_name(enum ominx_sched_state state);
+
 /* One-line status: the compatibility status first, then whether scheduling can boost. */
 void ominx_sched_status(const struct ominx_game *game, const char *sysroot, const char *root,
                         char *out, size_t out_size);

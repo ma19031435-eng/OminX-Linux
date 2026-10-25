@@ -330,6 +330,54 @@ static void explain_refusal(const char *reason) {
         printf("  Refused: %s\n", reason);
 }
 
+/* JSON output (schema 1). Strings are escaped; no other encoding is needed. */
+static void json_string(const char *text) {
+    putchar('"');
+    for (const unsigned char *p = (const unsigned char *)text; *p; p++) {
+        switch (*p) {
+        case '"': fputs("\\\"", stdout); break;
+        case '\\': fputs("\\\\", stdout); break;
+        case '\n': fputs("\\n", stdout); break;
+        case '\t': fputs("\\t", stdout); break;
+        default:
+            if (*p < 0x20) printf("\\u%04x", *p);
+            else putchar(*p);
+        }
+    }
+    putchar('"');
+}
+
+static const char *user_root_path(char *buffer, size_t size) {
+    if (ominx_sched_user_root(OMINX_SCHED_ROOT_DEFAULT, (unsigned)geteuid(), buffer, size)) buffer[0] = '\0';
+    return buffer;
+}
+
+static void print_game_json(const struct ominx_game *game) {
+    char reason[256] = "", detail[160] = "", user_root[OMINX_SCHED_PATH_MAX];
+    int allowed = ominx_game_gate(game, sysroot_path(), reason, sizeof reason) == 0;
+    enum ominx_sched_state state = ominx_sched_state_of(game, sysroot_path(),
+                                                        user_root_path(user_root, sizeof user_root),
+                                                        detail, sizeof detail);
+    fputs("{\"id\":", stdout); json_string(game->id);
+    fputs(",\"valid\":true,\"name\":", stdout); json_string(game->name);
+    fputs(",\"runner\":", stdout); json_string(ominx_game_runner_name(game->runner));
+    fputs(",\"appid\":", stdout); json_string(game->appid);
+    fputs(",\"anticheat\":", stdout); json_string(ominx_game_anticheat_name(game->anticheat));
+    fputs(",\"publisher_status\":", stdout); json_string(ominx_game_status_name(game->status));
+    fputs(",\"requires\":", stdout); json_string(ominx_game_requirement_name(game->requires));
+    printf(",\"launchable\":%s", allowed ? "true" : "false");
+    fputs(",\"refusal\":", stdout); json_string(allowed ? "" : reason);
+    fputs(",\"install_dir\":", stdout);
+    char install[OMINX_GAME_PROFILE_MAX];
+    snprintf(install, sizeof install, "$HOME/%s", game->dir);
+    json_string(install);
+    fputs(",\"program\":", stdout); json_string(game->exe);
+    fputs(",\"notes\":", stdout); json_string(game->notes);
+    fputs(",\"scheduling\":{\"state\":", stdout); json_string(ominx_sched_state_name(state));
+    fputs(",\"detail\":", stdout); json_string(detail);
+    fputs("}}", stdout);
+}
+
 static void print_game_row(const char *id, const struct ominx_game *game, const char *error, void *context) {
     (void)context;
     if (!game) { printf("%-14s invalid profile (%s)\n", id, error); return; }
@@ -340,8 +388,44 @@ static void print_game_row(const char *id, const struct ominx_game *game, const 
            allowed ? "launchable" : "refused");
 }
 
+/* Visitor state for `game list --json`: the envelope opens before the first item. */
+static int json_games_first = 1;
+static void print_game_json_item(const char *id, const struct ominx_game *game, const char *error, void *context) {
+    (void)context;
+    if (!json_games_first) putchar(',');
+    json_games_first = 0;
+    if (!game) {
+        fputs("{\"id\":", stdout); json_string(id);
+        fputs(",\"valid\":false,\"error\":", stdout); json_string(error);
+        fputs("}", stdout);
+        return;
+    }
+    print_game_json(game);
+}
+
 static int game_command(int argc, char **argv) {
     const char *verb = argv[2];
+    if (!strcmp(verb, "list") && argc == 4 && !strcmp(argv[3], "--json")) {
+        json_games_first = 1;
+        fputs("{\"schema\":1,\"games\":[", stdout);
+        int result = ominx_game_for_each(games_path(), print_game_json_item, NULL);
+        fputs("]}\n", stdout);
+        if (result < 0) { perror(games_path()); return 1; }
+        return 0;
+    }
+    if (!strcmp(verb, "info") && argc == 5 && !strcmp(argv[4], "--json")) {
+        struct ominx_game game;
+        char error[64];
+        if (ominx_game_load(games_path(), argv[3], &game, error, sizeof error)) {
+            fputs("{\"schema\":1,\"valid\":false,\"error\":", stdout); json_string(error);
+            fputs("}\n", stdout);
+            return 1;
+        }
+        fputs("{\"schema\":1,\"game\":", stdout);
+        print_game_json(&game);
+        fputs("}\n", stdout);
+        return 0;
+    }
     if (!strcmp(verb, "list") && argc == 3) {
         int result = ominx_game_for_each(games_path(), print_game_row, NULL);
         if (result < 0) { perror(games_path()); return 1; }

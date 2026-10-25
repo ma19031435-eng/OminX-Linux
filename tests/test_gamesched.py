@@ -27,6 +27,7 @@ from test_wined import ServiceCase, make_runtime, pe_image
 
 ROOT = Path(__file__).resolve().parents[1]
 GAMESCHED = os.environ.get('OMINX_GAMESCHED_BINARY', str(ROOT / 'build/host/ominx-gamesched-test'))
+WIN = os.environ.get('OMINX_WIN_BINARY', str(ROOT / 'build/host/ominx-win'))
 OMINX = 'sys/fs/cgroup/ominx'
 USER = f'{OMINX}/user-{os.getuid()}'
 SERVICE = f'{USER}/service'
@@ -286,6 +287,48 @@ class DaemonSchedulingTests(ServiceCase):
                          'ERR refused-anticheat-pending-publisher-support\n')
         self.assertFalse((self.sysroot / USER / 'game-valorant').exists())
         self.assertFalse((self.sysroot / USER / 'game-fortnite').exists())
+
+
+class StructuredOutputTests(SchedCase):
+    """`ominx-win game list|info --json`: the stable schema the GUI reads."""
+
+    def win(self, *args, sysroot):
+        env = dict(os.environ, OMINX_GAMES_DIR=str(self.games), OMINX_SYSROOT=str(sysroot),
+                   XDG_RUNTIME_DIR=str(self.root), HOME=str(self.root / 'home'))
+        return subprocess.run([WIN, 'game', *args], env=env, capture_output=True, text=True)
+
+    def test_list_json_is_schema_1_and_covers_every_profile(self):
+        import json
+        result = self.win('list', '--json', sysroot=fake_sysroot(self.root))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        data = json.loads(result.stdout)
+        self.assertEqual(data['schema'], 1)
+        ids = {game['id'] for game in data['games']}
+        self.assertTrue({'valorant', 'fortnite', 'boostdemo'} <= ids, ids)
+
+    def test_json_states_match_policy(self):
+        import json
+        data = json.loads(self.win('list', '--json', sysroot=fake_sysroot(self.root)).stdout)
+        by_id = {game['id']: game for game in data['games']}
+        self.assertFalse(by_id['valorant']['launchable'])
+        self.assertEqual(by_id['valorant']['refusal'], 'anticheat-denied')
+        self.assertEqual(by_id['valorant']['scheduling']['state'], 'not-eligible')
+        self.assertEqual(by_id['fortnite']['refusal'], 'anticheat-pending-publisher-support')
+        self.assertEqual(by_id['fortnite']['scheduling']['state'], 'not-eligible')
+        self.assertTrue(by_id['boostdemo']['launchable'])
+        self.assertEqual(by_id['boostdemo']['scheduling']['state'], 'ready')
+
+    def test_undelegated_host_reports_not_delegated(self):
+        import json
+        sysroot = fake_sysroot(self.root / 'bare', delegated=False)
+        data = json.loads(self.win('info', 'boostdemo', '--json', sysroot=sysroot).stdout)
+        self.assertEqual(data['game']['scheduling']['state'], 'not-delegated')
+
+    def test_unknown_game_is_a_json_error(self):
+        import json
+        result = self.win('info', 'missing', '--json', sysroot=fake_sysroot(self.root))
+        self.assertEqual(result.returncode, 1)
+        self.assertFalse(json.loads(result.stdout)['valid'])
 
 
 if __name__ == '__main__':

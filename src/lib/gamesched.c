@@ -214,24 +214,49 @@ void ominx_sched_release(const char *sysroot, const struct ominx_sched_plan *pla
         (void)write_knob(path, "auto\n");
 }
 
+enum ominx_sched_state ominx_sched_state_of(const struct ominx_game *game, const char *sysroot,
+                                            const char *root, char *detail, size_t detail_size) {
+    struct ominx_sched_plan plan;
+    if (detail_size) detail[0] = '\0';
+    ominx_sched_plan_game(game, sysroot, root, &plan);
+    if (!plan.boost) {
+        say(detail, detail_size, plan.why, "");
+        return OMINX_SCHED_NOT_ELIGIBLE;
+    }
+    if (!delegated(sysroot, root)) {
+        say(detail, detail_size, "user group not delegated", "");
+        return OMINX_SCHED_NOT_DELEGATED;
+    }
+    say(detail, detail_size, "cpu, io and gpu boost ready", "");
+    return OMINX_SCHED_READY;
+}
+
+const char *ominx_sched_state_name(enum ominx_sched_state state) {
+    switch (state) {
+    case OMINX_SCHED_READY: return "ready";
+    case OMINX_SCHED_NOT_ELIGIBLE: return "not-eligible";
+    case OMINX_SCHED_NOT_DELEGATED: return "not-delegated";
+    }
+    return "unknown";
+}
+
 void ominx_sched_status(const struct ominx_game *game, const char *sysroot, const char *root,
                         char *out, size_t out_size) {
-    struct ominx_sched_plan plan;
+    char detail[160];
     if (!out_size) return;
     out[0] = '\0';
-    ominx_sched_plan_game(game, sysroot, root, &plan);
     say(out, out_size, "Compatibility: ", game ? ominx_game_status_name(game->status) : "unknown");
-    if (plan.boost) {
-        say(out, out_size, ", launch allowed", "");
-    } else {
-        say(out, out_size, ", ", plan.why);
-    }
-    if (!plan.boost) {
+    enum ominx_sched_state state = ominx_sched_state_of(game, sysroot, root, detail, sizeof detail);
+    if (state == OMINX_SCHED_NOT_ELIGIBLE) {
+        say(out, out_size, ", ", detail);
         say(out, out_size, "; scheduling: default priorities", "");
-    } else if (delegated(sysroot, root)) {
-        say(out, out_size, "; scheduling: game boost ready (cpu, io, gpu where supported)", "");
     } else {
-        say(out, out_size, "; scheduling: default priorities (group not delegated)", "");
+        say(out, out_size, ", launch allowed", "");
+        if (state == OMINX_SCHED_READY) {
+            say(out, out_size, "; scheduling: game boost ready (cpu, io, gpu where supported)", "");
+        } else {
+            say(out, out_size, "; scheduling: default priorities (group not delegated)", "");
+        }
     }
 }
 

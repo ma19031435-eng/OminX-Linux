@@ -1,0 +1,4 @@
+singleton Theme 1.0 Theme.qml
+StatusPill 1.0 StatusPill.qml
+GameCard 1.0 GameCard.qml
+DetailPanel 1.0 DetailPanel.qml
