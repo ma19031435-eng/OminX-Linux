@@ -139,7 +139,7 @@ Rectangle {
             Text {
                 anchors.centerIn: parent
                 text: "Launch"
-                color: "#06141a"
+                color: Theme.navy
                 font.pixelSize: 15
                 font.weight: Font.DemiBold
             }

@@ -5,21 +5,28 @@ import QtQuick
 // Labels map the stable JSON values from `ominx-win game list --json` to words
 // a player understands. The JSON values never change; only the wording does.
 QtObject {
-    readonly property color background: "#0b1622"
-    readonly property color chrome: "#091320"
-    readonly property color card: "#12223a"
-    readonly property color cardHover: "#172c47"
-    readonly property color cardSelected: "#1a3a52"
-    readonly property color hover: "#16283d"
-    readonly property color line: "#1d3350"
-    readonly property color accent: "#5fd3c1"
-    readonly property color accentDeep: "#2a8f87"
+    // OminX brand palette: Deep Navy, Ocean Teal, Dark Cyan, Slate Blue, Soft White.
+    readonly property color navy: "#101d32"
+    readonly property color teal: "#74e0c7"
+    readonly property color darkCyan: "#123d46"
+    readonly property color slate: "#244767"
+    readonly property color softWhite: "#eff9f7"
+
+    readonly property color background: navy
+    readonly property color chrome: "#0c1728"
+    readonly property color card: "#15294a"
+    readonly property color cardHover: "#1b3558"
+    readonly property color cardSelected: darkCyan
+    readonly property color hover: "#1b3558"
+    readonly property color line: "#24466a"
+    readonly property color accent: teal
+    readonly property color accentDeep: "#4fbfa8"
     readonly property color amber: "#e8be60"
     readonly property color red: "#e87171"
     readonly property color closeRed: "#c42b1c"
-    readonly property color text: "#e2ecf2"
-    readonly property color muted: "#8fa4b4"
-    readonly property color disabled: "#3b5165"
+    readonly property color text: softWhite
+    readonly property color muted: "#9fb6c6"
+    readonly property color disabled: "#3d5a78"
 
     // Monogram tile colours when a title has no icon file. Chosen per runner.
     function tileColor(runner) {

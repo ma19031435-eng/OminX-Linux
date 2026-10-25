@@ -33,7 +33,7 @@ Rectangle {
                 GradientStop { position: 0; color: Theme.accent }
                 GradientStop { position: 1; color: Theme.accentDeep }
             }
-            Text { anchors.centerIn: parent; text: bar.mark; color: "#06141a"; font.pixelSize: 11; font.weight: Font.Black }
+            Text { anchors.centerIn: parent; text: bar.mark; color: Theme.navy; font.pixelSize: 11; font.weight: Font.Black }
         }
 
         Text {

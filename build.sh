@@ -29,7 +29,7 @@ make -C "$LINUX_SOURCE" O="$ROOT/build/kernel" ARCH=x86_64 CROSS_COMPILE="$PREFI
     -e DRM_QXL -e DRM_VMWGFX -e DRM_I915 -e DRM_AMDGPU -e DRM_NOUVEAU \
     -e USB_HID -e HID_GENERIC -e USB_XHCI_HCD -e USB_XHCI_PCI \
     -e VIRTIO_PCI -e VIRTIO_BLK -e EXT4_FS -e SATA_AHCI -e BLK_DEV_NVME \
-    -e USB_STORAGE -e FAT_FS -e VFAT_FS -e EXFAT_FS -e NTFS3_FS -e NLS_UTF8 -e NLS_CODEPAGE_437 -e NLS_ISO8859_1 \
+    -e USB_STORAGE -e FAT_FS -e VFAT_FS -e EXFAT_FS -e NTFS3_FS -e EXT2_FS -e EXT3_FS -e BTRFS_FS -e XFS_FS -e NLS_UTF8 -e NLS_CODEPAGE_437 -e NLS_ISO8859_1 \
     -e ISO9660_FS -e UDF_FS
 # Windows compatibility (Wine/Proton) and final-desktop prerequisites. Every
 # symbol here is asserted by scripts/check-kernel-graphics.py so a Kconfig
