@@ -183,6 +183,31 @@ class RootSetupTests(SchedCase):
         self.assertEqual((sysroot / OMINX / 'cgroup.subtree_control').read_text(), '+cpu +io\n')
         self.assertIn('scheduling root ready', prepare.stdout)
 
+    def test_prepare_selects_bfq_only_on_disks_that_offer_it(self):
+        sysroot = self.root / 'sysroot'
+        (sysroot / 'sys/fs/cgroup').mkdir(parents=True)
+        (sysroot / 'sys/fs/cgroup/cgroup.subtree_control').write_text('')
+        populate_cgroup(sysroot / OMINX)
+        for disk, scheduler in [('sda', '[mq-deadline] kyber bfq none\n'), ('loop0', 'none\n')]:
+            (sysroot / f'sys/block/{disk}/queue').mkdir(parents=True)
+            (sysroot / f'sys/block/{disk}/queue/scheduler').write_text(scheduler)
+        prepare = self.driver(sysroot, 'boostdemo', 'prepare')
+        self.assertEqual(prepare.returncode, 0, prepare.stdout + prepare.stderr)
+        self.assertEqual((sysroot / 'sys/block/sda/queue/scheduler').read_text(), 'bfq\n')
+        self.assertEqual((sysroot / 'sys/block/loop0/queue/scheduler').read_text(), 'none\n')
+        self.assertIn('io: bfq selected', prepare.stdout)
+
+    def test_prepare_says_when_no_disk_can_weight_io(self):
+        sysroot = self.root / 'sysroot'
+        (sysroot / 'sys/fs/cgroup').mkdir(parents=True)
+        (sysroot / 'sys/fs/cgroup/cgroup.subtree_control').write_text('')
+        populate_cgroup(sysroot / OMINX)
+        (sysroot / 'sys/block/vda/queue').mkdir(parents=True)
+        (sysroot / 'sys/block/vda/queue/scheduler').write_text('none\n')
+        prepare = self.driver(sysroot, 'boostdemo', 'prepare')
+        self.assertEqual(prepare.returncode, 0, prepare.stdout + prepare.stderr)
+        self.assertIn('io.weight inactive', prepare.stdout)
+
     def test_prepare_without_a_cgroup_mount_fails_softly(self):
         sysroot = self.root / 'bare'
         sysroot.mkdir()

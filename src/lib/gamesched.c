@@ -1,6 +1,7 @@
 #define _GNU_SOURCE
 #include "gamesched.h"
 
+#include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -31,7 +32,8 @@ static int child_path(char *out, size_t size, const char *dir, const char *name)
 
 /* Writes @text into an existing kernel knob. Returns 0 or a positive errno. */
 static int write_knob(const char *path, const char *text) {
-    int fd = open(path, O_WRONLY | O_CLOEXEC);
+    /* O_TRUNC matches `echo value > knob`; kernel attributes ignore it. */
+    int fd = open(path, O_WRONLY | O_TRUNC | O_CLOEXEC);
     if (fd < 0) return errno;
     size_t n = strlen(text);
     ssize_t w = write(fd, text, n);
@@ -289,6 +291,35 @@ static int chown_group(const char *sysroot, const char *abs, unsigned uid, const
     return 0;
 }
 
+/* io.weight is only honoured by the BFQ elevator. Switch every disk that offers
+   BFQ to it. Returns the number of disks switched; never fails the boot. */
+static int select_bfq(const char *sysroot, char *report, size_t report_size) {
+    char block[OMINX_SCHED_PATH_MAX];
+    if (under_sysroot(block, sizeof block, sysroot, "/sys/block")) return 0;
+    DIR *dir = opendir(block);
+    if (!dir) return 0;
+    int switched = 0;
+    struct dirent *entry;
+    while ((entry = readdir(dir))) {
+        if (entry->d_name[0] == '.') continue;
+        char scheduler[OMINX_SCHED_PATH_MAX + 64], text[160] = "";
+        if (child_path(scheduler, sizeof scheduler, block, entry->d_name) ||
+            strlen(scheduler) + 32 > sizeof scheduler)
+            continue;
+        strcat(scheduler, "/queue/scheduler");
+        FILE *f = fopen(scheduler, "r");
+        if (!f) continue;
+        if (!fgets(text, sizeof text, f)) text[0] = '\0';
+        fclose(f);
+        if (!strstr(text, "bfq")) continue;
+        if (write_knob(scheduler, "bfq\n") == 0) switched++;
+    }
+    closedir(dir);
+    say(report, report_size, switched ? "io: bfq selected" : "io: no disk offers bfq; io.weight inactive", "");
+    say(report, report_size, "", "; ");
+    return switched;
+}
+
 int ominx_sched_prepare(const char *sysroot, const char *root, char *report, size_t report_size) {
     char parent[OMINX_SCHED_PATH_MAX];
     if (report_size) report[0] = '\0';
@@ -309,7 +340,8 @@ int ominx_sched_prepare(const char *sysroot, const char *root, char *report, siz
     if (enable_controllers(sysroot, parent, "prepare: parent", report, report_size)) return -1;
     if (ensure_group(sysroot, root, "prepare: root", report, report_size)) return -1;
     if (enable_controllers(sysroot, root, "prepare: root", report, report_size)) return -1;
-    say(report, report_size, "prepare: scheduling root ready", "");
+    say(report, report_size, "prepare: scheduling root ready; ", "");
+    (void)select_bfq(sysroot, report, report_size);
     return 0;
 }
 
