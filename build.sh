@@ -1,5 +1,5 @@
 #!/bin/sh
-# Source-built target only. Legacy Debian build remains a separate opt-in command.
+# Source-built target only. No distribution base is used.
 set -eu
 ROOT=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 cd "$ROOT"

@@ -34,7 +34,7 @@ that the real runtime artifact will satisfy.
     rejected; an executable PE module is accepted as data.
   - `tests/test_kernel_config.py` now covers 60 required built-ins,
     including the 43-symbol windows-compatibility group.
-- `scripts/check-config.sh`: **passed**, including new mock-Wine
+- `scripts/check-config.sh` (since removed with the Debian track): **passed**, including new mock-Wine
   exercises proving the legacy desktop's `ominx-wine-firstboot` creates
   the prefix exactly once, records the runtime version, and no-ops
   afterwards.

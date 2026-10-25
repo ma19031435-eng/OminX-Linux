@@ -2,7 +2,7 @@ name: Windows compatibility services
 on:
   push:
     branches: [main, 'arena/**']
-    paths: ['src/win/**', 'src/lib/pe.*', 'src/lib/winproto.h', 'src/lib/session.*', 'src/core/**', 'src/login/seat.c', 'desktop/desktop-shell/**', 'scripts/make-initramfs.py', 'scripts/stage-wine-runtime.py', 'scripts/check-kernel-graphics.py', 'build.sh', 'Makefile', 'compat/**', 'tests/test_pe.py', 'tests/test_wined.py', 'tests/test_win_packaging.py', 'tests/test_wine_runtime_stage.py', 'tests/ui/test_desktop_shell.py', 'config/includes.chroot/usr/local/bin/ominx-wine-firstboot', 'config/includes.chroot/usr/local/bin/ominx-open-windows', 'scripts/check-config.sh', '.github/workflows/wine-compat.yml']
+    paths: ['src/win/**', 'src/lib/pe.*', 'src/lib/winproto.h', 'src/lib/session.*', 'src/core/**', 'src/login/seat.c', 'desktop/desktop-shell/**', 'scripts/make-initramfs.py', 'scripts/stage-wine-runtime.py', 'scripts/check-kernel-graphics.py', 'build.sh', 'Makefile', 'compat/**', 'tests/test_pe.py', 'tests/test_wined.py', 'tests/test_win_packaging.py', 'tests/test_wine_runtime_stage.py', 'tests/ui/test_desktop_shell.py', '.github/workflows/wine-compat.yml']
   pull_request:
     paths: ['src/win/**', 'src/lib/pe.*', 'src/lib/winproto.h', 'compat/**', 'tests/test_pe.py', 'tests/test_wined.py', 'tests/test_win_packaging.py', 'tests/test_wine_runtime_stage.py', '.github/workflows/wine-compat.yml']
   workflow_dispatch:
@@ -31,8 +31,6 @@ jobs:
           message = '%0A'.join(line.replace('%', '%25').replace('\r', '%0D') for line in lines)
           print('::error title=make check failure tail::' + message)
           PY
-      - name: Legacy Debian track recipe checks (incl. first-boot Wine setup)
-        run: ./scripts/check-config.sh
       - name: QML syntax for the desktop Windows panel
         run: |
           python3 -m venv build/ui-env

@@ -4,7 +4,7 @@ OminX is an independent Linux-based project. The new target is built from upstre
 Linux, a source-built GCC/binutils/musl cross toolchain, a source-built Limine
 bootloader, and original OminX init and console utilities. **No existing Linux
 distribution, distribution root filesystem, package database, or host libc is used
-as the new target's base.** The old Debian desktop build is preserved separately.
+as the new target's base.** No distribution is used anywhere in the build.
 
 ## Build from source
 
@@ -137,8 +137,7 @@ See [implementation details, test boundaries and remaining integration](docs/gra
 
 Windows programs are a first-class, always-prepared feature, not an
 afterthought that sets itself up on first use. Three original services
-implement the lifecycle on both the source-built target and the legacy
-desktop: a root first-boot service (`/sbin/ominx-winsetup`, started by
+implement the lifecycle on the source-built target: a root first-boot service (`/sbin/ominx-winsetup`, started by
 PID 1 before login: binfmt registration so `./program.exe` works, the
 Proton `vm.max_map_count`, runtime verification — it never runs Windows
 code), a per-user background service (`/bin/ominx-wined`, started by the
@@ -205,12 +204,8 @@ scripts/build-toolchain.sh  Source cross-toolchain build
 scripts/build-media.sh      Source bootloader and hybrid ISO creation
 scripts/test-platforms.py   Firmware/media/terminal/storage acceptance matrix
 tests/                      Host and target executable unit tests
-config/, auto/              Preserved old desktop assets and Debian recipes
-docs/legacy-debian.md        Historical desktop build documentation
 ```
 
-The existing desktop is retained via `make legacy-build` and `make legacy-check`.
-It remains a separate Debian-based track and is **not** the independent OS image.
 KDE integration, original graphical applications/file manager, network services,
 authentication, installation and updates are later layers. (Windows .exe/.msi
 services now ship by default; the large Wine runtime artifact and a glibc

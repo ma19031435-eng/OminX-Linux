@@ -196,7 +196,7 @@ can still fail for per-application reasons: check
 
 Implemented and host-tested (`tests/test_pe.py`, `tests/test_wined.py`,
 `tests/test_win_packaging.py`, `tests/test_wine_runtime_stage.py`, the
-desktop-shell UI test and `scripts/check-config.sh`; CI workflow
+desktop-shell UI test (the Debian recipe check was removed with the Debian track); CI workflow
 `wine-compat.yml`): services, first-boot/first-login setup state
 machines, persistent wineserver supervision, binfmt registration,
 PE/MSI classification and refusals, Proton prefix lifecycle, packaging

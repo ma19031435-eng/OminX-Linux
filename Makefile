@@ -2,7 +2,7 @@ CC = $(CURDIR)/build/toolchain/bin/x86_64-linux-musl-gcc
 HOSTCC = cc
 CFLAGS = -O2 -Wall -Wextra -Werror
 
-.PHONY: all check target-check build toolchain initramfs run media boot-check legacy-check legacy-build
+.PHONY: all check target-check build toolchain initramfs run media boot-check
 all: build
 toolchain:
 	./scripts/build-toolchain.sh
@@ -95,7 +95,3 @@ run:
 	qemu-system-x86_64 -m 512 -cdrom build/ominx-x86_64.iso -boot d -serial stdio -nic none
 boot-check:
 	python3 scripts/test-platforms.py
-legacy-check:
-	./scripts/check-config.sh
-legacy-build:
-	./scripts/build-debian-legacy.sh
