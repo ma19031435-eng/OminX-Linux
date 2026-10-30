@@ -1,7 +1,7 @@
 name: OminX SDDM Qt6 theme verification
 on:
   push:
-    branches: [arena/11b46bb0-ominx-linux]
+    branches: [main, 'arena/**']
     paths: ['desktop/**', 'tests/ui/**', 'scripts/build-greeter-host.sh', '.github/workflows/greeter.yml']
   workflow_dispatch:
 permissions:

@@ -5,6 +5,7 @@
 #include <QKeyEvent>
 #include <QFont>
 #include <QFontDatabase>
+#include <QHash>
 #include <QGuiApplication>
 #include <QQmlContext>
 #include <QQuickStyle>
@@ -176,8 +177,118 @@ class SessionContext final : public QObject {
     Q_OBJECT
     Q_PROPERTY(QString userName READ userName CONSTANT)
     Q_PROPERTY(QStringList facts READ facts CONSTANT)
+    /* Windows (Wine/Proton) state, refreshed from the per-user background
+       service the seat starts at login. The panel in Session.qml renders
+       these; it must stay truthful when the runtime is not installed. */
+    Q_PROPERTY(QString winSummary READ winSummary NOTIFY winChanged)
+    Q_PROPERTY(int winPercent READ winPercent NOTIFY winChanged)
+    Q_PROPERTY(bool winReady READ winReady NOTIFY winChanged)
+    Q_PROPERTY(QStringList winApps READ winApps NOTIFY winChanged)
 public:
+    SessionContext() {
+        /* The greeter process also constructs this object; the per-user
+           Windows service must only be contacted from a real session. */
+        if (qEnvironmentVariable("USER") == QLatin1String("greeter")) return;
+        auto *timer = new QTimer(this);
+        timer->setInterval(3000);
+        connect(timer, &QTimer::timeout, this, [this] { refreshWin(); });
+        timer->start();
+        QTimer::singleShot(0, this, [this] { refreshWin(); });
+    }
     QString userName() const { return qEnvironmentVariable("USER", "ominx"); }
+    QString winSummary() const {
+        if (m_winState == QLatin1String("ready"))
+            return tr("Windows apps are ready (Wine %1, Proton %2).")
+                .arg(m_winVersion.isEmpty() ? tr("runtime") : m_winVersion,
+                     m_winProton == QLatin1String("ready") ? tr("ready") : tr("preparing"));
+        if (m_winState == QLatin1String("setting-up"))
+            return tr("Preparing your Windows environment... %1% (%2)")
+                .arg(m_winPercent).arg(m_winStep);
+        if (m_winState == QLatin1String("runtime-missing"))
+            return tr("The Wine/Proton runtime is not installed in this image yet.");
+        if (m_winState == QLatin1String("failed"))
+            return tr("Windows setup did not finish. Choose Set up Windows apps to retry.");
+        return tr("Windows service is starting...");
+    }
+    int winPercent() const { return m_winPercent; }
+    bool winReady() const { return m_winState == QLatin1String("ready"); }
+    QStringList winApps() const { return m_winAppNames; }
+    Q_INVOKABLE void refreshWin() {
+        QByteArray reply;
+        QString error;
+        const QByteArray socketPath = winSocket().toUtf8();
+        if (socketPath.isEmpty() ||
+            !datagram(socketPath.constData(), "STATUS\n", &reply, &error)) {
+            if (m_winState != QLatin1String("unavailable")) {
+                m_winState = QStringLiteral("unavailable");
+                emit winChanged();
+            }
+            return;
+        }
+        QHash<QString, QString> values;
+        const QStringList lines = QString::fromUtf8(reply).split('\n', Qt::SkipEmptyParts);
+        for (const QString &line : lines) {
+            const qsizetype at = line.indexOf('=');
+            if (at > 0) values.insert(line.left(at), line.mid(at + 1));
+        }
+        m_winState = values.value(QStringLiteral("state"), QStringLiteral("unavailable"));
+        m_winStep = values.value(QStringLiteral("step"));
+        m_winVersion = values.value(QStringLiteral("version"));
+        m_winProton = values.value(QStringLiteral("proton-default"));
+        m_winPercent = values.value(QStringLiteral("percent")).toInt();
+        if (winReady() && datagram(socketPath.constData(), "APPS\n", &reply, &error)) {
+            m_winAppNames.clear();
+            m_winAppPaths.clear();
+            const QStringList appLines = QString::fromUtf8(reply).split('\n', Qt::SkipEmptyParts);
+            for (const QString &line : appLines) {
+                const QStringList fields = line.split('\t');
+                if (fields.size() == 3 && fields.at(0) == QLatin1String("APP")) {
+                    m_winAppNames << fields.at(1);
+                    m_winAppPaths << fields.at(2);
+                }
+            }
+        }
+        emit winChanged();
+    }
+    Q_INVOKABLE void setupWindows() {
+        QByteArray reply;
+        QString error;
+        const QByteArray socketPath = winSocket().toUtf8();
+        if (!socketPath.isEmpty())
+            (void)datagram(socketPath.constData(), "SETUP\n", &reply, &error);
+        refreshWin();
+    }
+    Q_INVOKABLE void launchWinApp(int index) {
+        if (index < 0 || index >= m_winAppPaths.size()) return;
+        QByteArray reply;
+        QString error;
+        const QByteArray socketPath = winSocket().toUtf8();
+        const QByteArray request = "RUN\t" + m_winAppPaths.at(index).toUtf8() + "\n";
+        if (socketPath.isEmpty() ||
+            !datagram(socketPath.constData(), request, &reply, &error) ||
+            !reply.startsWith("OK")) {
+            report("OMINX_WIN_LAUNCH_REFUSED " + m_winAppPaths.at(index).toUtf8());
+            return;
+        }
+        report("OMINX_WIN_LAUNCH " + m_winAppPaths.at(index).toUtf8());
+    }
+signals:
+    void winChanged();
+private:
+    static QString winSocket() {
+        const QString direct = qEnvironmentVariable("OMINX_WINED_SOCKET");
+        if (!direct.isEmpty()) return direct;
+        const QString runtime = qEnvironmentVariable("XDG_RUNTIME_DIR");
+        return runtime.isEmpty() ? QString() : runtime + QStringLiteral("/ominx-wined.sock");
+    }
+    QString m_winState = QStringLiteral("unavailable");
+    QString m_winStep;
+    QString m_winVersion;
+    QString m_winProton;
+    int m_winPercent = 0;
+    QStringList m_winAppNames;
+    QStringList m_winAppPaths;
+public:
     QStringList facts() const {
         return {tr("User: %1").arg(userName()),
                 tr("Home: %1").arg(qEnvironmentVariable("HOME")),
