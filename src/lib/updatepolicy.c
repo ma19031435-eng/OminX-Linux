@@ -44,9 +44,10 @@ int ominx_update_policy_parse(struct ominx_update_policy *policy, const char *te
     const char *p = text;
     while (*p) {
         size_t n = strcspn(p, "\n");
-        if (n >= sizeof line) { snprintf(error, error_size, "line-too-long"); return -1; }
-        memcpy(line, p, n);
-        line[n] = '\0';
+        size_t content = (n > 0 && p[n - 1] == '\r') ? n - 1 : n;  /* accept CRLF files */
+        if (content >= sizeof line) { snprintf(error, error_size, "line-too-long"); return -1; }
+        memcpy(line, p, content);
+        line[content] = '\0';
         p += n + (p[n] == '\n');
         if (!line[0] || line[0] == '#') continue;
         char *eq = strchr(line, '=');

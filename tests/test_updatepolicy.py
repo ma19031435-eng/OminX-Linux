@@ -90,6 +90,11 @@ class UpdatePolicyTests(unittest.TestCase):
             out = decide(policy, 3, 'idle')
             self.assertNotEqual(out.returncode, 0, policy)
 
+    def test_crlf_policy_files_are_accepted(self):
+        policy = 'auto_install=1\r\ninstall_window=2-5\r\n'
+        self.assertEqual(parse(decide(policy, 3, 'idle'))['install'], 1)
+        self.assertEqual(parse(decide(policy, 9, 'idle'))['install'], 0)
+
     def test_missing_policy_file_is_an_error(self):
         out = subprocess.run([BIN, '/nonexistent/policy', '3', 'idle', '0'],
                              capture_output=True, text=True, timeout=10)
