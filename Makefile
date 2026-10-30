@@ -88,9 +88,9 @@ build/host/ominx-winsetup-test: src/win/winsetup.c src/lib/winproto.h src/lib/se
 	mkdir -p build/host
 	$(HOSTCC) $(CFLAGS) -DOMINX_WINSETUP_TEST -static -o $@ $(filter %.c,$^)
 build/host/ominx-gamesched-test: src/lib/gamesched-test.c src/lib/gamedb.c src/lib/gamedb.h src/lib/gamesched.c src/lib/gamesched.h
-build/host/ominx-updatepolicy-test: src/lib/updatepolicy-test.c src/lib/updatepolicy.c src/lib/updatepolicy.h
 	mkdir -p build/host
-	$(HOSTCC) $(CFLAGS) -o $@ $(filter %.c,$^)
+	$(HOSTCC) $(CFLAGS) -static -o $@ $(filter %.c,$^)
+build/host/ominx-updatepolicy-test: src/lib/updatepolicy-test.c src/lib/updatepolicy.c src/lib/updatepolicy.h
 	mkdir -p build/host
 	$(HOSTCC) $(CFLAGS) -static -o $@ $(filter %.c,$^)
 check: build/host/ominx build/host/ominx-files build/host/ominx-control build/host/ominx-login-test build/host/ominx-passwd build/host/ominx-win build/host/ominx-wined-test build/host/ominx-winsetup-test build/host/ominx-gamesched-test build/host/ominx-updatepolicy-test
