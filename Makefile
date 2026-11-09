@@ -93,8 +93,11 @@ build/host/ominx-gamesched-test: src/lib/gamesched-test.c src/lib/gamedb.c src/l
 build/host/ominx-updatepolicy-test: src/lib/updatepolicy-test.c src/lib/updatepolicy.c src/lib/updatepolicy.h
 	mkdir -p build/host
 	$(HOSTCC) $(CFLAGS) -static -o $@ $(filter %.c,$^)
-check: build/host/ominx build/host/ominx-files build/host/ominx-control build/host/ominx-login-test build/host/ominx-passwd build/host/ominx-win build/host/ominx-wined-test build/host/ominx-winsetup-test build/host/ominx-gamesched-test build/host/ominx-updatepolicy-test
-	OMINX_CONTROL_BINARY=$(CURDIR)/build/host/ominx-control OMINX_FILES_BINARY=$(CURDIR)/build/host/ominx-files OMINX_TEST_BINARY=$(CURDIR)/build/host/ominx OMINX_WIN_BINARY=$(CURDIR)/build/host/ominx-win OMINX_WINED_BINARY=$(CURDIR)/build/host/ominx-wined-test OMINX_WINSETUP_BINARY=$(CURDIR)/build/host/ominx-winsetup-test OMINX_GAMESCHED_BINARY=$(CURDIR)/build/host/ominx-gamesched-test OMINX_UPDATEPOLICY_BINARY=$(CURDIR)/build/host/ominx-updatepolicy-test python3 -m unittest discover -s tests -v
+build/host/ominx-opkgx: src/lib/opkgx.c src/lib/opkgx.h src/lib/opkgx-cli.c
+	mkdir -p build/host
+	$(HOSTCC) $(CFLAGS) -static -o $@ $(filter %.c,$^)
+check: build/host/ominx build/host/ominx-files build/host/ominx-control build/host/ominx-login-test build/host/ominx-passwd build/host/ominx-win build/host/ominx-wined-test build/host/ominx-winsetup-test build/host/ominx-gamesched-test build/host/ominx-updatepolicy-test build/host/ominx-opkgx
+	OMINX_CONTROL_BINARY=$(CURDIR)/build/host/ominx-control OMINX_FILES_BINARY=$(CURDIR)/build/host/ominx-files OMINX_TEST_BINARY=$(CURDIR)/build/host/ominx OMINX_WIN_BINARY=$(CURDIR)/build/host/ominx-win OMINX_WINED_BINARY=$(CURDIR)/build/host/ominx-wined-test OMINX_WINSETUP_BINARY=$(CURDIR)/build/host/ominx-winsetup-test OMINX_GAMESCHED_BINARY=$(CURDIR)/build/host/ominx-gamesched-test OMINX_UPDATEPOLICY_BINARY=$(CURDIR)/build/host/ominx-updatepolicy-test OMINX_OPKGX_BINARY=$(CURDIR)/build/host/ominx-opkgx python3 -m unittest discover -s tests -v
 target-check: initramfs build/ominx-login build/ominx-seat build/ominx-passwd build/ominx-login-probe build/ominx-login-test build/ominx-win-test build/ominx-wined-test build/ominx-winsetup-test build/ominx-gamesched-test
 	OMINX_CONTROL_BINARY=$(CURDIR)/build/ominx-control OMINX_FILES_BINARY=$(CURDIR)/build/ominx-files OMINX_TEST_BINARY=$(CURDIR)/build/ominx OMINX_LOGIN_BINARY=$(CURDIR)/build/ominx-login-test OMINX_PASSWD_BINARY=$(CURDIR)/build/ominx-passwd OMINX_WIN_BINARY=$(CURDIR)/build/ominx-win-test OMINX_WINED_BINARY=$(CURDIR)/build/ominx-wined-test OMINX_WINSETUP_BINARY=$(CURDIR)/build/ominx-winsetup-test OMINX_GAMESCHED_BINARY=$(CURDIR)/build/ominx-gamesched-test python3 -m unittest discover -s tests -v
 media:
