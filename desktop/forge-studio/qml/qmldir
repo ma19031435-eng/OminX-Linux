@@ -1,0 +1,6 @@
+module ForgeStudio
+singleton Theme 1.0 Theme.qml
+Navigator 1.0 Navigator.qml
+Editor 1.0 Editor.qml
+OutputPanel 1.0 OutputPanel.qml
+NewProjectDialog 1.0 NewProjectDialog.qml

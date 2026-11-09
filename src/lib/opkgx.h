@@ -16,7 +16,12 @@
 #define OPKGX_MAX_ENTRIES 10000
 #define OPKGX_MAX_PAYLOAD (2ull * 1024ull * 1024ull * 1024ull)
 
-enum opkgx_runner { OPKGX_RUNNER_NATIVE = 0, OPKGX_RUNNER_WINE = 1 };
+/* native: an executable in the package. wine: a Windows program in its own prefix.
+   forge: a Forge program (.fg), run by ominx-forge, which runs only on OminXOS. */
+enum opkgx_runner { OPKGX_RUNNER_NATIVE = 0, OPKGX_RUNNER_WINE = 1, OPKGX_RUNNER_FORGE = 2 };
+
+/* Name of a runner as written in manifests and the registry. */
+const char *opkgx_runner_name(enum opkgx_runner r);
 
 /* Category bits, in the order the manifest lists them. */
 #define OPKGX_CAT_GAMES (1u << 0)

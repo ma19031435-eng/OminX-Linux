@@ -36,6 +36,14 @@ build/ominx-login-test: src/login/broker.c src/login/login.c src/login/login.h
 build/ominx-opkgx: src/lib/opkgx.c src/lib/opkgx.h src/lib/opkgx-cli.c src/lib/peicon.c src/lib/peicon.h src/lib/winproto.h
 	mkdir -p build
 	$(CC) $(CFLAGS) -static -o $@ $(filter %.c,$^)
+# Forge: the application language runtime and toolchain. Shipped build refuses to
+# run anywhere but OminXOS. The test build reads the platform identity from a fixture.
+build/ominx-forge: src/forge/forge.c src/forge/forge.h src/forge/main.c src/lib/opkgx.c src/lib/opkgx.h src/lib/peicon.c src/lib/peicon.h src/lib/winproto.h
+	mkdir -p build
+	$(CC) $(CFLAGS) -static -o $@ src/forge/forge.c src/forge/main.c src/lib/opkgx.c src/lib/peicon.c -lm
+build/ominx-forge-test: src/forge/forge.c src/forge/forge.h src/forge/main.c src/lib/opkgx.c src/lib/opkgx.h src/lib/peicon.c src/lib/peicon.h src/lib/winproto.h
+	mkdir -p build
+	$(CC) $(CFLAGS) -DOMINX_FORGE_TEST -static -o $@ src/forge/forge.c src/forge/main.c src/lib/opkgx.c src/lib/peicon.c -lm
 build/ominx-win: src/win/win.c src/lib/pe.c src/lib/pe.h src/lib/gamedb.c src/lib/gamedb.h src/lib/gamesched.c src/lib/gamesched.h src/lib/winproto.h
 	mkdir -p build
 	$(CC) $(CFLAGS) -static -o $@ $(filter %.c,$^)
@@ -61,11 +69,11 @@ build/ominx-gamesched-test: src/lib/gamesched-test.c src/lib/gamedb.c src/lib/ga
 build/ominx-winsetup-test: src/win/winsetup.c src/lib/winproto.h src/lib/session.h
 	mkdir -p build
 	$(CC) $(CFLAGS) -DOMINX_WINSETUP_TEST -static -o $@ $(filter %.c,$^)
-initramfs: build/ominx build/ominx-files build/ominx-control build/ominx-win build/ominx-wined build/ominx-winsetup build/ominx-opkgx scripts/make-initramfs.py
+initramfs: build/ominx build/ominx-files build/ominx-control build/ominx-win build/ominx-wined build/ominx-winsetup build/ominx-opkgx build/ominx-forge scripts/make-initramfs.py
 	mkdir -p build/win-stage
-	cp build/ominx-win build/ominx-wined build/ominx-winsetup build/ominx-opkgx build/win-stage/
+	cp build/ominx-win build/ominx-wined build/ominx-winsetup build/ominx-opkgx build/ominx-forge build/win-stage/
 	mkdir -p build/win-stage/games && cp compat/games/*.game build/win-stage/games/
-	python3 scripts/make-initramfs.py build/ominx build/initramfs.cpio.gz build/ominx-files build/ominx-control --win-dir build/win-stage
+	python3 scripts/make-initramfs.py build/ominx build/initramfs.cpio.gz build/ominx-files build/ominx-control --win-dir build/win-stage $(if $(wildcard build/forge-studio/forge-studio),--forge-studio build/forge-studio/forge-studio,)
 build/host/ominx: src/core/ominx.c src/lib/parse.c src/lib/files.c src/lib/parse.h src/lib/files.h src/lib/session.c src/lib/session.h src/lib/control.c src/lib/control.h src/lib/pe.c src/lib/pe.h
 	mkdir -p build/host
 	$(HOSTCC) $(CFLAGS) -static -o $@ $(filter %.c,$^)
@@ -90,17 +98,23 @@ build/host/ominx-wined-test: src/win/wined.c src/lib/pe.c src/lib/pe.h src/lib/g
 build/host/ominx-winsetup-test: src/win/winsetup.c src/lib/winproto.h src/lib/session.h
 	mkdir -p build/host
 	$(HOSTCC) $(CFLAGS) -DOMINX_WINSETUP_TEST -static -o $@ $(filter %.c,$^)
+build/host/ominx-forge: src/forge/forge.c src/forge/forge.h src/forge/main.c src/lib/opkgx.c src/lib/opkgx.h src/lib/peicon.c src/lib/peicon.h src/lib/winproto.h
+	mkdir -p build/host
+	$(HOSTCC) $(CFLAGS) -static -o $@ src/forge/forge.c src/forge/main.c src/lib/opkgx.c src/lib/peicon.c -lm
+build/host/ominx-forge-test: src/forge/forge.c src/forge/forge.h src/forge/main.c src/lib/opkgx.c src/lib/opkgx.h src/lib/peicon.c src/lib/peicon.h src/lib/winproto.h
+	mkdir -p build/host
+	$(HOSTCC) $(CFLAGS) -DOMINX_FORGE_TEST -static -o $@ src/forge/forge.c src/forge/main.c src/lib/opkgx.c src/lib/peicon.c -lm
 build/host/ominx-gamesched-test: src/lib/gamesched-test.c src/lib/gamedb.c src/lib/gamedb.h src/lib/gamesched.c src/lib/gamesched.h
 	mkdir -p build/host
 	$(HOSTCC) $(CFLAGS) -static -o $@ $(filter %.c,$^)
 build/host/ominx-updatepolicy-test: src/lib/updatepolicy-test.c src/lib/updatepolicy.c src/lib/updatepolicy.h
 	mkdir -p build/host
 	$(HOSTCC) $(CFLAGS) -static -o $@ $(filter %.c,$^)
-build/host/ominx-opkgx: src/lib/opkgx.c src/lib/opkgx.h src/lib/opkgx-cli.c src/lib/peicon.c src/lib/peicon.h src/lib/winproto.h
+build/host/ominx-opkgx: src/lib/opkgx.c src/lib/opkgx.h src/lib/opkgx-cli.c src/lib/peicon.c src/lib/peicon.h src/lib/winproto.h build/host/ominx-forge-test
 	mkdir -p build/host
-	$(HOSTCC) $(CFLAGS) -static -o $@ $(filter %.c,$^)
-check: build/host/ominx build/host/ominx-files build/host/ominx-control build/host/ominx-login-test build/host/ominx-passwd build/host/ominx-win build/host/ominx-wined-test build/host/ominx-winsetup-test build/host/ominx-gamesched-test build/host/ominx-updatepolicy-test build/host/ominx-opkgx
-	OMINX_CONTROL_BINARY=$(CURDIR)/build/host/ominx-control OMINX_FILES_BINARY=$(CURDIR)/build/host/ominx-files OMINX_TEST_BINARY=$(CURDIR)/build/host/ominx OMINX_WIN_BINARY=$(CURDIR)/build/host/ominx-win OMINX_WINED_BINARY=$(CURDIR)/build/host/ominx-wined-test OMINX_WINSETUP_BINARY=$(CURDIR)/build/host/ominx-winsetup-test OMINX_GAMESCHED_BINARY=$(CURDIR)/build/host/ominx-gamesched-test OMINX_UPDATEPOLICY_BINARY=$(CURDIR)/build/host/ominx-updatepolicy-test OMINX_OPKGX_BINARY=$(CURDIR)/build/host/ominx-opkgx python3 -m unittest discover -s tests -v
+	$(HOSTCC) $(CFLAGS) '-DOMINX_FORGE_PATH="$(CURDIR)/build/host/ominx-forge-test"' -static -o $@ $(filter %.c,$^)
+check: build/host/ominx build/host/ominx-files build/host/ominx-control build/host/ominx-login-test build/host/ominx-passwd build/host/ominx-win build/host/ominx-wined-test build/host/ominx-winsetup-test build/host/ominx-gamesched-test build/host/ominx-updatepolicy-test build/host/ominx-opkgx build/host/ominx-forge build/host/ominx-forge-test
+	OMINX_CONTROL_BINARY=$(CURDIR)/build/host/ominx-control OMINX_FILES_BINARY=$(CURDIR)/build/host/ominx-files OMINX_TEST_BINARY=$(CURDIR)/build/host/ominx OMINX_WIN_BINARY=$(CURDIR)/build/host/ominx-win OMINX_WINED_BINARY=$(CURDIR)/build/host/ominx-wined-test OMINX_WINSETUP_BINARY=$(CURDIR)/build/host/ominx-winsetup-test OMINX_GAMESCHED_BINARY=$(CURDIR)/build/host/ominx-gamesched-test OMINX_UPDATEPOLICY_BINARY=$(CURDIR)/build/host/ominx-updatepolicy-test OMINX_OPKGX_BINARY=$(CURDIR)/build/host/ominx-opkgx OMINX_FORGE_BINARY=$(CURDIR)/build/host/ominx-forge-test OMINX_FORGE_PROD_BINARY=$(CURDIR)/build/host/ominx-forge python3 -m unittest discover -s tests -v
 target-check: initramfs build/ominx-login build/ominx-seat build/ominx-passwd build/ominx-login-probe build/ominx-login-test build/ominx-win-test build/ominx-wined-test build/ominx-winsetup-test build/ominx-gamesched-test
 	OMINX_CONTROL_BINARY=$(CURDIR)/build/ominx-control OMINX_FILES_BINARY=$(CURDIR)/build/ominx-files OMINX_TEST_BINARY=$(CURDIR)/build/ominx OMINX_LOGIN_BINARY=$(CURDIR)/build/ominx-login-test OMINX_PASSWD_BINARY=$(CURDIR)/build/ominx-passwd OMINX_WIN_BINARY=$(CURDIR)/build/ominx-win-test OMINX_WINED_BINARY=$(CURDIR)/build/ominx-wined-test OMINX_WINSETUP_BINARY=$(CURDIR)/build/ominx-winsetup-test OMINX_GAMESCHED_BINARY=$(CURDIR)/build/ominx-gamesched-test python3 -m unittest discover -s tests -v
 media:
@@ -119,3 +133,4 @@ previews:
 # without a GL/EGL/xkb/dbus runtime. Also refreshes the game library screenshots.
 ui-check:
 	$${OMINX_UI_PYTHON:-python3} tests/ui/test_game_library.py
+	$${OMINX_UI_PYTHON:-python3} tests/test_forge_studio.py

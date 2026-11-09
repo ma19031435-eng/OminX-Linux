@@ -5,6 +5,20 @@
 #include "winproto.h"
 #include "peicon.h"
 
+/* The Forge runtime that runs forge packages. The host test build points this
+   at the test binary; the shipped build uses the system copy. */
+#ifndef OMINX_FORGE_PATH
+#define OMINX_FORGE_PATH "/bin/ominx-forge"
+#endif
+
+const char *opkgx_runner_name(enum opkgx_runner r) {
+    switch (r) {
+    case OPKGX_RUNNER_WINE: return "wine";
+    case OPKGX_RUNNER_FORGE: return "forge";
+    default: return "native";
+    }
+}
+
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <sys/un.h>
@@ -355,6 +369,7 @@ static int parse_manifest(const char *text, size_t length, struct opkgx_manifest
 
     if (!strcmp(values[K_RUNNER], "native")) out.runner = OPKGX_RUNNER_NATIVE;
     else if (!strcmp(values[K_RUNNER], "wine")) out.runner = OPKGX_RUNNER_WINE;
+    else if (!strcmp(values[K_RUNNER], "forge")) out.runner = OPKGX_RUNNER_FORGE;
     else FAIL("bad-runner");
 
     const char *exec = values[K_EXEC];
@@ -362,6 +377,10 @@ static int parse_manifest(const char *text, size_t length, struct opkgx_manifest
     if (out.runner == OPKGX_RUNNER_WINE) {
         if (ends_with_ci(exec, ".msi")) out.is_msi = 1;
         else if (!ends_with_ci(exec, ".exe")) FAIL("exec-not-windows");
+    }
+    if (out.runner == OPKGX_RUNNER_FORGE) {
+        size_t en = strlen(exec);
+        if (en < 4 || strcmp(exec + en - 3, ".fg")) FAIL("exec-not-forge");
     }
 
     if (seen[K_ICON]) {
@@ -631,7 +650,7 @@ static int write_desktop(const char *home, const struct opkgx_manifest *m, const
     char icon[PATH_BUF];
     if (!join(icon, sizeof icon, final_dir, "icon.png") && path_exists(icon)) fprintf(f, "Icon=%s\n", icon);
     fprintf(f, "Terminal=false\nX-OminX-App=%s\nX-OminX-Runner=%s\n", m->id,
-            m->runner == OPKGX_RUNNER_WINE ? "wine" : "native");
+            opkgx_runner_name(m->runner));
     if (m->categories) {
         static const char *const names[] = {"Games", "Office", "Development", "Graphics", "Audio",
                                             "Video", "Utilities", "Internet", "Education"};
@@ -677,7 +696,7 @@ static int registry_rewrite(const char *apps, const char *id, const char *line) 
 static int registry_add(const char *apps, const struct opkgx_manifest *m) {
     char line[512];
     snprintf(line, sizeof line, "%s %s %s %s", m->id, m->version,
-             m->runner == OPKGX_RUNNER_WINE ? "wine" : "native",
+             opkgx_runner_name(m->runner),
              m->is_msi ? "setup-pending" : "ready");
     return registry_rewrite(apps, m->id, line);
 }
@@ -882,6 +901,41 @@ int opkgx_run(const char *id, const char *home, char *err, size_t err_size) {
     if (strcmp(m.id, id)) return set_err(err, err_size, "manifest-id-mismatch");
 
     if (m.runner == OPKGX_RUNNER_WINE) return wine_run(&m, id, err, err_size);
+
+    if (m.runner == OPKGX_RUNNER_FORGE) {
+        /* Forge programs run in their own folder with ominx-forge, which checks the platform. */
+        char program[PATH_BUF];
+        if (join(program, sizeof program, dir, m.exec)) return set_err(err, err_size, "path-too-long");
+        /* Output goes to ~/.local/state/ominx/forge/<id>.log, since a desktop launch has no terminal.
+           Each run replaces the previous log. If the log cannot be opened, the program still runs. */
+        char logdir[PATH_BUF], logpath[PATH_BUF];
+        const char *logsub = "/.local/state/ominx/forge";
+        size_t hl = strlen(home), sl = strlen(logsub), il = strlen(id);
+        logpath[0] = '\0';
+        if (hl + sl + 1 <= sizeof logdir && hl + sl + 1 + il + 5 <= sizeof logpath && !mkdir_p(strcat(memcpy(logdir, home, hl + 1), logsub))) {
+            memcpy(logpath, logdir, hl + sl);
+            logpath[hl + sl] = '/';
+            memcpy(logpath + hl + sl + 1, id, il);
+            memcpy(logpath + hl + sl + 1 + il, ".log", 5);
+        }
+        pid_t fpid = fork();
+        if (fpid < 0) return set_err(err, err_size, "fork-failed");
+        if (fpid == 0) {
+            if (chdir(dir)) _exit(127);
+            if (logpath[0]) {
+                int logfd = open(logpath, O_WRONLY | O_CREAT | O_TRUNC | O_NOFOLLOW, 0644);
+                if (logfd >= 0) {
+                    dup2(logfd, 1);
+                    dup2(logfd, 2);
+                    if (logfd > 2) close(logfd);
+                }
+            }
+            char *argv[] = {(char *)OMINX_FORGE_PATH, "exec", program, NULL};
+            execv(OMINX_FORGE_PATH, argv);
+            _exit(127);
+        }
+        return 0;
+    }
 
     char exe[PATH_BUF];
     if (join(exe, sizeof exe, dir, m.exec)) return set_err(err, err_size, "path-too-long");

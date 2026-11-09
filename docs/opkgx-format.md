@@ -51,8 +51,8 @@ once. Unknown keys are an error, so a typo cannot be silently ignored.
 | `version` | yes | `MAJOR.MINOR.PATCH`, each a decimal integer of at most 5 digits |
 | `summary` | no | at most 120 bytes, no control characters |
 | `arch` | yes | must be `x86_64` |
-| `runner` | yes | `native` or `wine` |
-| `exec` | yes | path under `app/` of a regular file. For `native` the file must be executable. For `wine` it must end in `.exe` or `.msi`, case-insensitive |
+| `runner` | yes | `native`, `wine` or `forge` |
+| `exec` | yes | path under `app/` of a regular file. For `native` the file must be executable. For `wine` it must end in `.exe` or `.msi`, case-insensitive. For `forge` it must end in `.fg` (lowercase), and no executable bit is needed |
 | `icon` | no | must be `icon.png`, and the file must be present |
 | `categories` | no | comma-separated, from: `Games`, `Office`, `Development`, `Graphics`, `Audio`, `Video`, `Utilities`, `Internet`, `Education` |
 | `permissions` | no | reserved in version 1, must be empty or absent |
@@ -87,6 +87,14 @@ categories=Games
     stays `setup-pending` until that installer exits with status 0. Running
     the package again after it is `ready` repeats the installer, which is how
     a user repairs or removes the program.
+- **forge**: the program is a Forge source file, run by `ominx-forge`, which
+  runs only on OminXOS. `run` starts `ominx-forge exec <app/...fg>` in the
+  app's folder, detached from the caller, as the other runners do. Standard
+  output and standard error go to `~/.local/state/ominx/forge/<id>.log`. Each run
+  replaces the log, and the log is never written through a symbolic link. The
+  program's imports resolve inside `app/`. The language and its limits are in
+  `docs/forge-language.md`, and the packaging workflow is in
+  `docs/opkgx-system.md`.
 
 ## Installation
 
@@ -111,7 +119,8 @@ Installs happen under the user's home directory and never need root.
    exists.
 7. Record the install in `~/.local/share/ominx/apps/registry`, one line per
    app: `id version runner state`. `state` is `ready`, or `setup-pending` for
-   an `.msi` package until its installer finishes.
+   an `.msi` package until its installer finishes. A `forge` package is `ready`
+   at install.
 8. For a `wine` package, ask the service to build the app's prefix. The
    service does this in the background, and if its worker is busy the request
    is queued. Installing still succeeds if the service is not running. The
@@ -151,7 +160,7 @@ The validator and installer report one short reason per failure. The main ones:
 | `bad-id`, `bad-version`, `bad-name`, `bad-summary`, `bad-runner`, `bad-category`, `bad-icon-key` | a manifest value is out of range |
 | `arch-unsupported`, `format-unsupported`, `permissions-unsupported` | the package asks for something version 1 does not provide |
 | `unknown-key`, `duplicate-key`, `bad-line`, `missing-required-key` | the manifest syntax is wrong |
-| `exec-outside-app`, `exec-missing`, `exec-not-executable`, `exec-not-windows` | the program entry is wrong |
+| `exec-outside-app`, `exec-missing`, `exec-not-executable`, `exec-not-windows`, `exec-not-forge` | the program entry is wrong for its runner |
 | `link-entry`, `device-entry`, `fifo-entry`, `extension-entry`, `entry-type-unsupported` | an archive entry type is refused |
 | `path-escape`, `unexpected-entry`, `duplicate-entry`, `path-too-long`, `bad-size` | an archive path or size is refused |
 | `bad-checksum`, `not-ustar`, `truncated` | the archive is damaged or cut short |
@@ -162,6 +171,7 @@ The validator and installer report one short reason per failure. The main ones:
 | `wined-unavailable` | the Wine service is not running |
 | `prefix-not-ready` | the app's prefix is still being built; the request was queued |
 | `program-missing`, `not-a-windows-program`, `not-an-msi`, `unsupported-architecture` | the Windows program is not usable |
+| `fork-failed` | the program could not be started |
 | `too-many-programs` | the service is already running its maximum number of programs |
 | `swap-failed`, `registry-failed`, `desktop-entry-failed` | the installer could not finish a step |
 | `source-unreadable`, `output-unwritable`, `too-deep` | `pack` could not read the folder or write the output |
