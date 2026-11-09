@@ -33,6 +33,9 @@ build/ominx-login-probe: src/login/probe.c src/login/login.c src/login/login.h
 build/ominx-login-test: src/login/broker.c src/login/login.c src/login/login.h
 	mkdir -p build
 	$(CC) $(CFLAGS) -DOMINX_LOGIN_TEST -static -o $@ $(filter %.c,$^)
+build/ominx-opkgx: src/lib/opkgx.c src/lib/opkgx.h src/lib/opkgx-cli.c src/lib/peicon.c src/lib/peicon.h src/lib/winproto.h
+	mkdir -p build
+	$(CC) $(CFLAGS) -static -o $@ $(filter %.c,$^)
 build/ominx-win: src/win/win.c src/lib/pe.c src/lib/pe.h src/lib/gamedb.c src/lib/gamedb.h src/lib/gamesched.c src/lib/gamesched.h src/lib/winproto.h
 	mkdir -p build
 	$(CC) $(CFLAGS) -static -o $@ $(filter %.c,$^)
@@ -58,9 +61,9 @@ build/ominx-gamesched-test: src/lib/gamesched-test.c src/lib/gamedb.c src/lib/ga
 build/ominx-winsetup-test: src/win/winsetup.c src/lib/winproto.h src/lib/session.h
 	mkdir -p build
 	$(CC) $(CFLAGS) -DOMINX_WINSETUP_TEST -static -o $@ $(filter %.c,$^)
-initramfs: build/ominx build/ominx-files build/ominx-control build/ominx-win build/ominx-wined build/ominx-winsetup scripts/make-initramfs.py
+initramfs: build/ominx build/ominx-files build/ominx-control build/ominx-win build/ominx-wined build/ominx-winsetup build/ominx-opkgx scripts/make-initramfs.py
 	mkdir -p build/win-stage
-	cp build/ominx-win build/ominx-wined build/ominx-winsetup build/win-stage/
+	cp build/ominx-win build/ominx-wined build/ominx-winsetup build/ominx-opkgx build/win-stage/
 	mkdir -p build/win-stage/games && cp compat/games/*.game build/win-stage/games/
 	python3 scripts/make-initramfs.py build/ominx build/initramfs.cpio.gz build/ominx-files build/ominx-control --win-dir build/win-stage
 build/host/ominx: src/core/ominx.c src/lib/parse.c src/lib/files.c src/lib/parse.h src/lib/files.h src/lib/session.c src/lib/session.h src/lib/control.c src/lib/control.h src/lib/pe.c src/lib/pe.h
@@ -93,7 +96,7 @@ build/host/ominx-gamesched-test: src/lib/gamesched-test.c src/lib/gamedb.c src/l
 build/host/ominx-updatepolicy-test: src/lib/updatepolicy-test.c src/lib/updatepolicy.c src/lib/updatepolicy.h
 	mkdir -p build/host
 	$(HOSTCC) $(CFLAGS) -static -o $@ $(filter %.c,$^)
-build/host/ominx-opkgx: src/lib/opkgx.c src/lib/opkgx.h src/lib/opkgx-cli.c
+build/host/ominx-opkgx: src/lib/opkgx.c src/lib/opkgx.h src/lib/opkgx-cli.c src/lib/peicon.c src/lib/peicon.h src/lib/winproto.h
 	mkdir -p build/host
 	$(HOSTCC) $(CFLAGS) -static -o $@ $(filter %.c,$^)
 check: build/host/ominx build/host/ominx-files build/host/ominx-control build/host/ominx-login-test build/host/ominx-passwd build/host/ominx-win build/host/ominx-wined-test build/host/ominx-winsetup-test build/host/ominx-gamesched-test build/host/ominx-updatepolicy-test build/host/ominx-opkgx

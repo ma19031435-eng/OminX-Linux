@@ -28,7 +28,7 @@ Nothing here is a claim of compatibility or performance that has not been measur
 | `.msi` compatibility | Partial | `.msi` handling is routed through the Wine runtime. Not verified with real installers. |
 | "89% Windows application compatibility" | Target | Not measured. No test suite of real applications exists yet. This figure must not be used as a claim until measured. |
 | Shortcuts, install and launch from the desktop | Partial | The game library lists titles and launches them through `ominx-win`. Shortcut creation and general app install are not built. |
-| Native `.opkgx` applications | Partial | Format v1 is specified in `docs/opkgx-format.md`. The validator, installer, remove, list and native run are in `src/lib/opkgx.c` and built as `ominx-opkgx`. `tests/test_opkgx.py` has 69 tests, also run under ASan/UBSan, plus a 3000-case mutation fuzz with no failures. Not yet done: Wine launch (`wine-launch-not-wired`), `.msi` setup run, icon extraction from packages, a package builder for developers, and testing on the real target. |
+| Native `.opkgx` applications | Partial | Format v1 is specified in `docs/opkgx-format.md`. `ominx-opkgx` validates, packs, installs, lists, removes and runs packages (`src/lib/opkgx.c`, `src/lib/opkgx-cli.c`). Native apps run directly. Windows `.exe` apps run in their own prefix through the Wine service (`APPRUN`); `.msi` installers run through `APPMSI`, and the app is `ready` once they exit 0. Each app prefix is built at install time. Icons are extracted from the program when no `icon.png` is shipped (`src/lib/peicon.c`). Double-clicking a package installs it, with notifications. Tests: `tests/test_opkgx.py` (100 tests), run under ASan/UBSan, plus archive and PE fuzzing with no failures. Not yet verified: a real Wine runtime running a real installer, and the packages on the real target. |
 | LibreOffice Writer, Calc, Impress, Draw, Base, Math | Not started | Not in the build. |
 | Linux applications | Partial | The base system is source-built; a Wayland compositor and GUI apps are listed as remaining gates in `docs/windows-compatibility.md`. |
 
@@ -65,4 +65,4 @@ Nothing here is a claim of compatibility or performance that has not been measur
 2. Extract icons from installed `.exe` files for real titles.
 3. C++ on-target launch bridge for the game library.
 4. Per-title Windows application results on a booted target.
-5. Decide the `.opkgx` format and the installer, with the product owner, before implementing.
+5. `.opkgx` v1 is designed and implemented (`docs/opkgx-format.md`). Still to verify on a real target: a real Wine runtime running a real installer, and double-click install from the file manager.

@@ -96,6 +96,7 @@ def archive(binary, files=None, control=None, graphics_probe=None, quick_probe=N
         entry('bin/ominx-wined', stat.S_IFREG | 0o755, win['ominx-wined'])
         entry('sbin/ominx-winsetup', stat.S_IFREG | 0o755, win['ominx-winsetup'])
         entry('bin/ominx-win-binfmt', stat.S_IFLNK | 0o777, b'ominx-win')
+        entry('bin/ominx-opkgx', stat.S_IFREG | 0o755, win['ominx-opkgx'])
         entry('etc/ominx/windows-compat', stat.S_IFREG | 0o444, b'1\n')
         # Game profiles (compat/games): read-only policy data for `win game`.
         # The launch gate reads them as-is; they are never generated or edited on the target.
@@ -107,6 +108,10 @@ def archive(binary, files=None, control=None, graphics_probe=None, quick_probe=N
               WIN_DESKTOP_ENTRY)
         entry('usr/share/mime/packages/ominx-windows.xml', stat.S_IFREG | 0o644,
               WIN_MIME_XML)
+        entry('usr/share/applications/ominx-opkgx-install.desktop', stat.S_IFREG | 0o644,
+              OPKGX_DESKTOP_ENTRY)
+        entry('usr/share/mime/packages/ominx-opkgx.xml', stat.S_IFREG | 0o644,
+              OPKGX_MIME_XML)
     if wine_runtime is not None:
         if win is None:
             raise ValueError('A Wine runtime tree requires the Windows services (--win-dir)')
@@ -145,7 +150,7 @@ def static_elf(path):
 
 
 
-WIN_BINARIES = ('ominx-win', 'ominx-wined', 'ominx-winsetup')
+WIN_BINARIES = ('ominx-win', 'ominx-wined', 'ominx-winsetup', 'ominx-opkgx')
 # Desktop integration packaged for the final frontend: the same association
 # the file manager will use to offer .exe/.msi files to ominx-win.
 WIN_DESKTOP_ENTRY = (b'[Desktop Entry]\nType=Application\nName=OminX Windows App Support\n'
@@ -162,6 +167,16 @@ WIN_MIME_XML = (b'<?xml version="1.0" encoding="UTF-8"?>\n<mime-info '
                 b' </mime-type>\n <mime-type type="application/x-msi">\n'
                 b'  <comment>Windows Installer package</comment><glob pattern="*.msi"/>\n'
                 b' </mime-type>\n</mime-info>\n')
+# OPKGX packages: double-clicking one installs it, and the result is shown as a notification.
+OPKGX_DESKTOP_ENTRY = (b'[Desktop Entry]\nType=Application\nName=Install OminX application\n'
+                       b'Comment=Install an OPKGX application package\n'
+                       b'Exec=ominx-opkgx install --notify %f\nTerminal=false\nNoDisplay=true\n'
+                       b'Categories=Utility;\nMimeType=application/x-opkgx;\n')
+OPKGX_MIME_XML = (b'<?xml version="1.0" encoding="UTF-8"?>\n<mime-info '
+                  b'xmlns="http://www.freedesktop.org/standards/shared-mime-info">\n'
+                  b' <mime-type type="application/x-opkgx">\n'
+                  b'  <comment>OminX application package</comment><glob pattern="*.opkgx"/>\n'
+                  b' </mime-type>\n</mime-info>\n')
 BUS_LICENSES = ('DBUS-LICENSES', 'DBUS-COPYING', 'DBUS-AFL-2.1.txt', 'DBUS-GPL-2.0-or-later.txt', 'EXPAT-COPYING')
 LOGIN_BINARIES = ('ominx-login', 'ominx-seat', 'ominx-passwd', 'ominx-desktop', 'ominx-login-probe')
 LOGIN_PATHS = {'ominx-login': 'sbin/ominx-login', 'ominx-seat': 'sbin/ominx-seat',

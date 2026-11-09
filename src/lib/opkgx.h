@@ -52,8 +52,13 @@ int opkgx_install(const char *archive, const char *home, char *err, size_t err_s
 /* Removes an installed app and its desktop entry. Returns 0, or -1 if it is not installed. */
 int opkgx_remove(const char *id, const char *home, char *err, size_t err_size);
 
-/* Prints the registry, one line per app: id version runner state. */
+/* Prints the registry, one line per app: id version runner state.
+   A .msi package moves from setup-pending to ready once its installer exits 0. */
 int opkgx_list(const char *home, FILE *out);
+
+/* Builds a package from a source folder (opkgx.manifest, optional icon.png, app/...).
+   The result is validated before it is moved into place. Returns 0 or -1 with a reason. */
+int opkgx_pack(const char *dir, const char *out_path, char *err, size_t err_size);
 
 /* Starts an installed app. Native apps run directly; wine apps are handed to
    the Wine service. Returns 0 when the launch was started. */

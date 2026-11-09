@@ -1,14 +1,16 @@
 # OPKGX format, version 1
 
 `.opkgx` is the native application package for OminXOS. This document is the
-specification. The validator and installer in `src/lib/opkgx.c` implement it,
-and `tests/test_opkgx.py` checks it.
+specification. `src/lib/opkgx.c` implements it, the `ominx-opkgx` tool
+(`src/lib/opkgx-cli.c`) exposes it, and `tests/test_opkgx.py` checks it.
 
 ## Goals
 
 - Installing an application is one double-click, or one `ominx-opkgx install`.
 - A package cannot write outside its own application directory, cannot run as
   root, and cannot carry links or devices.
+- Windows programs install the same way as native ones, and run in their own
+  Wine prefix that is built ahead of time, not on first launch.
 - The target has no Python and no JSON parser, so the format needs only C and
   a tar reader.
 
@@ -22,6 +24,8 @@ and `tests/test_opkgx.py` checks it.
 - Paths are relative, use `/` separators, contain no `..` component, no empty
   component, and are at most 255 bytes long.
 - The first entry must be `opkgx.manifest`.
+- The archive must end with the two zero blocks of the tar end marker. An
+  archive that stops earlier is a truncated download and is refused.
 
 ## Layout
 
@@ -44,7 +48,7 @@ once. Unknown keys are an error, so a typo cannot be silently ignored.
 | `format` | yes | must be `1` |
 | `id` | yes | 2 to 64 characters: `a-z`, `0-9`, `.`, `-`; starts with a letter; no `..` |
 | `name` | yes | 1 to 64 bytes, no control characters |
-| `version` | yes | `MAJOR.MINOR.PATCH`, each a decimal integer |
+| `version` | yes | `MAJOR.MINOR.PATCH`, each a decimal integer of at most 5 digits |
 | `summary` | no | at most 120 bytes, no control characters |
 | `arch` | yes | must be `x86_64` |
 | `runner` | yes | `native` or `wine` |
@@ -72,11 +76,17 @@ categories=Games
 ## Runners
 
 - **native**: the executable runs directly on the host, using the system's
-  libraries that the package does not bundle.
-- **wine**: the executable runs inside the OminX Wine runtime, in that
-  application's own prefix at `~/.local/share/ominx/apps/<id>/prefix`. A
-  `.msi` exec is run through `msiexec` in that prefix. Version 1 installs
-  `.msi` packages but reports `setup-pending` until the first run completes.
+  libraries that the package does not bundle. `run` starts it in its own
+  directory, detached from the caller.
+- **wine**: the program runs inside the OminX Wine service, in the app's own
+  prefix at `~/.local/share/ominx/apps/<id>/prefix`. The service is the
+  per-user `ominx-wined` daemon. It keeps one wineserver per prefix, so a
+  program starts quickly.
+  - `.exe`: `run` starts the program in that prefix.
+  - `.msi`: `run` starts `msiexec /i` on the package in that prefix. Its state
+    stays `setup-pending` until that installer exits with status 0. Running
+    the package again after it is `ready` repeats the installer, which is how
+    a user repairs or removes the program.
 
 ## Installation
 
@@ -90,22 +100,71 @@ Installs happen under the user's home directory and never need root.
 4. Swap the staging directory into place. The previous version is first renamed
    to `.old-<id>`, then the staging directory is renamed to `<id>`, then the
    old copy is deleted. If a crash lands between the two renames, the next
-   install or remove finds `.old-<id>` with no `<id>` and restores it first.
-5. Write `~/.local/share/applications/ominx-<id>.desktop`, with `Exec` set to
-   `ominx-opkgx run <id>` and `Icon` set to the installed `icon.png` if present.
-6. Record the install in `~/.local/share/ominx/apps/registry`, one line per
+   install, remove or run finds `.old-<id>` with no `<id>` and restores it first.
+5. Icon. For a `wine` package without `icon.png`, the installer extracts the
+   program's largest icon from its resources and writes it as `icon.png` in
+   the installed copy. Icons in PNG format are copied as they are. Bitmap icons
+   at 24 or 32 bits per pixel are converted to PNG. Other formats leave the app
+   with the generic icon. This generated file is never part of the package.
+6. Write `~/.local/share/applications/ominx-<id>.desktop`. `Exec` is
+   `ominx-opkgx run --notify <id>`. `Icon` is the installed `icon.png` if it
+   exists.
+7. Record the install in `~/.local/share/ominx/apps/registry`, one line per
    app: `id version runner state`. `state` is `ready`, or `setup-pending` for
-   a `.msi` package.
+   an `.msi` package until its installer finishes.
+8. For a `wine` package, ask the service to build the app's prefix. The
+   service does this in the background, and if its worker is busy the request
+   is queued. Installing still succeeds if the service is not running. The
+   first run then reports `prefix-not-ready`, and the prefix is built when that
+   run is requested.
 
 Removing an app deletes its directory and its desktop entry, and removes its
 registry line. Nothing outside the user's home is touched.
 
+## Packing
+
+`ominx-opkgx pack <source-dir> <out.opkgx>` builds a package from a folder that
+holds `opkgx.manifest`, an optional `icon.png`, and `app/`. The output is
+deterministic: the same folder always gives the same bytes. Entries are sorted
+with the manifest first, owners are zero, and timestamps are zero. The result is
+validated before it is moved into place, so `pack` never produces a package
+that `install` would refuse. Symbolic links in the source folder are refused.
+
+## Notifications
+
+With `--notify`, `install` and `run` report their result through `notify-send`
+when it is installed. Desktop entries and file associations use it, so a
+double-click install or a launch that fails is never silent.
+
+## File association
+
+Installing the `ominx-opkgx` package also registers `application/x-opkgx` for
+`*.opkgx`, and adds a desktop entry that runs `ominx-opkgx install --notify`.
+
 ## Errors
 
-The validator reports one short reason per failure, for example
-`manifest-missing`, `bad-id`, `link-entry`, `path-escape`, `exec-not-executable`,
-`duplicate-key`, `unknown-key`, `too-large`. The installer prints the same
-reason and exits non-zero.
+The validator and installer report one short reason per failure. The main ones:
+
+| Reason | Meaning |
+|---|---|
+| `manifest-missing`, `manifest-not-first` | the manifest is absent or not the first entry |
+| `bad-id`, `bad-version`, `bad-name`, `bad-summary`, `bad-runner`, `bad-category`, `bad-icon-key` | a manifest value is out of range |
+| `arch-unsupported`, `format-unsupported`, `permissions-unsupported` | the package asks for something version 1 does not provide |
+| `unknown-key`, `duplicate-key`, `bad-line`, `missing-required-key` | the manifest syntax is wrong |
+| `exec-outside-app`, `exec-missing`, `exec-not-executable`, `exec-not-windows` | the program entry is wrong |
+| `link-entry`, `device-entry`, `fifo-entry`, `extension-entry`, `entry-type-unsupported` | an archive entry type is refused |
+| `path-escape`, `unexpected-entry`, `duplicate-entry`, `path-too-long`, `bad-size` | an archive path or size is refused |
+| `bad-checksum`, `not-ustar`, `truncated` | the archive is damaged or cut short |
+| `too-large`, `too-many-entries` | a size or count limit was exceeded |
+| `icon-not-png`, `icon-missing`, `icon-undeclared` | the icon is wrong |
+| `payload-missing` | the package has no `app/` contents |
+| `not-installed`, `bad-id`, `manifest-id-mismatch` | the requested app is not installed as named |
+| `wined-unavailable` | the Wine service is not running |
+| `prefix-not-ready` | the app's prefix is still being built; the request was queued |
+| `program-missing`, `not-a-windows-program`, `not-an-msi`, `unsupported-architecture` | the Windows program is not usable |
+| `too-many-programs` | the service is already running its maximum number of programs |
+| `swap-failed`, `registry-failed`, `desktop-entry-failed` | the installer could not finish a step |
+| `source-unreadable`, `output-unwritable`, `too-deep` | `pack` could not read the folder or write the output |
 
 ## Versioning
 
@@ -115,5 +174,6 @@ this one.
 
 ## Not in version 1
 
-Signatures, a permission model, delta updates, and compression. Each will be
-added in a later format version.
+Signatures, a permission model, delta updates, compression, icon extraction from
+non-Windows binaries, 8-bit and 4-bit program icons, and package signing
+for the update channel. Each will be added in a later format version.

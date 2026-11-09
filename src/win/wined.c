@@ -47,10 +47,13 @@ static char step_name[64] = "waiting";
 static char failure[96] = "";
 static pid_t worker = -1, wineserver_pid = -1;
 static int worker_pipe = -1, worker_proton;
+/* worker_app: the worker sets up an OPKGX app prefix. It must not touch the
+   default prefix state and must not create the ~/.wine link. */
+static int worker_app;
 static char worker_prefix[PATHBUF], worker_appid[40];
 static char proton_setup[16] = "idle";
 /* boosted: this program holds the one game boost; plan is what release undoes. */
-static struct { pid_t pid; char what[128]; int boosted; struct ominx_sched_plan plan; } running[OMINX_WIN_MAX_RUNNING];
+static struct { pid_t pid; char what[128]; char exitfile[PATHBUF]; int boosted; struct ominx_sched_plan plan; } running[OMINX_WIN_MAX_RUNNING];
 static int last_exit = -1, stopping;
 
 static int join(char *out, size_t capacity, const char *a, const char *b) {
@@ -227,7 +230,7 @@ static void setup_worker(int pipe_fd, const char *target_prefix, int proton) {
     char path[PATHBUF], other[PATHBUF];
     progress(pipe_fd, 5, "directories");
     if (mkdir_p(target_prefix)) _exit(10);
-    if (!proton) {
+    if (!proton && !worker_app) {
         /* ~/.wine compatibility link for traditional Wine tooling. */
         join(path, sizeof path, home_dir, ".wine");
         struct stat st;
@@ -294,8 +297,44 @@ static int start_setup(const char *target_prefix, int proton, const char *appid)
     int flags = fcntl(worker_pipe, F_GETFL);
     if (flags >= 0 && fcntl(worker_pipe, F_SETFL, flags | O_NONBLOCK)) { /* progress read would block */ }
     if (proton) snprintf(proton_setup, sizeof proton_setup, "%s", "running");
-    else { state = ST_SETTING_UP; step_percent = 0; snprintf(step_name, sizeof step_name, "%s", "starting"); }
+    else if (!worker_app) { state = ST_SETTING_UP; step_percent = 0; snprintf(step_name, sizeof step_name, "%s", "starting"); }
     return 0;
+}
+/* Sets up one OPKGX app's own prefix. Returns 0 when the worker started. */
+static int start_app_setup(const char *app_prefix) {
+    worker_app = 1;
+    if (start_setup(app_prefix, 0, "")) { worker_app = 0; return -1; }
+    return 0;
+}
+/* App prefixes waiting for the single setup worker, in request order. */
+#define OMINX_APP_QUEUE 8
+static char app_queue[OMINX_APP_QUEUE][PATHBUF];
+static int app_queue_len;
+static void queue_app_setup(const char *app_prefix) {
+    for (int i = 0; i < app_queue_len; i++) if (!strcmp(app_queue[i], app_prefix)) return;
+    if (app_queue_len == OMINX_APP_QUEUE) return;
+    snprintf(app_queue[app_queue_len++], PATHBUF, "%s", app_prefix);
+}
+/* Starts the next queued app setup once the worker is free. */
+static void pump_app_queue(void) {
+    while (worker <= 0 && app_queue_len > 0 && runtime.present) {
+        char next[PATHBUF];
+        snprintf(next, sizeof next, "%s", app_queue[0]);
+        for (int i = 1; i < app_queue_len; i++) snprintf(app_queue[i - 1], PATHBUF, "%s", app_queue[i]);
+        app_queue_len--;
+        if (marker_ready(next)) continue;
+        if (start_app_setup(next) == 0) break;
+    }
+}
+/* Writes "exit=<code>" atomically, so OPKGX can read the last result of an app program. */
+static void write_exit(const char *path, int code) {
+    char tmp[PATHBUF + 8];
+    if (snprintf(tmp, sizeof tmp, "%s.tmp", path) >= (int)sizeof tmp) return;
+    int fd = open(tmp, O_WRONLY | O_CREAT | O_TRUNC, 0600);
+    if (fd < 0) return;
+    dprintf(fd, "exit=%d\n", code);
+    close(fd);
+    rename(tmp, path);
 }
 static void start_wineserver(void) {
     if (!runtime.present || wineserver_pid > 0) return;
@@ -404,6 +443,36 @@ static int valid_appid(const char *field) {
     }
     return 1;
 }
+/* OPKGX app ids: the same rule as docs/opkgx-format.md. Returns 0 when valid. */
+static int valid_package_id(const char *id) {
+    size_t length = strlen(id);
+    if (length < 2 || length > 64 || !(id[0] >= 'a' && id[0] <= 'z')) return -1;
+    for (size_t i = 0; i < length; i++) {
+        char c = id[i];
+        if (!((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '.' || c == '-')) return -1;
+    }
+    return strstr(id, "..") ? -1 : 0;
+}
+/* Resolves an app's directory and its own Wine prefix. Returns 0 on success. */
+static int app_dirs(const char *id, char *appdir, size_t appdir_size, char *app_prefix, size_t prefix_size) {
+    if (valid_package_id(id)) return -1;
+    char apps[PATHBUF];
+    if (join(apps, sizeof apps, home_dir, ".local/share/ominx/apps")) return -1;
+    if (join(appdir, appdir_size, apps, id)) return -1;
+    if (join(app_prefix, prefix_size, appdir, "prefix")) return -1;
+    return 0;
+}
+/* True when the app is installed. Requests for other ids must never create a prefix. */
+static int app_installed(const char *appdir) {
+    struct stat st;
+    return !stat(appdir, &st) && S_ISDIR(st.st_mode);
+}
+/* A program inside the app's app/ folder, relative to the app directory. */
+static int valid_app_file(const char *rel) {
+    if (strncmp(rel, "app/", 4) || strstr(rel, "..") || !valid_field(rel, 0)) return 0;
+    return strlen(rel) < 256;
+}
+
 /* Launches under the selected prefix. The file has already been inspected. */
 static pid_t launch(const char *target_prefix, const char *file, char *const args[],
                     int count, int msi, int proton, const char *appid) {
@@ -444,6 +513,7 @@ static int track(pid_t pid, const char *file) {
         if (!running[i].pid) {
             running[i].pid = pid;
             running[i].boosted = 0;
+            running[i].exitfile[0] = 0;
             const char *name = strrchr(file, '/');
             snprintf(running[i].what, sizeof running[i].what, "%s", name ? name + 1 : file);
             return i;
@@ -593,6 +663,53 @@ static void handle(int client, char *request, ssize_t size) {
         append(reply, sizeof reply, &used, "OK pid=%ld game=%s\n", (long)pid, game.id);
         goto send;
     }
+    if (!strcmp(fields[0], "APPSETUP") && count == 2) {
+        char appdir[PATHBUF], app_prefix[PATHBUF];
+        if (app_dirs(fields[1], appdir, sizeof appdir, app_prefix, sizeof app_prefix)) { out = "ERR bad-app-id\n"; goto send; }
+        if (!app_installed(appdir)) { out = "ERR not-installed\n"; goto send; }
+        if (!runtime.present) { out = "ERR runtime-missing\n"; goto send; }
+        if (marker_ready(app_prefix)) { out = "OK already-ready\n"; goto send; }
+        if (worker > 0) { queue_app_setup(app_prefix); out = "OK queued\n"; goto send; }
+        if (start_app_setup(app_prefix)) { out = "ERR setup-failed-to-start\n"; goto send; }
+        out = "OK setup-started\n"; goto send;
+    }
+    if ((!strcmp(fields[0], "APPRUN") || !strcmp(fields[0], "APPMSI")) && count == 3) {
+        /* An installed OPKGX app runs in its own prefix. Its last exit code is
+           written to <app>/.last-run, which OPKGX reads to finish an MSI install. */
+        int msi = !strcmp(fields[0], "APPMSI");
+        char appdir[PATHBUF], app_prefix[PATHBUF], file[PATHBUF];
+        if (app_dirs(fields[1], appdir, sizeof appdir, app_prefix, sizeof app_prefix)) { out = "ERR bad-app-id\n"; goto send; }
+        if (!valid_app_file(fields[2])) { out = "ERR bad-path\n"; goto send; }
+        if (!app_installed(appdir)) { out = "ERR not-installed\n"; goto send; }
+        if (!runtime.present) { out = "ERR runtime-missing\n"; goto send; }
+        if (join(file, sizeof file, appdir, fields[2])) { out = "ERR path-too-long\n"; goto send; }
+        if (!marker_ready(app_prefix)) {
+            if (worker < 0) { if (start_app_setup(app_prefix)) queue_app_setup(app_prefix); }
+            else queue_app_setup(app_prefix);
+            out = "ERR prefix-not-ready\n"; goto send;
+        }
+        struct ominx_pe_info info;
+        int result = ominx_pe_inspect_path(file, &info);
+        if (result == -2) { out = "ERR program-missing\n"; goto send; }
+        if (msi) {
+            if (result || info.kind != OMINX_PE_MSI) { out = "ERR not-an-msi\n"; goto send; }
+        } else {
+            if (result || info.kind != OMINX_PE_EXE) { out = "ERR not-a-windows-program\n"; goto send; }
+            if (info.arch != OMINX_PE_ARCH_I386 && info.arch != OMINX_PE_ARCH_AMD64) {
+                out = "ERR unsupported-architecture\n"; goto send;
+            }
+        }
+        if (running_count() >= OMINX_WIN_MAX_RUNNING) { out = "ERR too-many-programs\n"; goto send; }
+        pid_t pid = launch(app_prefix, file, NULL, 0, msi, 0, "");
+        if (pid < 0) { out = "ERR launch-failed\n"; goto send; }
+        int slot = track(pid, file);
+        if (slot < 0) { out = "ERR too-many-programs\n"; goto send; }
+        char exit_path[PATHBUF];
+        if (join(exit_path, sizeof exit_path, appdir, ".last-run") == 0)
+            snprintf(running[slot].exitfile, sizeof running[slot].exitfile, "%s", exit_path);
+        append(reply, sizeof reply, &used, "OK pid=%ld\n", (long)pid);
+        goto send;
+    }
     if (!strcmp(fields[0], "RUN") || !strcmp(fields[0], "MSI") || !strcmp(fields[0], "PROTON")) {
         int proton = !strcmp(fields[0], "PROTON");
         int msi = !strcmp(fields[0], "MSI");
@@ -657,7 +774,11 @@ static void reap(void) {
         if (ended == worker) {
             worker = -1;
             int code = WIFEXITED(status) ? WEXITSTATUS(status) : 128;
-            if (worker_proton) {
+            if (worker_app) {
+                worker_app = 0;
+                record("ominx-wined: app prefix %s setup %s (code %d)",
+                       worker_prefix, code ? "failed" : "ready", code);
+            } else if (worker_proton) {
                 snprintf(proton_setup, sizeof proton_setup, "%s", code ? "failed" : "idle");
                 record("ominx-wined: proton prefix %s setup %s (code %d)",
                        worker_appid, code ? "failed" : "ready", code);
@@ -689,9 +810,11 @@ static void reap(void) {
                     running[i].pid = 0;
                     last_exit = WIFEXITED(status) ? WEXITSTATUS(status) : 128;
                     record("ominx-wined: %s exited %d", running[i].what, last_exit);
+                    if (running[i].exitfile[0]) write_exit(running[i].exitfile, last_exit);
                 }
         }
     }
+    pump_app_queue();
 }
 static void read_progress(void) {
     if (worker_pipe < 0) return;

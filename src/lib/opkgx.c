@@ -2,6 +2,12 @@
 #define _POSIX_C_SOURCE 200809L
 
 #include "opkgx.h"
+#include "winproto.h"
+#include "peicon.h"
+
+#include <sys/socket.h>
+#include <sys/time.h>
+#include <sys/un.h>
 
 #include <dirent.h>
 #include <stddef.h>
@@ -620,8 +626,10 @@ static int write_desktop(const char *home, const struct opkgx_manifest *m, const
     FILE *f = fopen(tmp, "w");
     if (!f) return -1;
     fprintf(f, "[Desktop Entry]\nType=Application\nName=%s\nComment=%s\n", m->name, m->summary);
-    fprintf(f, "Exec=ominx-opkgx run %s\n", m->id);
-    if (m->has_icon) fprintf(f, "Icon=%s/icon.png\n", final_dir);
+    fprintf(f, "Exec=ominx-opkgx run --notify %s\n", m->id);
+    /* The icon is either shipped in the package or extracted from the program at install time. */
+    char icon[PATH_BUF];
+    if (!join(icon, sizeof icon, final_dir, "icon.png") && path_exists(icon)) fprintf(f, "Icon=%s\n", icon);
     fprintf(f, "Terminal=false\nX-OminX-App=%s\nX-OminX-Runner=%s\n", m->id,
             m->runner == OPKGX_RUNNER_WINE ? "wine" : "native");
     if (m->categories) {
@@ -674,6 +682,8 @@ static int registry_add(const char *apps, const struct opkgx_manifest *m) {
     return registry_rewrite(apps, m->id, line);
 }
 
+static int wined_setup_app(const char *id);
+
 /* Extracts the archive into a fresh staging directory. Refuses to write through anything but plain paths. */
 int opkgx_install(const char *archive, const char *home, char *err, size_t err_size) {
     struct opkgx_manifest m;
@@ -704,10 +714,19 @@ int opkgx_install(const char *archive, const char *home, char *err, size_t err_s
     }
     rm_tree(old, 0);
 
+    /* A Windows program without a shipped icon gets the one inside its own resources. */
+    if (m.runner == OPKGX_RUNNER_WINE && !m.has_icon && !m.is_msi) {
+        char exe[PATH_BUF], icon_path[PATH_BUF], why[64];
+        if (!join(exe, sizeof exe, final, m.exec) && !join(icon_path, sizeof icon_path, final, "icon.png"))
+            (void)ominx_pe_extract_icon(exe, icon_path, why, sizeof why);
+    }
+
     /* The registry is the source of truth, so it is written first. A failed menu entry
        leaves a working app that the user can still run, and is reported. */
     if (registry_add(apps, &m)) return set_err(err, err_size, "registry-failed");
     if (write_desktop(home, &m, final)) return set_err(err, err_size, "desktop-entry-failed");
+    /* Wine apps get their own prefix built now, in the background, so the first run is not slow. */
+    if (m.runner == OPKGX_RUNNER_WINE) (void)wined_setup_app(m.id);
     return 0;
 }
 
@@ -725,9 +744,117 @@ int opkgx_remove(const char *id, const char *home, char *err, size_t err_size) {
     return 0;
 }
 
+/* ---- Wine service client ---- */
+
+/* Sends one request line to ominx-wined and reads one reply line into @reply.
+   Returns 0 when a reply arrived, -1 when the service is not reachable. */
+static int wined_request(const char *line, char *reply, size_t size) {
+    char path_buf[PATH_BUF];
+    const char *path = getenv(OMINX_WINED_SOCKET_ENV);
+    if (!path || !*path) {
+        const char *runtime = getenv("XDG_RUNTIME_DIR");
+        if (!runtime || !*runtime) return -1;
+        if (snprintf(path_buf, sizeof path_buf, "%s/%s", runtime, OMINX_WINED_SOCKET_NAME) >= (int)sizeof path_buf)
+            return -1;
+        path = path_buf;
+    }
+    struct sockaddr_un addr;
+    if (strlen(path) >= sizeof addr.sun_path) return -1;
+    memset(&addr, 0, sizeof addr);
+    addr.sun_family = AF_UNIX;
+    strcpy(addr.sun_path, path);
+    /* The service speaks SOCK_SEQPACKET: one request is one message, one reply is one message. */
+    int fd = socket(AF_UNIX, SOCK_SEQPACKET | SOCK_CLOEXEC, 0);
+    if (fd < 0) return -1;
+    struct timeval timeout = {10, 0};
+    setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof timeout);
+    setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof timeout);
+    if (connect(fd, (struct sockaddr *)&addr, sizeof addr)) { close(fd); return -1; }
+    size_t length = strlen(line);
+    if (send(fd, line, length, MSG_NOSIGNAL) != (ssize_t)length) { close(fd); return -1; }
+    ssize_t n = recv(fd, reply, size - 1, 0);
+    close(fd);
+    if (n <= 0) return -1;
+    reply[n] = '\0';
+    return 0;
+}
+
+/* Asks the Wine service to build an app's own prefix. Best effort: the first
+   run reports prefix-not-ready until it finishes. Returns 0 when accepted. */
+static int wined_setup_app(const char *id) {
+    char line[128], reply[256];
+    if (snprintf(line, sizeof line, "APPSETUP\t%s\n", id) >= (int)sizeof line) return -1;
+    if (wined_request(line, reply, sizeof reply)) return -1;
+    return strncmp(reply, "OK", 2) == 0 ? 0 : -1;
+}
+
+/* Runs a wine app or its .msi installer through the service. The first line of
+   the reply is either "OK ..." or "ERR <reason>". */
+static int wine_run(const struct opkgx_manifest *m, const char *id, char *err, size_t err_size) {
+    char line[PATH_BUF], reply[256];
+    if (snprintf(line, sizeof line, "%s\t%s\t%s\n", m->is_msi ? "APPMSI" : "APPRUN", id, m->exec) >= (int)sizeof line)
+        return set_err(err, err_size, "path-too-long");
+    if (wined_request(line, reply, sizeof reply)) return set_err(err, err_size, "wined-unavailable");
+    if (strncmp(reply, "OK", 2) == 0) return 0;
+    if (strncmp(reply, "ERR ", 4) == 0) {
+        char *end = strchr(reply + 4, '\n');
+        if (end) *end = '\0';
+        return set_err(err, err_size, reply + 4);
+    }
+    return set_err(err, err_size, "wined-bad-reply");
+}
+
+/* ---- MSI completion ---- */
+
+/* Reads <app>/.last-run, written by the service when an app program exits.
+   Returns 1 when it reports exit=0. */
+static int last_run_succeeded(const char *apps, const char *id) {
+    char path[PATH_BUF], text[64];
+    char dir[PATH_BUF];
+    if (join(dir, sizeof dir, apps, id) || join(path, sizeof path, dir, ".last-run")) return 0;
+    FILE *f = fopen(path, "r");
+    if (!f) return 0;
+    size_t n = fread(text, 1, sizeof text - 1, f);
+    fclose(f);
+    text[n] = '\0';
+    return strncmp(text, "exit=0", 6) == 0 && (text[6] == '\n' || text[6] == '\0');
+}
+
+/* Moves setup-pending entries to ready once their installer has finished
+   successfully. Failed or unfinished installers stay pending. */
+static void reconcile_pending(const char *apps) {
+    char reg[PATH_BUF], tmp[PATH_BUF];
+    if (join(reg, sizeof reg, apps, "registry") || snprintf(tmp, sizeof tmp, "%s.tmp", reg) >= (int)sizeof tmp) return;
+    FILE *in = fopen(reg, "r");
+    if (!in) return;
+    FILE *out = fopen(tmp, "w");
+    if (!out) { fclose(in); return; }
+    int changed = 0, ok = 1;
+    char buf[512];
+    while (fgets(buf, sizeof buf, in)) {
+        char id[OPKGX_ID_MAX + 2];
+        size_t n = strcspn(buf, " \n");
+        if (n == 0 || n >= sizeof id) { if (fputs(buf, out) == EOF) ok = 0; continue; }
+        memcpy(id, buf, n);
+        id[n] = '\0';
+        char *pending = strstr(buf, " setup-pending");
+        if (pending && last_run_succeeded(apps, id)) {
+            size_t head = (size_t)(pending - buf);
+            fprintf(out, "%.*s ready\n", (int)head, buf);
+            changed = 1;
+        } else if (fputs(buf, out) == EOF) ok = 0;
+    }
+    fclose(in);
+    if (fclose(out) != 0) ok = 0;
+    if (!ok || !changed || rename(tmp, reg)) { unlink(tmp); }
+}
+
+/* ---- list, run ---- */
+
 int opkgx_list(const char *home, FILE *out) {
     char apps[PATH_BUF], reg[PATH_BUF];
     if (apps_dir(apps, sizeof apps, home) || join(reg, sizeof reg, apps, "registry")) return -1;
+    reconcile_pending(apps);
     FILE *f = fopen(reg, "r");
     if (!f) return 0;
     char buf[512];
@@ -742,6 +869,7 @@ int opkgx_run(const char *id, const char *home, char *err, size_t err_size) {
     if (apps_dir(apps, sizeof apps, home) || join(dir, sizeof dir, apps, id)) return set_err(err, err_size, "path-too-long");
     if (join(mpath, sizeof mpath, dir, "opkgx.manifest")) return set_err(err, err_size, "path-too-long");
     if (!path_exists(dir)) return set_err(err, err_size, "not-installed");
+    reconcile_pending(apps);
 
     FILE *f = fopen(mpath, "rb");
     if (!f) return set_err(err, err_size, "manifest-missing");
@@ -753,8 +881,7 @@ int opkgx_run(const char *id, const char *home, char *err, size_t err_size) {
     if (parse_manifest(text, n, &m, err, err_size)) return -1;
     if (strcmp(m.id, id)) return set_err(err, err_size, "manifest-id-mismatch");
 
-    if (m.runner == OPKGX_RUNNER_WINE)
-        return set_err(err, err_size, "wine-launch-not-wired");
+    if (m.runner == OPKGX_RUNNER_WINE) return wine_run(&m, id, err, err_size);
 
     char exe[PATH_BUF];
     if (join(exe, sizeof exe, dir, m.exec)) return set_err(err, err_size, "path-too-long");
@@ -767,4 +894,196 @@ int opkgx_run(const char *id, const char *home, char *err, size_t err_size) {
         _exit(127);
     }
     return 0;
+}
+
+/* ---- pack ---- */
+
+static void put_octal(char *field, size_t size, uint64_t value) {
+    /* size-1 octal digits, zero padded, then NUL. */
+    for (size_t i = size - 1; i-- > 0;) {
+        field[i] = (char)('0' + (value & 7));
+        value >>= 3;
+    }
+    field[size - 1] = '\0';
+}
+
+/* Splits a path into ustar name and prefix fields. Returns 0 on success. */
+static int split_name(const char *path, struct tar_hdr *h) {
+    size_t n = strlen(path);
+    if (n <= 100) {
+        memcpy(h->name, path, n);
+        return 0;
+    }
+    for (size_t i = n; i-- > 0;) {
+        if (path[i] != '/') continue;
+        size_t plen = i, nlen = n - i - 1;
+        if (plen <= 155 && nlen >= 1 && nlen <= 100) {
+            memcpy(h->prefix, path, plen);
+            memcpy(h->name, path + i + 1, nlen);
+            return 0;
+        }
+    }
+    return -1;
+}
+
+static int write_header(FILE *out, const char *path, int is_dir, uint64_t size, int exec) {
+    struct tar_hdr h;
+    memset(&h, 0, sizeof h);
+    if (split_name(path, &h)) return -1;
+    put_octal(h.mode, sizeof h.mode, is_dir || exec ? 0755 : 0644);
+    put_octal(h.uid, sizeof h.uid, 0);
+    put_octal(h.gid, sizeof h.gid, 0);
+    put_octal(h.size, sizeof h.size, is_dir ? 0 : size);
+    put_octal(h.mtime, sizeof h.mtime, 0);
+    h.typeflag = is_dir ? '5' : '0';
+    memcpy(h.magic, "ustar", 6);
+    memcpy(h.version, "00", 2);
+    memset(h.chksum, ' ', sizeof h.chksum);
+    unsigned sum = 0;
+    const unsigned char *raw = (const unsigned char *)&h;
+    for (size_t i = 0; i < BLOCK; i++) sum += raw[i];
+    /* Six octal digits, NUL, then a space, as tar tools write them. */
+    for (int i = 5; i >= 0; i--) { h.chksum[i] = (char)('0' + (sum & 7)); sum >>= 3; }
+    h.chksum[6] = '\0';
+    h.chksum[7] = ' ';
+    return fwrite(&h, 1, BLOCK, out) == BLOCK ? 0 : -1;
+}
+
+struct pack_entry { char rel[256]; char full[PATH_BUF]; int is_dir; uint64_t size; int exec; };
+
+static int cmp_entries(const void *a, const void *b) {
+    const struct pack_entry *x = a, *y = b;
+    int mx = !strcmp(x->rel, "opkgx.manifest"), my = !strcmp(y->rel, "opkgx.manifest");
+    if (mx != my) return mx ? -1 : 1;
+    return strcmp(x->rel, y->rel);
+}
+
+/* Walks the source tree. Refuses anything the format refuses. */
+static int collect(const char *root, const char *rel, int depth, struct pack_entry **list, size_t *count, size_t *cap,
+                   char *err, size_t err_size) {
+    if (depth > 32) return set_err(err, err_size, "too-deep"), -1;
+    char dirpath[PATH_BUF];
+    if (!rel[0]) {
+        if (strlen(root) >= sizeof dirpath) return set_err(err, err_size, "path-too-long"), -1;
+        strcpy(dirpath, root);
+    } else if (join(dirpath, sizeof dirpath, root, rel)) {
+        return set_err(err, err_size, "path-too-long"), -1;
+    }
+    DIR *d = opendir(dirpath);
+    if (!d) return set_err(err, err_size, "source-unreadable"), -1;
+    struct dirent *e;
+    int rc = 0;
+    while ((e = readdir(d))) {
+        if (!strcmp(e->d_name, ".") || !strcmp(e->d_name, "..")) continue;
+        struct pack_entry ent;
+        memset(&ent, 0, sizeof ent);
+        if (rel[0]) {
+            if (snprintf(ent.rel, sizeof ent.rel, "%s/%s", rel, e->d_name) >= (int)sizeof ent.rel) { set_err(err, err_size, "path-too-long"); rc = -1; break; }
+        } else if (snprintf(ent.rel, sizeof ent.rel, "%s", e->d_name) >= (int)sizeof ent.rel) { set_err(err, err_size, "path-too-long"); rc = -1; break; }
+        if (join(ent.full, sizeof ent.full, root, ent.rel)) { set_err(err, err_size, "path-too-long"); rc = -1; break; }
+        struct stat st;
+        if (lstat(ent.full, &st)) { set_err(err, err_size, "source-unreadable"); rc = -1; break; }
+        if (S_ISLNK(st.st_mode)) { set_err(err, err_size, "link-entry"); rc = -1; break; }
+        if (S_ISDIR(st.st_mode)) {
+            ent.is_dir = 1;
+        } else if (S_ISREG(st.st_mode)) {
+            ent.size = (uint64_t)st.st_size;
+            ent.exec = (st.st_mode & 0111) != 0;
+        } else { set_err(err, err_size, "entry-type-unsupported"); rc = -1; break; }
+        if (*count == *cap) {
+            size_t ncap = *cap ? *cap * 2 : 64;
+            struct pack_entry *n = realloc(*list, ncap * sizeof *n);
+            if (!n) { set_err(err, err_size, "out-of-memory"); rc = -1; break; }
+            *list = n;
+            *cap = ncap;
+        }
+        if (*count >= OPKGX_MAX_ENTRIES) { set_err(err, err_size, "too-many-entries"); rc = -1; break; }
+        (*list)[(*count)++] = ent;
+        if (ent.is_dir && collect(root, ent.rel, depth + 1, list, count, cap, err, err_size)) { rc = -1; break; }
+    }
+    closedir(d);
+    return rc;
+}
+
+int opkgx_pack(const char *dir, const char *out_path, char *err, size_t err_size) {
+    struct stat st;
+    if (stat(dir, &st) || !S_ISDIR(st.st_mode)) return set_err(err, err_size, "source-unreadable");
+
+    /* The manifest must be good before anything else is read. */
+    char mpath[PATH_BUF];
+    if (join(mpath, sizeof mpath, dir, "opkgx.manifest")) return set_err(err, err_size, "path-too-long");
+    FILE *mf = fopen(mpath, "rb");
+    if (!mf) return set_err(err, err_size, "manifest-missing");
+    char *text = malloc(OPKGX_MANIFEST_MAX + 1);
+    if (!text) { fclose(mf); return set_err(err, err_size, "out-of-memory"); }
+    size_t n = fread(text, 1, OPKGX_MANIFEST_MAX, mf);
+    int more = fgetc(mf) != EOF;
+    fclose(mf);
+    if (more) { free(text); return set_err(err, err_size, "too-large"); }
+    struct opkgx_manifest m;
+    int prc = parse_manifest(text, n, &m, err, err_size);
+    free(text);
+    if (prc) return -1;
+
+    struct pack_entry *list = NULL;
+    size_t count = 0, cap = 0;
+    if (collect(dir, "", 0, &list, &count, &cap, err, err_size)) { free(list); return -1; }
+    qsort(list, count, sizeof *list, cmp_entries);
+
+    uint64_t payload = 0;
+    for (size_t i = 0; i < count; i++) payload += list[i].size;
+    if (payload > OPKGX_MAX_PAYLOAD) { free(list); return set_err(err, err_size, "too-large"); }
+
+    char tmp[PATH_BUF];
+    if (snprintf(tmp, sizeof tmp, "%s.tmp", out_path) >= (int)sizeof tmp) { free(list); return set_err(err, err_size, "path-too-long"); }
+    FILE *out = fopen(tmp, "wb");
+    if (!out) { free(list); return set_err(err, err_size, "output-unwritable"); }
+    int rc = 0;
+    char *chunk = malloc(COPY_CHUNK);
+    if (!chunk) { rc = set_err(err, err_size, "out-of-memory"); goto fail; }
+    for (size_t i = 0; i < count; i++) {
+        struct pack_entry *ent = &list[i];
+        char name[258];
+        snprintf(name, sizeof name, "%s%s", ent->rel, ent->is_dir ? "/" : "");
+        if (write_header(out, name, ent->is_dir, ent->size, ent->exec)) { rc = set_err(err, err_size, "path-too-long"); goto fail; }
+        if (ent->is_dir) continue;
+        FILE *src = fopen(ent->full, "rb");
+        if (!src) { rc = set_err(err, err_size, "source-unreadable"); goto fail; }
+        uint64_t left = ent->size;
+        while (left) {
+            size_t want = left < COPY_CHUNK ? (size_t)left : COPY_CHUNK;
+            if (fread(chunk, 1, want, src) != want || fwrite(chunk, 1, want, out) != want) {
+                fclose(src);
+                rc = set_err(err, err_size, "source-unreadable");
+                goto fail;
+            }
+            left -= want;
+        }
+        fclose(src);
+        size_t pad = (size_t)(padded(ent->size) - ent->size);
+        char zeros[BLOCK] = {0};
+        if (pad && fwrite(zeros, 1, pad, out) != pad) { rc = set_err(err, err_size, "output-unwritable"); goto fail; }
+    }
+    {
+        char zeros[BLOCK * 2] = {0};
+        if (fwrite(zeros, 1, sizeof zeros, out) != sizeof zeros || fclose(out) != 0) {
+            out = NULL;
+            rc = set_err(err, err_size, "output-unwritable");
+            goto fail;
+        }
+        out = NULL;
+    }
+    /* Never leave a package that the installer would refuse. */
+    struct opkgx_manifest check;
+    if (opkgx_validate(tmp, &check, err, err_size)) { rc = -1; goto fail; }
+    if (rename(tmp, out_path)) { rc = set_err(err, err_size, "output-unwritable"); goto fail; }
+    free(chunk);
+    free(list);
+    return 0;
+fail:
+    if (out) fclose(out);
+    free(chunk);
+    free(list);
+    unlink(tmp);
+    return rc;
 }
