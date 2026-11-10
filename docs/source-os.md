@@ -52,6 +52,18 @@ The target now includes a supervised power broker and additional kernel graphics
 drivers. A separately tested SDDM theme is available, but target Qt/KDE and
 authenticated graphical startup remain unfinished. See [graphics-login.md](graphics-login.md).
 
+## Windows compatibility increment
+
+The target now ships the complete service layer for Windows programs:
+a root first-boot service (binfmt, Proton sysctls, runtime report), a
+per-user background daemon that silently creates the Wine prefix and
+the default Proton prefix at first login and then supervises a
+persistent wineserver, a validated console/desktop client, kernel
+support asserted at build time, and an audited packaging path for the
+from-source glibc/Wine runtime (`scripts/build-wine-runtime.sh`). The
+first multi-hour runtime build and guest executable acceptance remain
+gates; see [windows-compatibility.md](windows-compatibility.md).
+
 ## Remaining product work
 
 1. Physical-machine testing, additional CPU/device coverage and 32-bit x86 if needed.
@@ -62,8 +74,9 @@ authenticated graphical startup remain unfinished. See [graphics-login.md](graph
    integrate the original OminX bottom-taskbar desktop and accessibility behavior.
 4. Original graphical file manager, settings, setup and application-management
    services. Old Debian-specific app wrappers cannot simply be reused unchanged.
-5. Windows-file workflows (explicitly define file formats/filesystems separately
-   from running Windows executables), storage discovery and removable-media policy.
+5. Storage discovery and removable-media policy. (Running Windows executables
+   now has its own service layer; its runtime artifact and GPU ICD are gated
+   in windows-compatibility.md.)
 6. Installer, safe disk-selection UI, recovery, signed updates, rollback and a
    maintained security-release policy for all pinned upstream dependencies.
 

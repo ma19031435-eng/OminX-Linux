@@ -1,0 +1,11 @@
+[General]
+ColorScheme=OminXHarbor
+Name=OminX Harbor
+font=Noto Sans,10,-1,5,50,0,0,0,0,0
+
+[Icons]
+Theme=breeze-dark
+
+[KDE]
+LookAndFeelPackage=com.ominx.harbor
+widgetStyle=Breeze

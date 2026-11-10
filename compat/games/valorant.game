@@ -1,0 +1,13 @@
+# VALORANT (Riot Games). Riot Vanguard is a Windows kernel driver with no
+# Linux runtime, and Riot has not announced Linux support. This profile is
+# listed so the console and desktop can explain the refusal. Do not add a
+# launch path, Proton setting or driver workaround for it.
+id = valorant
+name = VALORANT
+appid = valorant
+runner = proton
+dir = Games/valorant
+exe = Riot Client/RiotClientServices.exe
+anticheat = vanguard
+anticheat_status = denied
+notes = Riot Vanguard (Windows kernel anti-cheat) is not available on Linux. Riot has not announced Linux support.

@@ -3,7 +3,8 @@ name: Export OminX boot preview thumbnail
 on:
   push:
     branches:
-      - "arena/30b7965b-ominx-linux"
+      - "main"
+      - "arena/**"
     paths:
       - ".github/workflows/export-preview-thumbnail.yml"
   workflow_dispatch:

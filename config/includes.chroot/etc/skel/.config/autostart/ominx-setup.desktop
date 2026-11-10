@@ -1,7 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=OminX Setup
-Comment=Complete the OminX first-run setup
-Exec=ominx-setup --first-run
-Icon=ominx
-Terminal=false

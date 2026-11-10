@@ -4,6 +4,7 @@
 #include "../lib/files.h"
 #include "../lib/session.h"
 #include "../lib/control.h"
+#include "../lib/pe.h"
 #include <sys/prctl.h>
 #include <dirent.h>
 #include <errno.h>
@@ -49,7 +50,8 @@ static void shell(void) {
                  "mkdir PATH | write FILE WORDS... | echo WORDS... | sync\n"
                  "cp SOURCE DEST | mv SOURCE DEST | rm FILE\n"
                  "attach DEVICE [ro [ext4|vfat|exfat|ntfs3]] | detach\n"
-                 "files COMMAND [args] | exit | reboot | poweroff | /absolute/program [args]\n"
+                 "files COMMAND [args] | win run|install|proton|status FILE... | PROGRAM.exe [args]\n"
+                 "exit | reboot | poweroff | /absolute/program [args]\n"
                  "Single/double quotes and backslash escapes supported; no pipes or expansion.\n"
                  "write replaces a file. Only files on an attached data disk survive reboot.");
         } else if (!strcmp(cmd, "exit")) break;
@@ -143,11 +145,27 @@ static void shell(void) {
             if (ominx_control_request(!strcmp(cmd, "control") ? "status" : cmd, response, sizeof response))
                 error("control service");
             else fputs(response, stdout);
-        } else if (cmd[0] == '/' || !strcmp(cmd, "files")) {
+        } else if (cmd[0] == '/' || !strcmp(cmd, "files") || !strcmp(cmd, "win") ||
+                   (ominx_pe_suffix(cmd) && ominx_pe_suffix(cmd) != 3 && !access(cmd, F_OK))) {
             pid_t pid = fork();
             if (pid == 0) {
                 signal(SIGINT, SIG_DFL);
-                execv(!strcmp(cmd, "files") ? "/bin/ominx-files" : cmd, args); error(cmd); _exit(127);
+                if (!strcmp(cmd, "files")) { execv("/bin/ominx-files", args); }
+                else if (!strcmp(cmd, "win")) { execv("/bin/ominx-win", args); }
+                else if (ominx_pe_suffix(cmd) && ominx_pe_suffix(cmd) != 3) {
+                    /* Running ./setup.exe or ./app.msi by name takes the same
+                       inspected path as the desktop file association. */
+                    char *win_args[68];
+                    int at = 0;
+                    win_args[at++] = "/bin/ominx-win";
+                    if (ominx_pe_suffix(cmd) == 2) win_args[at++] = "msi";
+                    else { win_args[at++] = "run"; win_args[at++] = "--wait"; }
+                    for (int i = 0; i < n && at < 67; i++) win_args[at++] = args[i];
+                    win_args[at] = NULL;
+                    execv("/bin/ominx-win", win_args);
+                }
+                else execv(cmd, args);
+                error(cmd); _exit(127);
             }
             if (pid < 0) error("fork");
             else while (waitpid(pid, NULL, 0) < 0 && errno == EINTR) {}
@@ -188,6 +206,16 @@ static pid_t start_control(void) {
         if (clearenv()) _exit(1);
         execl("/sbin/ominx-control", "ominx-control", (char *)NULL);
         error("control service exec"); _exit(1);
+    }
+    return child;
+}
+static pid_t start_winsetup(void) {
+    if (access("/sbin/ominx-winsetup", X_OK)) return 0;
+    pid_t child = fork();
+    if (child == 0) {
+        if (chdir("/") || clearenv()) _exit(1);
+        execl("/sbin/ominx-winsetup", "ominx-winsetup", (char *)NULL);
+        error("windows setup service exec"); _exit(1);
     }
     return child;
 }
@@ -270,6 +298,9 @@ int main(int argc, char **argv) {
     if (graphical_login) { devices[0] = "/dev/ttyS0"; count = 1; }
     else { devices[0] = "/dev/tty1"; devices[1] = "/dev/ttyS0"; }
     pid_t control = start_control();
+    /* Machine-wide first-boot Wine/Proton preparation runs before login so
+       binfmt, sysctls and the runtime report are ready immediately. */
+    pid_t winsetup = start_winsetup();
     pid_t desktop_bus = start_desktop_bus();
     pid_t login = graphical_login ? start_login() : 0;
     pid_t seat = graphical_login ? start_seat() : 0;
@@ -288,6 +319,10 @@ int main(int argc, char **argv) {
         if (control < 0 || ended == control) {
             sleep(1);
             control = start_control();
+        }
+        if (winsetup < 0 || (winsetup > 0 && ended == winsetup)) {
+            sleep(1);
+            winsetup = start_winsetup();
         }
         if (desktop_bus < 0 || (desktop_bus > 0 && ended == desktop_bus)) {
             sleep(1);
