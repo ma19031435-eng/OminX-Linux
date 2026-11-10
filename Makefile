@@ -2,7 +2,7 @@ CC = $(CURDIR)/build/toolchain/bin/x86_64-linux-musl-gcc
 HOSTCC = cc
 CFLAGS = -O2 -Wall -Wextra -Werror
 
-.PHONY: all check target-check build toolchain initramfs run media boot-check previews ui-check
+.PHONY: all check target-check build toolchain initramfs run media boot-check previews ui-check forge-studio-native-check
 all: build
 toolchain:
 	./scripts/build-toolchain.sh
@@ -134,3 +134,7 @@ previews:
 ui-check:
 	$${OMINX_UI_PYTHON:-python3} tests/ui/test_game_library.py
 	$${OMINX_UI_PYTHON:-python3} tests/test_forge_studio.py
+
+# Native Forge Studio bridge against a Qt 6 prefix (QT_PREFIX=/path/to/qt). See scripts/test-forge-studio-native.sh.
+forge-studio-native-check: build/host/ominx-forge-test
+	./scripts/test-forge-studio-native.sh

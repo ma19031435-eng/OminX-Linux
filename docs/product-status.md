@@ -69,4 +69,9 @@ Nothing here is a claim of compatibility or performance that has not been measur
 3. C++ on-target launch bridge for the game library.
 4. Per-title Windows application results on a booted target.
 5. `.opkgx` v1 is designed and implemented (`docs/opkgx-format.md`, system overview in `docs/opkgx-system.md`). Still to verify on a real target: a real Wine runtime running a real installer, and double-click install from the file manager.
-6. Forge 1.0 and Forge Studio are implemented (`docs/forge-language.md`, `docs/forge-studio.md`). Still to verify on a target: Studio rendered on a display, and the native Qt host built with the Qt target toolchain (`scripts/build-forge-studio.sh`).
+6. Forge 1.0 and Forge Studio are implemented (`docs/forge-language.md`, `docs/forge-studio.md`). Verified here: the Studio window rendered and the native host built, linked and ran against Qt 6.8.1. Still to verify on a target: the CMake configure of the Studio project, the static musl Qt Studio build (`scripts/build-forge-studio.sh`), and mouse and keyboard use on a real display.
+
+## Build notes: compilers used in the build sandbox
+
+- The shipped musl target is the source-built GNU toolchain (`make toolchain`, `scripts/build-toolchain.sh`). Its source hosts (ftp.gnu.org) are not reachable from the build sandbox.
+- `scripts/musl-cc-zig.sh` runs Zig's clang with its bundled musl libc to produce the same static x86-64 `ET_EXEC` binaries. It is used only through `make <target> CC="$PWD/scripts/musl-cc-zig.sh"` when the GNU toolchain is absent. The production build still defaults to the source-built toolchain.

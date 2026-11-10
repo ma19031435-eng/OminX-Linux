@@ -165,19 +165,36 @@ What has been run:
   platform and produces no QML warnings (`QmlLoads` in `tests/test_forge_studio.py`,
   run with `OMINX_UI_PYTHON`).
 
+Verified in the build sandbox:
+
+- **The rendered window.** `Main.qml` was rendered to an image with Qt 6.8 and
+  checked by eye. Layout, palette, toolbar, editor, and the Problems and Output
+  tabs all draw. Captures used a scaled offscreen screen, since the offscreen
+  platform has a fixed 800x800 surface.
+- **The native bridge.** `desktop/forge-studio/host/forge_bridge.cpp` builds with
+  `-Wall -Wextra -Werror` against Qt 6.8.1 headers built from source. Its runtime
+  test, `scripts/test-forge-studio-native.sh`, drives real `QProcess` calls through
+  the Forge test binary: new, tree, check, read, write, round-trip, path refusal,
+  unknown operations and missing folders. All 13 checks pass.
+- **The native Studio host.** `host/forge_studio.cpp` also builds with `-Werror`
+  against the Qt 6.8.1 QML headers. The linked binary passes the OminX platform
+  gate (exit 3 off OminX), and with the gate passed it loads the same QML and runs
+  its event loop for 12 seconds with no QML errors. The QML module was loaded from
+  file, not from the CMake QML registration.
+
 What has not been run in the build sandbox:
 
-- **The rendered window.** The QML loads headless, but nothing is drawn or clicked
-  in the build sandbox. The layout and interaction still need a pass on the target.
-- **The static musl build and the initramfs.** `make build/ominx-forge` and
-  `make initramfs` need the source-built musl toolchain (`make toolchain`), which
-  fetches from ftp.gnu.org. The build sandbox cannot reach that host, so the
-  static binary and the image contents are checked only by `tests/test_win_packaging.py`
-  and the host builds.
-- **The native Qt host.** No Qt C++ headers are installed in the sandbox, so
-  `host/forge_bridge.cpp` and `host/forge_studio.cpp` are not compiled here. They
-  build with `scripts/build-forge-studio.sh` on the Qt target, and the first build
-  there is the check.
+- **The CMake project.** `desktop/forge-studio/CMakeLists.txt` lists every QML file
+  and the singleton, and a test enforces that. It was not configured, because the
+  sandbox only has a partial Qt install (a full `cmake --install` of qtbase fails on
+  unbuilt third-party modules). The first CMake configure is on the Qt target.
+- **The static musl build and the full Qt-based Studio binary.** Studio needs a
+  static musl Qt prefix (`scripts/build-qt-quick-target.sh`). That prefix needs the
+  GNU toolchain, which cannot be fetched here. So `--forge-studio` in the initramfs
+  is not exercised. The initramfs itself builds (`make initramfs CC=$PWD/scripts/musl-cc-zig.sh`)
+  with the static Forge CLI and its MIME entry, and the Studio desktop entry is left out
+  without the Studio binary.
+- **Real display and input.** Mouse and keyboard use on a real display is not tested.
 
 ## Limits in Forge 1.0
 

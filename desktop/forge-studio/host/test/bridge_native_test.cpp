@@ -100,8 +100,12 @@ int main(int argc, char *argv[])
 
     r = call(bridge, QStringLiteral("7"), QStringLiteral("read"), proj, QStringLiteral("../etc/passwd"),
              QString());
-    check(!r.ok && r.code == -1 && r.err.contains(QStringLiteral("not allowed")),
-          "path traversal is refused before any process starts");
+    check(!r.ok && r.code == -1 && r.err.contains(QStringLiteral("only files in src/")),
+          "a path outside src/, assets/ and forge.project is refused before any process starts");
+
+    r = call(bridge, QStringLiteral("7b"), QStringLiteral("read"), proj, QStringLiteral("src/../../etc/passwd"),
+             QString());
+    check(!r.ok && r.code == -1, "traversal that starts inside src/ is refused");
 
     r = call(bridge, QStringLiteral("8"), QStringLiteral("write"), proj, QStringLiteral("forge.project.bak"),
              QStringLiteral("x"));

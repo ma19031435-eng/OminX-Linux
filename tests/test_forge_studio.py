@@ -240,6 +240,14 @@ class ContractConsistency(unittest.TestCase):
 
 
 class Presentation(unittest.TestCase):
+    def test_qmldir_registers_every_component(self):
+        text = (QML_DIR / 'qmldir').read_text()
+        for qml in sorted(QML_DIR.glob('*.qml')):
+            if qml.name == 'Theme.qml':
+                self.assertIn('singleton Theme 1.0 Theme.qml', text)
+            else:
+                self.assertIn(qml.stem + ' 1.0 ' + qml.name, text, qml.name + ' not in qmldir')
+
     def test_cmake_project_lists_every_qml_file(self):
         cmake = STUDIO / 'CMakeLists.txt'
         self.assertTrue(cmake.exists(), 'build-forge-studio.sh configures desktop/forge-studio')
