@@ -240,6 +240,17 @@ class ContractConsistency(unittest.TestCase):
 
 
 class Presentation(unittest.TestCase):
+    def test_cmake_project_lists_every_qml_file(self):
+        cmake = STUDIO / 'CMakeLists.txt'
+        self.assertTrue(cmake.exists(), 'build-forge-studio.sh configures desktop/forge-studio')
+        text = cmake.read_text()
+        for qml in sorted(QML_DIR.glob('*.qml')):
+            self.assertIn('qml/' + qml.name, text, qml.name + ' missing from QML_FILES')
+        self.assertIn('QT_QML_SINGLETON_TYPE', text)
+        for src in ('host/forge_studio.cpp', 'host/forge_bridge.cpp'):
+            self.assertIn(src, text)
+            self.assertTrue((STUDIO / src).exists())
+
     def test_qml_files_present(self):
         for name in ('Main.qml', 'Navigator.qml', 'Editor.qml', 'OutputPanel.qml', 'NewProjectDialog.qml',
                      'Theme.qml', 'qmldir'):

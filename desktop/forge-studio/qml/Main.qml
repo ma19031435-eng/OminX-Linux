@@ -210,41 +210,48 @@ ApplicationWindow {
                 Layout.fillWidth: true
                 Layout.maximumWidth: 560
                 placeholderText: "Project folder, for example /home/ominx/Forge/PuzzleGarden"
+                placeholderTextColor: Theme.muted
                 text: window.projectDir
                 color: Theme.text
+                background: Rectangle {
+                    color: Theme.gutter
+                    border.color: pathField.activeFocus ? Theme.accent : Theme.line
+                    border.width: 1
+                    radius: 4
+                }
                 font.family: Theme.codeFont
                 font.pixelSize: 13
                 selectByMouse: true
                 onAccepted: window.openProject(text)
             }
 
-            Button {
+            ForgeButton {
                 text: "Open"
                 onClicked: window.openProject(pathField.text)
             }
-            Button {
+            ForgeButton {
                 text: "New project…"
                 onClicked: newDialog.open()
             }
 
             Item { Layout.fillWidth: true }
 
-            Button {
+            ForgeButton {
                 text: "Check"
                 enabled: window.projectDir !== "" && !window.busy
                 onClicked: window.runAction("check")
             }
-            Button {
+            ForgeButton {
                 text: "Test"
                 enabled: window.projectDir !== "" && !window.busy
                 onClicked: window.runAction("test")
             }
-            Button {
+            ForgeButton {
                 text: "Build .opkgx"
                 enabled: window.projectDir !== "" && !window.busy
                 onClicked: window.runAction("build")
             }
-            Button {
+            ForgeButton {
                 text: "Run"
                 highlighted: true
                 enabled: window.projectDir !== "" && !window.busy

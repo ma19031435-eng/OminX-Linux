@@ -9,6 +9,9 @@ qt_standard_project_setup(REQUIRES 6.5)
 
 qt_add_executable(forge-studio host/forge_studio.cpp host/forge_bridge.cpp)
 
+# Theme is the one singleton; every other QML file is a plain component.
+set_source_files_properties(qml/Theme.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+
 qt_add_qml_module(forge-studio
     URI ForgeStudio
     VERSION 1.0
@@ -18,6 +21,7 @@ qt_add_qml_module(forge-studio
         qml/Editor.qml
         qml/OutputPanel.qml
         qml/NewProjectDialog.qml
+        qml/ForgeButton.qml
         qml/Theme.qml
     SOURCES host/forge_bridge.h
 )

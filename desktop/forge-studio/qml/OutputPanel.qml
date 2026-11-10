@@ -31,8 +31,40 @@ Rectangle {
                 id: tabs
                 background: null
                 Layout.preferredWidth: implicitWidth
-                TabButton { text: "Problems (" + panel.diagnostics.length + ")" }
-                TabButton { text: "Output" }
+                TabButton {
+                    id: problemsTab
+                    text: "Problems (" + panel.diagnostics.length + ")"
+                    implicitWidth: implicitContentWidth + 28
+                    contentItem: Text {
+                        text: problemsTab.text
+                        font.family: Theme.uiFont
+                        font.pixelSize: 13
+                        color: problemsTab.checked ? Theme.accent : Theme.muted
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    background: Rectangle {
+                        color: problemsTab.checked ? Theme.selection : "transparent"
+                        radius: 4
+                    }
+                }
+                TabButton {
+                    id: outputTab
+                    text: "Output"
+                    implicitWidth: implicitContentWidth + 28
+                    contentItem: Text {
+                        text: outputTab.text
+                        font.family: Theme.uiFont
+                        font.pixelSize: 13
+                        color: outputTab.checked ? Theme.accent : Theme.muted
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    background: Rectangle {
+                        color: outputTab.checked ? Theme.selection : "transparent"
+                        radius: 4
+                    }
+                }
             }
 
             Item { Layout.fillWidth: true }

@@ -188,15 +188,11 @@ OPKGX_MIME_XML = (b'<?xml version="1.0" encoding="UTF-8"?>\n<mime-info '
 BUS_LICENSES = ('DBUS-LICENSES', 'DBUS-COPYING', 'DBUS-AFL-2.1.txt', 'DBUS-GPL-2.0-or-later.txt', 'EXPAT-COPYING')
 # Forge Studio: the IDE for Forge apps. The Qt host is packaged only when it was built
 # (--forge-studio); the desktop entry and the .fg MIME type ship with the Forge CLI.
-FORGE_STUDIO_DESKTOP_ENTRY = (b'[Desktop Entry]\nType=Application\nName=Forge Studio\n'
-                              b'Comment=Write and build OminX apps in Forge\n'
-                              b'Exec=/bin/forge-studio %f\nTerminal=false\nNoDisplay=false\n'
-                              b'Categories=Development;\nMimeType=application/x-forge;\n')
-FORGE_MIME_XML = (b'<?xml version="1.0" encoding="UTF-8"?>\n<mime-info '
-                  b'xmlns="http://www.freedesktop.org/standards/shared-mime-info">\n'
-                  b' <mime-type type="application/x-forge">\n'
-                  b'  <comment>Forge source file</comment>\n  <glob pattern="*.fg"/>\n'
-                  b' </mime-type>\n</mime-info>\n')
+# Forge desktop and MIME content lives in desktop/forge-studio/integration/ so the
+# files can be reviewed and validated as they will ship.
+FORGE_INTEGRATION = Path(__file__).resolve().parent.parent / 'desktop' / 'forge-studio' / 'integration'
+FORGE_STUDIO_DESKTOP_ENTRY = (FORGE_INTEGRATION / 'forge-studio.desktop').read_bytes()
+FORGE_MIME_XML = (FORGE_INTEGRATION / 'ominx-forge.mime.xml').read_bytes()
 
 LOGIN_BINARIES = ('ominx-login', 'ominx-seat', 'ominx-passwd', 'ominx-desktop', 'ominx-login-probe')
 LOGIN_PATHS = {'ominx-login': 'sbin/ominx-login', 'ominx-seat': 'sbin/ominx-seat',
