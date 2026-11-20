@@ -2323,26 +2323,30 @@ static void run_top_level(struct ctx *c) {
 
 int forge_run_main(forge_program *p, const char *assets, FILE *out, FILE *err) {
     if (!p) return 1;
-    struct ctx c;
+    /* c is modified between setjmp and longjmp: keep it reachable through a
+       volatile pointer so the handler sees the latest error state. */
+    struct ctx cstore;
+    struct ctx *volatile cp = &cstore;
     jmp_buf jb;
     if (setjmp(jb)) {
+        struct ctx *ec = cp;
         int code = 1;
-        if (c.jb_code == 2) code = c.exit_code;
-        else fprintf(err, "%s\n", c.msg);
-        arena_free(&c.heap);
+        if (ec->jb_code == 2) code = ec->exit_code;
+        else fprintf(err, "%s\n", ec->msg);
+        arena_free(&ec->heap);
         return code;
     }
-    setup_ctx(&c, p, assets, out, err, &jb);
-    run_top_level(&c);
+    setup_ctx(&cstore, p, assets, out, err, &jb);
+    run_top_level(&cstore);
     if (!forge_has_function(p, "main")) {
         fprintf(err, "error: the program has no main() function\n");
-        arena_free(&c.heap);
+        arena_free(&cstore.heap);
         return 1;
     }
-    value mainfn = *env_find(c.globals, "main");
-    call_value(&c, mainfn, NULL, 0);
+    value mainfn = *env_find(cstore.globals, "main");
+    call_value(&cstore, mainfn, NULL, 0);
     fflush(out);
-    arena_free(&c.heap);
+    arena_free(&cstore.heap);
     return 0;
 }
 

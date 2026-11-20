@@ -36,6 +36,9 @@ build/ominx-login-test: src/login/broker.c src/login/login.c src/login/login.h
 build/ominx-opkgx: src/lib/opkgx.c src/lib/opkgx.h src/lib/opkgx-cli.c src/lib/peicon.c src/lib/peicon.h src/lib/winproto.h
 	mkdir -p build
 	$(CC) $(CFLAGS) -static -o $@ $(filter %.c,$^)
+build/ominx-opkgx-test: src/lib/opkgx.c src/lib/opkgx.h src/lib/opkgx-cli.c src/lib/peicon.c src/lib/peicon.h src/lib/winproto.h build/ominx-forge-test
+	mkdir -p build
+	$(CC) $(CFLAGS) '-DOMINX_FORGE_PATH="$(CURDIR)/build/ominx-forge-test"' -static -o $@ $(filter %.c,$^)
 # Forge: the application language runtime and toolchain. Shipped build refuses to
 # run anywhere but OminXOS. The test build reads the platform identity from a fixture.
 build/ominx-forge: src/forge/forge.c src/forge/forge.h src/forge/main.c src/lib/opkgx.c src/lib/opkgx.h src/lib/peicon.c src/lib/peicon.h src/lib/winproto.h
@@ -115,8 +118,8 @@ build/host/ominx-opkgx: src/lib/opkgx.c src/lib/opkgx.h src/lib/opkgx-cli.c src/
 	$(HOSTCC) $(CFLAGS) '-DOMINX_FORGE_PATH="$(CURDIR)/build/host/ominx-forge-test"' -static -o $@ $(filter %.c,$^)
 check: build/host/ominx build/host/ominx-files build/host/ominx-control build/host/ominx-login-test build/host/ominx-passwd build/host/ominx-win build/host/ominx-wined-test build/host/ominx-winsetup-test build/host/ominx-gamesched-test build/host/ominx-updatepolicy-test build/host/ominx-opkgx build/host/ominx-forge build/host/ominx-forge-test
 	OMINX_CONTROL_BINARY=$(CURDIR)/build/host/ominx-control OMINX_FILES_BINARY=$(CURDIR)/build/host/ominx-files OMINX_TEST_BINARY=$(CURDIR)/build/host/ominx OMINX_WIN_BINARY=$(CURDIR)/build/host/ominx-win OMINX_WINED_BINARY=$(CURDIR)/build/host/ominx-wined-test OMINX_WINSETUP_BINARY=$(CURDIR)/build/host/ominx-winsetup-test OMINX_GAMESCHED_BINARY=$(CURDIR)/build/host/ominx-gamesched-test OMINX_UPDATEPOLICY_BINARY=$(CURDIR)/build/host/ominx-updatepolicy-test OMINX_OPKGX_BINARY=$(CURDIR)/build/host/ominx-opkgx OMINX_FORGE_BINARY=$(CURDIR)/build/host/ominx-forge-test OMINX_FORGE_PROD_BINARY=$(CURDIR)/build/host/ominx-forge python3 -m unittest discover -s tests -v
-target-check: initramfs build/ominx-login build/ominx-seat build/ominx-passwd build/ominx-login-probe build/ominx-login-test build/ominx-win-test build/ominx-wined-test build/ominx-winsetup-test build/ominx-gamesched-test
-	OMINX_CONTROL_BINARY=$(CURDIR)/build/ominx-control OMINX_FILES_BINARY=$(CURDIR)/build/ominx-files OMINX_TEST_BINARY=$(CURDIR)/build/ominx OMINX_LOGIN_BINARY=$(CURDIR)/build/ominx-login-test OMINX_PASSWD_BINARY=$(CURDIR)/build/ominx-passwd OMINX_WIN_BINARY=$(CURDIR)/build/ominx-win-test OMINX_WINED_BINARY=$(CURDIR)/build/ominx-wined-test OMINX_WINSETUP_BINARY=$(CURDIR)/build/ominx-winsetup-test OMINX_GAMESCHED_BINARY=$(CURDIR)/build/ominx-gamesched-test python3 -m unittest discover -s tests -v
+target-check: initramfs build/ominx-login build/ominx-seat build/ominx-passwd build/ominx-login-probe build/ominx-login-test build/ominx-win-test build/ominx-wined-test build/ominx-winsetup-test build/ominx-gamesched-test build/ominx-opkgx-test build/ominx-forge build/ominx-forge-test
+	OMINX_OPKGX_BINARY=$(CURDIR)/build/ominx-opkgx-test OMINX_FORGE_BINARY=$(CURDIR)/build/ominx-forge-test OMINX_FORGE_PROD_BINARY=$(CURDIR)/build/ominx-forge OMINX_CONTROL_BINARY=$(CURDIR)/build/ominx-control OMINX_FILES_BINARY=$(CURDIR)/build/ominx-files OMINX_TEST_BINARY=$(CURDIR)/build/ominx OMINX_LOGIN_BINARY=$(CURDIR)/build/ominx-login-test OMINX_PASSWD_BINARY=$(CURDIR)/build/ominx-passwd OMINX_WIN_BINARY=$(CURDIR)/build/ominx-win-test OMINX_WINED_BINARY=$(CURDIR)/build/ominx-wined-test OMINX_WINSETUP_BINARY=$(CURDIR)/build/ominx-winsetup-test OMINX_GAMESCHED_BINARY=$(CURDIR)/build/ominx-gamesched-test python3 -m unittest discover -s tests -v
 media:
 	./scripts/build-media.sh
 run:

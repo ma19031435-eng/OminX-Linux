@@ -617,11 +617,15 @@ class OpkgxForgeRunner(ForgeCase):
         self.assertEqual(r.returncode, 0, r.stderr)
         # A desktop launch has no terminal: the program's output lands in the app's log.
         log = self.home / '.local/state/ominx/forge/org.example.greeter.log'
-        for _ in range(100):
-            if log.exists() and 'Hello, OminX!' in log.read_text():
+        # The launch is asynchronous: the log is truncated first, then written by the child.
+        # Wait for the complete line instead of a partial read.
+        text = ''
+        for _ in range(400):
+            text = log.read_text() if log.exists() else ''
+            if text.endswith('\n'):
                 break
             time.sleep(0.05)
-        self.assertEqual(log.read_text(), 'Hello, OminX!\n')
+        self.assertEqual(text, 'Hello, OminX!\n')
         self.assertEqual(oct(log.stat().st_mode & 0o777), '0o644')
 
     def test_validator_accepts_forge_and_refuses_bad_entries(self):
