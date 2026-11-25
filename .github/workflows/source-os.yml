@@ -113,3 +113,30 @@ jobs:
             build/acceptance/*.ppm
             build/*.log
           retention-days: 14
+  publish-iso:
+    # Publishes the verified ISO as a GitHub prerelease, so it can be downloaded
+    # from the Releases page without the Actions artifact store.
+    needs: boot
+    if: github.event_name == 'push' && success()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: OminX-x86-${{ github.sha }}
+          path: release
+      - name: Publish prerelease with ISO and checksums
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ominx-beta-${{ github.sha }}
+        run: |
+          cd release
+          test -s ominx-x86_64.iso
+          test -s ominx-recovery-x86_64.iso
+          test -s SHA256SUMS
+          sha256sum -c SHA256SUMS
+          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease \
+            --title "OminX beta ${GITHUB_SHA:0:7}" \
+            --notes "Source-built OminX x86 ISO. Checksums in SHA256SUMS. Built and verified by source-os.yml run $GITHUB_RUN_ID." \
+            ominx-x86_64.iso ominx-recovery-x86_64.iso SHA256SUMS
