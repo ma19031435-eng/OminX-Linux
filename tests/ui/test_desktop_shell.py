@@ -93,6 +93,27 @@ class Session(QObject):
     @Property(list, constant=True)
     def facts(self): return ['User: ominx', 'Home: /home/ominx']
 
+    @Property(str, constant=True)
+    def winSummary(self): return 'Windows apps are ready.'
+
+    @Property(int, constant=True)
+    def winPercent(self): return 100
+
+    @Property(bool, constant=True)
+    def winReady(self): return True
+
+    @Property(list, constant=True)
+    def winApps(self): return ['demo.exe']
+
+    @Slot()
+    def refreshWin(self): self.win_refreshed = getattr(self, 'win_refreshed', 0) + 1
+
+    @Slot()
+    def setupWindows(self): self.win_setups = getattr(self, 'win_setups', 0) + 1
+
+    @Slot(int)
+    def launchWinApp(self, index): self.win_launched = getattr(self, 'win_launched', []) + [index]
+
     @Slot()
     def logout(self): self.logouts += 1
 
@@ -129,6 +150,17 @@ def child(root, name):
     result = root.findChild(QObject, name)
     assert result is not None, 'missing ' + name
     return result
+
+
+def repeater_item(root, list_name, index):
+    # Repeater delegates live outside the QObject child tree; itemAt()
+    # through a QML expression is the supported way to reach one.
+    from PySide6.QtQml import QQmlExpression, qmlContext
+    repeater = child(root, list_name)
+    assert repeater.property('count') > index, 'no delegate in ' + list_name
+    item, _ = QQmlExpression(qmlContext(repeater), repeater, f'itemAt({index})').evaluate()
+    assert item is not None, 'delegate not created in ' + list_name
+    return item
 
 
 temporary = tempfile.TemporaryDirectory()
@@ -171,6 +203,19 @@ assert session.power == 1, 'keyboard power action did not reach the session cont
 QMetaObject.invokeMethod(child(root, 'informationButton'), 'clicked')
 QTest.qWait(200)
 assert child(root, 'sessionInformation').property('opened') is True, 'session information did not open'
+QMetaObject.invokeMethod(child(root, 'sessionInformation'), 'close')
+QTest.qWait(120)
+QMetaObject.invokeMethod(child(root, 'windowsButton'), 'clicked')
+QTest.qWait(200)
+assert child(root, 'windowsPanel').property('opened') is True, 'windows panel did not open'
+QMetaObject.invokeMethod(child(root, 'windowsSetupButton'), 'clicked')
+QTest.qWait(120)
+assert getattr(session, 'win_setups', 0) == 1, 'windows setup action did not run'
+app_button = repeater_item(root, 'winAppsList', 0)
+assert app_button.property('text') == 'demo.exe', 'installed windows app is not listed'
+QMetaObject.invokeMethod(app_button, 'clicked')
+QTest.qWait(120)
+assert getattr(session, 'win_launched', []) == [0], 'windows app launch did not run'
 view.close()
 temporary.cleanup()
 if errors:

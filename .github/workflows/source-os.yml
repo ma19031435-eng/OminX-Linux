@@ -1,13 +1,16 @@
 name: Source-built OminX x86 acceptance
 on:
   push:
-    branches: [arena/11b46bb0-ominx-linux]
+    branches: [main, 'arena/**']
     # Qt/greeter-only changes have dedicated source-build/guest workflows. Do not
     # rebuild the unchanged kernel for every desktop dependency recipe correction.
     paths:
       - 'src/core/**'
       - 'src/lib/**'
       - 'src/control/**'
+      - 'src/win/**'
+      - 'compat/**'
+      - 'scripts/stage-wine-runtime.py'
       - 'src/files/**'
       - 'tests/test_*.py'
       - 'tests/fixtures/**'
@@ -38,6 +41,8 @@ jobs:
   boot:
     runs-on: ubuntu-24.04
     timeout-minutes: 120
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - name: Install build-host tools (not target packages)
@@ -110,3 +115,18 @@ jobs:
             build/acceptance/*.ppm
             build/*.log
           retention-days: 14
+      - name: Publish verified ISO as a prerelease
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ominx-beta-${{ github.sha }}
+        run: |
+          cd build
+          test -s ominx-x86_64.iso
+          test -s ominx-recovery-x86_64.iso
+          test -s SHA256SUMS
+          sha256sum -c SHA256SUMS
+          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease \
+            --title "OminX beta ${GITHUB_SHA:0:7}" \
+            --notes "Source-built OminX x86 ISO. Checksums in SHA256SUMS. Built and verified by source-os.yml run $GITHUB_RUN_ID." \
+            ominx-x86_64.iso ominx-recovery-x86_64.iso SHA256SUMS

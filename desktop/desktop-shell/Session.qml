@@ -94,6 +94,76 @@ Rectangle {
         }
     }
 
+    // Windows (Wine/Proton) panel. Every value comes from the per-user
+    // background service; when it has no runtime the panel says so instead
+    // of pretending programs can run. Installed programs launch from here
+    // exactly like `win run` in the console.
+    Popup {
+        id: windowsPanel
+        objectName: "windowsPanel"
+        anchors.centerIn: parent
+        width: Math.min(560, desktop.width - 48); height: windowsColumn.implicitHeight + 56
+        modal: true; focus: true; closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
+        background: Rectangle { radius: 16; color: "#f0101c2a"; border.color: "#33556f"; border.width: 1 }
+        onOpened: if (session) session.refreshWin()
+        ColumnLayout {
+            id: windowsColumn
+            anchors.centerIn: parent; width: parent.width - 48; spacing: 10
+            Text { text: qsTr("Windows apps"); color: "#eaf4fb"; font.pixelSize: 20; font.weight: Font.DemiBold }
+            Text {
+                Layout.fillWidth: true
+                text: session ? session.winSummary : ""
+                color: "#b9d3e6"; font.pixelSize: 13; wrapMode: Text.WordWrap
+            }
+            Rectangle {
+                Layout.fillWidth: true; height: 8; radius: 4; color: "#1b3d56"
+                visible: session ? (!session.winReady && session.winPercent > 0) : false
+                Rectangle {
+                    height: parent.height; radius: 4; color: "#4fa3ff"
+                    width: session ? parent.width * session.winPercent / 100 : 0
+                }
+            }
+            Repeater {
+                objectName: "winAppsList"
+                model: session ? session.winApps : []
+                MenuButton {
+                    Layout.fillWidth: true
+                    objectName: "winAppButton"
+                    text: modelData
+                    onClicked: { windowsPanel.close(); session.launchWinApp(index) }
+                }
+            }
+            Text {
+                Layout.fillWidth: true
+                visible: session ? (session.winReady && session.winApps.length === 0) : false
+                text: qsTr("Nothing installed yet. In the console, run: win install setup.exe")
+                color: "#b9d3e6"; font.pixelSize: 12; wrapMode: Text.WordWrap
+            }
+            RowLayout {
+                Layout.alignment: Qt.AlignRight
+                spacing: 8
+                Button {
+                    id: windowsSetupButton; objectName: "windowsSetupButton"
+                    text: session && session.winReady ? qsTr("Repair setup") : qsTr("Set up Windows apps")
+                    Keys.onReturnPressed: windowsSetupButton.click()
+                    onClicked: session.setupWindows()
+                }
+                Button {
+                    id: windowsRefreshButton; objectName: "windowsRefreshButton"
+                    text: qsTr("Refresh")
+                    Keys.onReturnPressed: windowsRefreshButton.click()
+                    onClicked: session.refreshWin()
+                }
+                Button {
+                    id: windowsClose; objectName: "windowsClose"
+                    text: qsTr("Close")
+                    Keys.onReturnPressed: windowsClose.click()
+                    onClicked: windowsPanel.close()
+                }
+            }
+        }
+    }
+
     Popup {
         id: startMenu
         objectName: "startMenu"
@@ -146,6 +216,12 @@ Rectangle {
                 Layout.fillWidth: true
                 text: qsTr("Session information")
                 onClicked: { startMenu.close(); information.open() }
+            }
+            MenuButton {
+                objectName: "windowsButton"
+                Layout.fillWidth: true
+                text: qsTr("Windows apps")
+                onClicked: { startMenu.close(); windowsPanel.open() }
             }
         }
     }

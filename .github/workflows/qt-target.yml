@@ -1,7 +1,7 @@
 name: Source-built target Qt graphics
 on:
   push:
-    branches: [arena/11b46bb0-ominx-linux]
+    branches: [main, 'arena/**']
     paths: ['desktop/qt/source.env', 'desktop/probe/**', 'scripts/build-qt-target.sh', 'scripts/test-qt-target.py', '.github/workflows/qt-target.yml']
   workflow_dispatch:
 permissions:
@@ -56,18 +56,32 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh run watch 39482457386 --interval 60 --exit-status
-          gh api repos/${{ github.repository }}/actions/runs/39482457386 > build/source-run.json
+          RUN_ID="${{ vars.OMINX_KERNEL_RUN_ID }}"
+          if [ -z "$RUN_ID" ]; then
+            RUN_ID=$(gh run list --workflow source-os.yml --branch "${{ github.ref_name }}" --status success --limit 1 --json databaseId --jq '.[0].databaseId // empty')
+          fi
+          if [ -z "$RUN_ID" ]; then
+            RUN_ID=$(gh run list --workflow source-os.yml --branch main --status success --limit 1 --json databaseId --jq '.[0].databaseId // empty')
+          fi
+          if [ -z "$RUN_ID" ]; then
+            echo "No successful source-os run found for this branch or main." >&2
+            echo "Run the 'Source-built OminX x86 acceptance' workflow first, or set vars.OMINX_KERNEL_RUN_ID." >&2
+            exit 1
+          fi
+          echo "Using accepted source kernel from run $RUN_ID"
+          echo "KERNEL_RUN_ID=$RUN_ID" >> "$GITHUB_ENV"
+          gh api repos/${{ github.repository }}/actions/runs/$RUN_ID > build/source-run.json
           python3 - <<'PY'
-          import json
+          import json, os
           r = json.load(open('build/source-run.json'))
-          assert r['conclusion'] == 'success', 'Source kernel acceptance must pass before Qt guest tests'
-          assert r['head_sha'] == '35514119f11e775ab696d6c3c67be5c221366848'
+          assert r['conclusion'] == 'success', 'Source kernel acceptance must pass first'
+          with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as env:
+              env.write('KERNEL_ARTIFACT=OminX-x86-' + r['head_sha'] + '\n')
           PY
       - uses: actions/download-artifact@v4
         with:
-          run-id: 39482457386
-          name: OminX-x86-35514119f11e775ab696d6c3c67be5c221366848
+          run-id: ${{ env.KERNEL_RUN_ID }}
+          name: ${{ env.KERNEL_ARTIFACT }}
           path: build/source-core
           github-token: ${{ github.token }}
       - name: Package independent target graphics test media

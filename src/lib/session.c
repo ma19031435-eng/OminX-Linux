@@ -37,6 +37,16 @@ int ominx_prepare_session(void) {
         directory("/home/ominx", OMINX_UID, OMINX_GID, 0700) ||
         directory("/run/user", 0, 0, 0755) ||
         directory("/run/user/1000", OMINX_UID, OMINX_GID, 0700)) return -1;
+    /* Windows-compatibility state lives under the user's data directory so
+       a persistent installed home keeps the Wine and Proton prefixes. */
+    if (!access("/bin/ominx-wined", X_OK) &&
+        (directory("/home/ominx/.local", OMINX_UID, OMINX_GID, 0700) ||
+         directory("/home/ominx/.local/share", OMINX_UID, OMINX_GID, 0700) ||
+         directory("/home/ominx/.local/share/ominx", OMINX_UID, OMINX_GID, 0700) ||
+         directory("/home/ominx/.local/share/ominx/wine", OMINX_UID, OMINX_GID, 0700) ||
+         directory("/home/ominx/.local/share/ominx/proton", OMINX_UID, OMINX_GID, 0700) ||
+         directory("/home/ominx/.local/share/ominx/proton/compatdata", OMINX_UID, OMINX_GID, 0700)))
+        return -1;
     return 0;
 }
 int ominx_enter_session(int recovery) {
@@ -50,6 +60,11 @@ int ominx_enter_session(int recovery) {
     if (!access("/sbin/ominx-desktop-bus", X_OK)) {
         if (setenv("DBUS_SYSTEM_BUS_ADDRESS", "unix:path=/run/dbus/system_bus_socket", 1)) return -1;
         if (!recovery && setenv("DBUS_SESSION_BUS_ADDRESS", "unix:path=/run/user/1000/bus", 1)) return -1;
+    }
+    if (!recovery && !access("/bin/ominx-wined", X_OK)) {
+        if (setenv("WINEPREFIX", "/home/ominx/.local/share/ominx/wine/prefix", 1) ||
+            setenv("WINEARCH", "win64", 1) ||
+            setenv("OMINX_WINED_SOCKET", "/run/user/1000/ominx-wined.sock", 1)) return -1;
     }
     if (!recovery) {
         gid_t groups[] = {OMINX_VIDEO, OMINX_INPUT, OMINX_RENDER};

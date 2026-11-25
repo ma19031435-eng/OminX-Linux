@@ -1,0 +1,102 @@
+name: Source-built Wine/Proton runtime
+# A from-source glibc + Wine + DXVK build takes hours, so it runs when the
+# runtime itself changes: manually, or on a push to an arena/** branch that
+# touches the pins, the build script, the auditor or this workflow. Source
+# and stamps are cached by those files. The artifact feeds
+# make-initramfs --wine-runtime-dir build/wine-runtime; see
+# docs/windows-compatibility.md.
+on:
+  workflow_dispatch:
+    inputs:
+      jobs:
+        description: Parallel build jobs
+        default: '4'
+  push:
+    branches: ['arena/**']
+    paths:
+      - 'compat/**'
+      - 'scripts/build-wine-runtime.sh'
+      - 'scripts/stage-wine-runtime.py'
+      - 'toolchain/sources.env'
+      - '.github/workflows/wine-runtime.yml'
+permissions:
+  contents: read
+defaults:
+  run:
+    shell: bash
+jobs:
+  runtime:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 720
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build-host tools (never shipped in the image)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake ninja-build pkg-config \
+            python3 python3-venv autoconf automake libtool texinfo nasm flex bison gperf \
+            gcc-mingw-w64-x86-64 gcc-mingw-w64-i686 g++-mingw-w64-x86-64 g++-mingw-w64-i686 \
+            patchelf gettext glslang-tools
+          mkdir -p build
+          python3 -m venv build/meson-env
+          build/meson-env/bin/pip install meson==1.7.2
+      - uses: actions/cache/restore@v4
+        id: sources
+        with:
+          path: |
+            build/sources/wine-rt
+            build/wine-rt/stamps
+            build/wine-rt/stage
+          key: wine-runtime-${{ runner.os }}-${{ hashFiles('compat/sources.env', 'compat/sources.json', 'scripts/build-wine-runtime.sh') }}
+      - name: Build glibc, Wine (WoW64), DXVK and vkd3d-proton from pinned source
+        run: MESON="$PWD/build/meson-env/bin/meson" JOBS="${{ inputs.jobs }}" scripts/build-wine-runtime.sh 2>&1 | tee build/wine-runtime-build.log
+      - name: Surface the build failure (Actions logs are not downloadable from the sandbox)
+        if: failure()
+        run: |
+          python3 - <<'PY'
+          import re
+          from pathlib import Path
+          log = Path('build/wine-runtime-build.log')
+          lines = log.read_text(errors='replace').splitlines() if log.exists() else ['(no log produced)']
+          clean = lambda line: line.replace('%', '%25').replace('\r', '%0D')[:180]
+          # GitHub truncates annotation messages near 4 KB, so keep the closest-to-failure
+          # evidence: the last two error matches (with context), configure probes, the tail.
+          errors = [i for i, line in enumerate(lines)
+                    if re.search(r'\berror:|Error [0-9]+|\*\*\*|fatal error|undefined reference|No such file or directory', line)]
+          block = []
+          for i in errors[-1:]:
+              block += lines[max(0, i - 2):i + 2] + ['----']
+          probes = [line for line in lines if re.search(r'checking for (wayland|xkb|libxml)|configure: error', line)][-4:]
+          cfg = Path('build/wine-rt/wine-build/config.log')
+          ctx = []
+          if cfg.exists():
+              cl = cfg.read_text(errors='replace').splitlines()
+              hits = [i for i, l in enumerate(cl) if 'wl_display_connect' in l or 'rxkb_context_new' in l]
+              if hits:
+                  win = cl[hits[-1]:hits[-1] + 60]
+                  ctx = [l for l in win if re.search(r'ld|cannot|undefined|rror|No such|not found', l)][:6]
+          message = '%0A'.join(clean(line) for line in (block + ['==== probes ===='] + probes + ['==== config.log link ===='] + ctx + ['==== tail ===='] + lines[-6:]))
+          message = message.encode()[:3900].decode(errors='ignore')
+          print('::error title=wine runtime build failure::' + message)
+          PY
+      - uses: actions/cache/save@v4
+        if: steps.sources.outputs.cache-hit != 'true'
+        with:
+          path: |
+            build/sources/wine-rt
+            build/wine-rt/stamps
+            build/wine-rt/stage
+          key: ${{ steps.sources.outputs.cache-primary-key }}
+      - name: Audit is part of the build script; show the result
+        run: |
+          cat build/wine-runtime/VERSION
+          du -sh build/wine-runtime
+          head -20 build/provenance/wine-runtime.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: OminX-wine-runtime-${{ github.sha }}
+          path: |
+            build/wine-runtime
+            build/provenance/wine-runtime.sha256
+            build/provenance/sources.env
+          retention-days: 30

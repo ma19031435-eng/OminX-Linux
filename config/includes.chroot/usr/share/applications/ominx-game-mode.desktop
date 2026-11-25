@@ -1,9 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=OminX Game Mode Setup
-Comment=Enable per-game performance tuning and read latency guidance
-Exec=ominx-welcome --game-mode
-Icon=applications-games
-Terminal=false
-Categories=Game;Settings;
-StartupNotify=true

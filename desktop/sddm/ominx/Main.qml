@@ -88,9 +88,12 @@ Rectangle {
         anchors.top: parent.top; anchors.left: parent.left
         anchors.margins: root.compact ? 22 : 40
         spacing: 12
-        Rectangle {
-            width: 28; height: 28; radius: 8; color: root.accent
-            Text { anchors.centerIn: parent; text: "X"; font.pixelSize: 19; font.bold: true; color: "#112d35" }
+        Image {
+            width: 34; height: 34
+            sourceSize.width: 68; sourceSize.height: 68
+            source: Qt.resolvedUrl("ominx-logo.svg")
+            fillMode: Image.PreserveAspectFit
+            smooth: true
         }
         Text { text: "OminX"; color: "#eff9f7"; font.pixelSize: 24; font.weight: Font.DemiBold }
     }

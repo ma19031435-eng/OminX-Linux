@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- OminX logo, vector trace of the supplied mark: a navy rounded square, a
+     white ring, and a teal wave sweeping through its lower right. Vector only,
+     so the Plasma package stays free of raster images. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1254" height="1254" viewBox="0 0 1254 1254">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="50%" r="70%">
+      <stop offset="0" stop-color="#14294a"/>
+      <stop offset="1" stop-color="#0c1a30"/>
+    </radialGradient>
+    <clipPath id="ring">
+      <circle cx="625" cy="620" r="362"/>
+    </clipPath>
+  </defs>
+  <rect x="40" y="40" width="1174" height="1174" rx="200" ry="200" fill="url(#bg)"/>
+  <!-- white ring -->
+  <circle cx="625" cy="620" r="300" fill="none" stroke="#f6fbfa" stroke-width="124"/>
+  <!-- teal wave in the lower right, inside the ring -->
+  <path clip-path="url(#ring)" fill="#74e0c7"
+        d="M450 785 C520 840 600 835 700 785 S880 690 975 725 L880 880 C790 935 560 935 450 785 Z"/>
+  <!-- inner hole, cut back to the background -->
+  <circle cx="625" cy="620" r="238" fill="#0f1d33"/>
+</svg>

@@ -1,0 +1,12 @@
+"compatibilitytools"
+{
+  "compat_tools"
+  {
+    "OminX-Proton"
+    {
+      "display_name" "OminX Proton"
+      "from_oslist" "windows"
+      "to_oslist" "linux"
+    }
+  }
+}

@@ -1,0 +1,15 @@
+# Fortnite (Epic Games). Epic is rebuilding Easy Anti-Cheat for Linux (EAC
+# Linux v2) and will ship Fortnite through the Epic Games Launcher once it is
+# available. Until Epic enables Linux for this title, the launcher refuses it.
+# Set anticheat_status to vendor-opt-in only after Epic publishes support.
+# exe is the path inside the Windows client. Verify it before enabling.
+id = fortnite
+name = Fortnite
+appid = fortnite
+runner = proton
+dir = Games/fortnite
+exe = FortniteGame/Binaries/Win64/FortniteClient-Win64-Shipping.exe
+anticheat = eac
+anticheat_status = pending
+requires = eac-v2
+notes = Waiting on Epic: EAC Linux v2 is in development and Fortnite is not yet enabled for Linux.

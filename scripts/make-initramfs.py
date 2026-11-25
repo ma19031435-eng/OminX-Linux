@@ -10,7 +10,7 @@ import struct
 import sys
 
 
-def archive(binary, files=None, control=None, graphics_probe=None, quick_probe=None, bus=None, qt_bus_probe=None, qt_bus_licenses=None, runtime=None, login=None, accounts=None):
+def archive(binary, files=None, control=None, graphics_probe=None, quick_probe=None, bus=None, qt_bus_probe=None, qt_bus_licenses=None, runtime=None, login=None, accounts=None, win=None, wine_runtime=None, win_games=None, forge_studio=None):
     if qt_bus_probe is not None and (bus is None or not qt_bus_licenses):
         raise ValueError("Qt bus probe requires source bus bundle and Qt license texts")
     if (login is None) != (accounts is None):
@@ -83,6 +83,52 @@ def archive(binary, files=None, control=None, graphics_probe=None, quick_probe=N
     if qt_bus_probe is not None:
         entry('bin/ominx-qt-bus-probe', stat.S_IFREG | 0o755, qt_bus_probe)
         entry('usr/share/licenses/ominx-qt-bus-LICENSES', stat.S_IFREG | 0o644, qt_bus_licenses)
+    if win is not None:
+        # Windows compatibility services. The interfaces ship in every
+        # default image; the large glibc/Wine runtime (wine_runtime) is a
+        # separate audited tree so services-only media stay small and the
+        # daemon reports "runtime-missing" honestly until it is packaged.
+        for name in ('etc/ominx', 'var', 'var/lib', 'var/lib/ominx', 'var/lib/ominx/wine',
+                     'usr', 'usr/share', 'usr/share/applications', 'usr/share/mime',
+                     'usr/share/mime/packages'):
+            entry(name, stat.S_IFDIR | 0o755)
+        entry('bin/ominx-win', stat.S_IFREG | 0o755, win['ominx-win'])
+        entry('bin/ominx-wined', stat.S_IFREG | 0o755, win['ominx-wined'])
+        entry('sbin/ominx-winsetup', stat.S_IFREG | 0o755, win['ominx-winsetup'])
+        entry('bin/ominx-win-binfmt', stat.S_IFLNK | 0o777, b'ominx-win')
+        entry('bin/ominx-opkgx', stat.S_IFREG | 0o755, win['ominx-opkgx'])
+        entry('bin/ominx-forge', stat.S_IFREG | 0o755, win['ominx-forge'])
+        entry('etc/ominx/windows-compat', stat.S_IFREG | 0o444, b'1\n')
+        # Game profiles (compat/games): read-only policy data for `win game`.
+        # The launch gate reads them as-is; they are never generated or edited on the target.
+        entry('usr/share/ominx', stat.S_IFDIR | 0o755)
+        entry('usr/share/ominx/games', stat.S_IFDIR | 0o755)
+        for name, data in sorted((win_games or {}).items()):
+            entry('usr/share/ominx/games/' + name, stat.S_IFREG | 0o644, data)
+        entry('usr/share/applications/ominx-windows.desktop', stat.S_IFREG | 0o644,
+              WIN_DESKTOP_ENTRY)
+        entry('usr/share/mime/packages/ominx-windows.xml', stat.S_IFREG | 0o644,
+              WIN_MIME_XML)
+        entry('usr/share/applications/ominx-opkgx-install.desktop', stat.S_IFREG | 0o644,
+              OPKGX_DESKTOP_ENTRY)
+        entry('usr/share/mime/packages/ominx-opkgx.xml', stat.S_IFREG | 0o644,
+              OPKGX_MIME_XML)
+        # Forge: .fg source files open in Forge Studio, which runs only on OminXOS.
+        entry('usr/share/mime/packages/ominx-forge.xml', stat.S_IFREG | 0o644,
+              FORGE_MIME_XML)
+        if forge_studio is not None:
+            entry('bin/forge-studio', stat.S_IFREG | 0o755, forge_studio)
+            entry('usr/share/applications/forge-studio.desktop', stat.S_IFREG | 0o644,
+                  FORGE_STUDIO_DESKTOP_ENTRY)
+    if wine_runtime is not None:
+        if win is None:
+            raise ValueError('A Wine runtime tree requires the Windows services (--win-dir)')
+        spec = importlib.util.spec_from_file_location(
+            'stage_wine_runtime', Path(__file__).with_name('stage-wine-runtime.py'))
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        for name, (mode, data) in sorted(module.audit(wine_runtime).items()):
+            entry(name, mode, data)
     entry('etc/os-release' , stat.S_IFREG | 0o644,
           b'NAME=OminX\nID=ominx\nPRETTY_NAME="OminX source-built console"\n')
     if runtime is not None:
@@ -111,7 +157,43 @@ def static_elf(path):
     return binary
 
 
+
+WIN_BINARIES = ('ominx-win', 'ominx-wined', 'ominx-winsetup', 'ominx-opkgx', 'ominx-forge')
+# Desktop integration packaged for the final frontend: the same association
+# the file manager will use to offer .exe/.msi files to ominx-win.
+WIN_DESKTOP_ENTRY = (b'[Desktop Entry]\nType=Application\nName=OminX Windows App Support\n'
+                     b'Comment=Install or run Windows EXE and MSI programs with Wine and Proton\n'
+                     b'Exec=/bin/ominx-win run %f\nTerminal=false\nNoDisplay=false\n'
+                     b'Categories=Utility;Emulator;\n'
+                     b'MimeType=application/x-ms-dos-executable;application/x-msi;'
+                     b'application/vnd.microsoft.portable-executable;\n')
+WIN_MIME_XML = (b'<?xml version="1.0" encoding="UTF-8"?>\n<mime-info '
+                b'xmlns="http://www.freedesktop.org/standards/shared-mime-info">\n'
+                b' <mime-type type="application/x-ms-dos-executable">\n'
+                b'  <comment>Windows program</comment><glob pattern="*.exe"/>\n'
+                b'  <magic priority="60"><match value="MZ" type="string" offset="0"/></magic>\n'
+                b' </mime-type>\n <mime-type type="application/x-msi">\n'
+                b'  <comment>Windows Installer package</comment><glob pattern="*.msi"/>\n'
+                b' </mime-type>\n</mime-info>\n')
+# OPKGX packages: double-clicking one installs it, and the result is shown as a notification.
+OPKGX_DESKTOP_ENTRY = (b'[Desktop Entry]\nType=Application\nName=Install OminX application\n'
+                       b'Comment=Install an OPKGX application package\n'
+                       b'Exec=ominx-opkgx install --notify %f\nTerminal=false\nNoDisplay=true\n'
+                       b'Categories=Utility;\nMimeType=application/x-opkgx;\n')
+OPKGX_MIME_XML = (b'<?xml version="1.0" encoding="UTF-8"?>\n<mime-info '
+                  b'xmlns="http://www.freedesktop.org/standards/shared-mime-info">\n'
+                  b' <mime-type type="application/x-opkgx">\n'
+                  b'  <comment>OminX application package</comment><glob pattern="*.opkgx"/>\n'
+                  b' </mime-type>\n</mime-info>\n')
 BUS_LICENSES = ('DBUS-LICENSES', 'DBUS-COPYING', 'DBUS-AFL-2.1.txt', 'DBUS-GPL-2.0-or-later.txt', 'EXPAT-COPYING')
+# Forge Studio: the IDE for Forge apps. The Qt host is packaged only when it was built
+# (--forge-studio); the desktop entry and the .fg MIME type ship with the Forge CLI.
+# Forge desktop and MIME content lives in desktop/forge-studio/integration/ so the
+# files can be reviewed and validated as they will ship.
+FORGE_INTEGRATION = Path(__file__).resolve().parent.parent / 'desktop' / 'forge-studio' / 'integration'
+FORGE_STUDIO_DESKTOP_ENTRY = (FORGE_INTEGRATION / 'forge-studio.desktop').read_bytes()
+FORGE_MIME_XML = (FORGE_INTEGRATION / 'ominx-forge.mime.xml').read_bytes()
+
 LOGIN_BINARIES = ('ominx-login', 'ominx-seat', 'ominx-passwd', 'ominx-desktop', 'ominx-login-probe')
 LOGIN_PATHS = {'ominx-login': 'sbin/ominx-login', 'ominx-seat': 'sbin/ominx-seat',
                'ominx-passwd': 'bin/ominx-passwd', 'ominx-desktop': 'bin/ominx-desktop',
@@ -156,6 +238,10 @@ if __name__ == '__main__':
     parser.add_argument('--bus-dir', type=Path)
     parser.add_argument('--qt-bus-probe', type=Path)
     parser.add_argument('--runtime-dir', type=Path)
+    parser.add_argument('--win-dir', type=Path)
+    parser.add_argument('--forge-studio', type=Path,
+                        help='built Forge Studio binary (Qt target build); omit to leave Studio out')
+    parser.add_argument('--wine-runtime-dir', type=Path)
     parser.add_argument('--login-dir', type=Path)
     parser.add_argument('--login-accounts', type=Path)
     args = parser.parse_args()
@@ -179,7 +265,22 @@ if __name__ == '__main__':
                 if not data:
                     raise ValueError('Empty login component: ' + name)
             accounts = account_records(args.login_accounts)
-        packed = archive(static_elf(args.init), static_elf(args.files), static_elf(args.control), probe, quick, bus, qt_bus, qt_licenses, args.runtime_dir, login, accounts)
+        win = None
+        win_games = None
+        if args.win_dir is not None:
+            win = {name: static_elf(args.win_dir / name) for name in WIN_BINARIES}
+            for name, data in win.items():
+                if not data:
+                    raise ValueError('Empty windows component: ' + name)
+            games_dir = args.win_dir / 'games'
+            win_games = {}
+            if games_dir.is_dir():
+                for profile in sorted(games_dir.glob('*.game')):
+                    win_games[profile.name] = profile.read_bytes()
+                    if not win_games[profile.name]:
+                        raise ValueError('Empty game profile: ' + profile.name)
+        studio = static_elf(args.forge_studio) if args.forge_studio is not None else None
+        packed = archive(static_elf(args.init), static_elf(args.files), static_elf(args.control), probe, quick, bus, qt_bus, qt_licenses, args.runtime_dir, login, accounts, win, args.wine_runtime_dir, win_games, forge_studio=studio)
     except (ValueError, OSError) as error:
         raise SystemExit(str(error))
     Path(args.output).write_bytes(packed)

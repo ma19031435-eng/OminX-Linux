@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Forge Studio
+Comment=Write and build OminX apps in Forge
+Exec=/bin/forge-studio %f
+Terminal=false
+NoDisplay=false
+Categories=Development;
+MimeType=application/x-forge;
